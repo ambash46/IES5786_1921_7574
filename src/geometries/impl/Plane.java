@@ -1,17 +1,18 @@
 package geometries.impl;
 
+import geometries.api.Geometry;
 import primitives.Point;
 import primitives.Vector;
 
 /**
  * Represents a plane in a three-dimensional Cartesian coordinate system.
  * <p>
- * A plane can be defined either by three points on the plane or by a point and
- * a normal vector.
+ * This geometry can be defined either by three points on the plane or by a
+ * point and a normal vector.
  * </p>
  * @author Ambash and Elyasaf
  */
-public final class Plane {
+public final class Plane extends Geometry {
     /** A point belonging to the plane. */
     private final Point _point;
     /** The normal vector of the plane. */
@@ -43,6 +44,7 @@ public final class Plane {
      * @param point a point on the plane
      * @return the normalized normal vector of the plane
      */
+    @Override
     public final Vector getNormal(Point point) {
         return _normal;
     }

@@ -26,7 +26,12 @@ public final class Sphere extends RadialGeometry {
 
     }
 
-
+    /**
+     * Returns the normal vector of the sphere at the given point.
+     * @param point a point on the sphere
+     * @return the normal vector at the given point
+     */
+    @Override
     public final Vector getNormal(Point point) {
         return null;
     }

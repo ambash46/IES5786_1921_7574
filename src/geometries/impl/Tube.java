@@ -27,6 +27,11 @@ public class Tube extends RadialGeometry {
         this._axis = axis;
     }
 
+    /**
+     * Returns the normal vector of the tube at the given point.
+     * @param point a point on the tube
+     * @return the normal vector at the given point
+     */
     @Override
     public Vector getNormal(Point point) {
         return null;

@@ -8,11 +8,11 @@ package primitives;
  * </p>
  * @author Ambash and Elyasaf
  */
-public class Ray {
+public final class Ray {
     /** The starting point of the ray. */
-    public final Point _origin;
+    private final Point _origin;
     /** The normalized direction of the ray. */
-    public final Vector _direction;
+    private final Vector _direction;
 
     /**
      * Constructs a ray from an origin point and a direction vector.
@@ -24,5 +24,20 @@ public class Ray {
         this._direction = direction.normalize();
     }
 
+    /**
+     * Returns the normalized direction vector of the ray.
+     * @return the ray direction
+     */
+    public final Vector direction() {
+        return _direction;
+    }
+
+    /**
+     * Returns the origin point of the ray.
+     * @return the starting point of the ray
+     */
+    public final Point origin() {
+        return _origin;
+    }
 
 }

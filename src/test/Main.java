@@ -84,7 +84,7 @@ public final class Main {
      */
     private static void rayTests() {
         Ray r = new Ray(P1, new Vector(2, 4, 6));
-        if (!isZero(r._direction.length() - 1))
+        if (!isZero(r.direction().length() - 1))
             out.println("ERROR: Ray direction is not normalized");
     }
 

@@ -103,23 +103,6 @@ public final class Vector extends Point {
         return Math.sqrt(lengthSquared());
     }
 
-    /**
-     * Calculates the squared distance between this vector and another vector.
-     * @param other the other vector
-     * @return the squared distance between the vectors
-     */
-    public final double distanceSquared(Vector other) {
-        return super.distanceSquared(other);
-    }
-
-    /**
-     * Calculates the distance between this vector and another vector.
-     * @param other the other vector
-     * @return the distance between the vectors
-     */
-    public final double distance(Vector other) {
-        return Math.sqrt(distanceSquared(other));
-    }
 
     /**
      * Returns a unit vector in the same direction as this vector.
