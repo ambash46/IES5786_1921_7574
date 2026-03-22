@@ -3,6 +3,7 @@ package geometries.impl;
 import static primitives.Util.isZero;
 
 import java.util.List;
+import java.util.Objects;
 
 import geometries.api.Geometry;
 import primitives.*;
@@ -85,5 +86,25 @@ public class Polygon extends Geometry {
     @Override
     public Vector getNormal(Point point) {
         return _plane.getNormal(point);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Polygon other = (Polygon) obj;
+        return _size == other._size
+                && Objects.equals(_vertices, other._vertices)
+                && Objects.equals(_plane, other._plane);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(_vertices, _plane, _size);
+    }
+
+    @Override
+    public String toString() {
+        return "Polygon{vertices=" + _vertices + "}";
     }
 }

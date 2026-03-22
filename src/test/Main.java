@@ -1,10 +1,19 @@
 package test;
 
-import static java.lang.System.out;
-import static primitives.Util.isZero;
+import geometries.impl.Cylinder;
+import geometries.impl.Plane;
+import geometries.impl.Polygon;
+import geometries.impl.Sphere;
+import geometries.impl.Triangle;
+import geometries.impl.Tube;
+import primitives.Double3;
+import primitives.Point;
+import primitives.Ray;
+import primitives.Vector;
 
-import geometries.impl.*;
-import primitives.*;
+import static java.lang.System.out;
+
+import static primitives.Util.isZero;
 
 /**
  * Basic sanity tests for the primitives classes.
@@ -22,6 +31,7 @@ public final class Main {
     /**
      * Default constructor to satisfy JavaDoc generator
      */
+
     public Main() { /* to satisfy JavaDoc generator */ }
 
     /**
@@ -233,7 +243,7 @@ public final class Main {
     /**
      * Basic constructor checks for geometry classes.
      * At this stage most geometry constructors only store the given parameters.
-     * Therefore the tests verify mainly that objects can be created successfully.
+     * Therefore, the tests verify mainly that objects can be created successfully.
      * The only geometry that performs structural validation in its constructor
      * is {@link Polygon}, which checks coplanarity, ordering and convexity.
      * However, Polygon is supplied to the students already tested, therefore

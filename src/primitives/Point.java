@@ -1,6 +1,5 @@
 package primitives;
 
-import java.util.Objects;
 
 /**
  * Represents a point in a three-dimensional Cartesian coordinate system.
@@ -8,16 +7,22 @@ import java.util.Objects;
  * A point stores its location and provides basic geometric services such as
  * subtraction, translation by a vector, and distance calculations.
  * </p>
+ *
  * @author Ambash and Elyasaf
  */
 public class Point {
-    /** The coordinates of the point. */
+    /**
+     * The coordinates of the point.
+     */
     final protected Double3 _xyz;
-    /** The origin point (0,0,0). */
+    /**
+     * The origin point (0,0,0).
+     */
     public static final Point ZERO = new Point(0, 0, 0);
 
     /**
      * Constructs a point from a coordinate triplet.
+     *
      * @param _xyz the coordinates of the point
      */
     public Point(Double3 _xyz) {
@@ -26,6 +31,7 @@ public class Point {
 
     /**
      * Constructs a point from three coordinate values.
+     *
      * @param x the x coordinate
      * @param y the y coordinate
      * @param z the z coordinate
@@ -39,6 +45,7 @@ public class Point {
      * <p>
      * The returned vector points from the given point to this point.
      * </p>
+     *
      * @param other the point to subtract
      * @return the vector from {@code other} to this point
      * @throws IllegalArgumentException if the result is the zero vector
@@ -49,6 +56,7 @@ public class Point {
 
     /**
      * Translates this point by a vector.
+     *
      * @param vector the vector to add
      * @return a new point obtained by moving this point by the given vector
      */
@@ -58,6 +66,7 @@ public class Point {
 
     /**
      * Calculates the squared distance between this point and another point.
+     *
      * @param other the other point
      * @return the squared distance between the two points
      */
@@ -70,6 +79,7 @@ public class Point {
 
     /**
      * Calculates the distance between this point and another point.
+     *
      * @param other the other point
      * @return the distance between the two points
      */
