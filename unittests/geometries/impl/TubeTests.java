@@ -7,15 +7,18 @@ import primitives.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for class {@link Tube}.
  * The tests verify:
  * <ul>
+ * <li>{@link Tube#Tube(double, Ray)}</li>
  * <li>{@link Tube#getNormal(Point)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
+ *  * @author Ambash and Elyasaf
  */
 class TubeTests {
     /**
@@ -46,6 +49,14 @@ class TubeTests {
     private static final double DELTA = 1e-6;
 
     /**
+     * Error message for wrong tube construction
+     */
+    private static final String ERROR_CONSTRUCTOR = "Failed constructing a correct tube";
+    /**
+     * Error message for non-positive tube radius
+     */
+    private static final String ERROR_RADIUS = "Constructed a tube with a non-positive radius";
+    /**
      * Error message for wrong getNormal execution
      */
     private static final String ERROR_GET_NORMAL = "getNormal() threw unexpected exception";
@@ -65,6 +76,27 @@ class TubeTests {
      * Error message for wrong boundary tube normal direction
      */
     private static final String ERROR_NORMAL_DIRECTION3 = "Tube normal has wrong direction for the boundary point";
+
+    /**
+     * Test method for {@link Tube#Tube(double, Ray)}.
+     * Verifies correct and incorrect tube constructions.
+     */
+    @Test
+    void testConstructor() {
+
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Correct tube with positive radius
+        assertDoesNotThrow(() -> new Tube(1d, AXIS), ERROR_CONSTRUCTOR);
+
+        // =============== Boundary Values Tests ==================
+
+        // TC11: Zero radius
+        assertThrows(IllegalArgumentException.class, () -> new Tube(0d, AXIS), ERROR_RADIUS);
+
+        // TC12: Negative radius
+        assertThrows(IllegalArgumentException.class, () -> new Tube(-1d, AXIS), ERROR_RADIUS);
+    }
 
     /**
      * Test method for {@link Tube#getNormal(Point)}.

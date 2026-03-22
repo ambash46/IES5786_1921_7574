@@ -18,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
+ *  * @author Ambash and Elyasaf
  */
 class PlaneTests {
     /**

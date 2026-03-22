@@ -38,10 +38,19 @@ public final class Cylinder extends Tube {
             throw new IllegalArgumentException("Height must be positive");
     }
 
+    /**
+     * Returns the normal vector of the cylinder at the given point.
+     *
+     * @param point a point on the cylinder
+     * @return the normal vector at the given point
+     */
     @Override
     public Vector getNormal(Point point) {
         Point origin = _axis.origin();
         Vector direction = _axis.direction();
+        if (point.equals(origin))
+            return direction.scale(-1);
+
         double projection = direction.dotProduct(point.subtract(origin));
 
         if (isZero(projection)) {
@@ -52,9 +61,17 @@ public final class Cylinder extends Tube {
             return direction;
         }
 
+
         return super.getNormal(point);
     }
 
+    /**
+     * Compares this cylinder with another object.
+     *
+     * @param obj the object to compare with
+     * @return {@code true} if the other object is a cylinder with equal tube
+     * data and height
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -64,11 +81,21 @@ public final class Cylinder extends Tube {
         return isZero(other._height - _height);
     }
 
+    /**
+     * Returns a hash code for this cylinder.
+     *
+     * @return the hash code of the inherited tube data and height
+     */
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), _height);
     }
 
+    /**
+     * Returns a string representation of this cylinder.
+     *
+     * @return the cylinder axis, radius and height
+     */
     @Override
     public String toString() {
         return "Cylinder{axis=" + _axis + ", radius=" + _radius + ", height=" + _height + "}";

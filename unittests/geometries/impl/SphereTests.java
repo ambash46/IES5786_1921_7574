@@ -6,15 +6,18 @@ import primitives.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for class {@link Sphere}.
  * The tests verify:
  * <ul>
+ * <li>{@link Sphere#Sphere(Point, double)}</li>
  * <li>{@link Sphere#getNormal(Point)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
+ *  * @author Ambash and Elyasaf
  */
 class SphereTests {
     /**
@@ -37,6 +40,14 @@ class SphereTests {
     private static final double DELTA = 1e-6;
 
     /**
+     * Error message for wrong sphere construction
+     */
+    private static final String ERROR_CONSTRUCTOR = "Failed constructing a correct sphere";
+    /**
+     * Error message for non-positive sphere radius
+     */
+    private static final String ERROR_RADIUS = "Constructed a sphere with a non-positive radius";
+    /**
      * Error message for wrong getNormal execution
      */
     private static final String ERROR_GET_NORMAL = "getNormal() threw unexpected exception";
@@ -48,6 +59,27 @@ class SphereTests {
      * Error message for wrong sphere normal direction
      */
     private static final String ERROR_NORMAL_DIRECTION = "Sphere normal has wrong direction";
+
+    /**
+     * Test method for {@link Sphere#Sphere(Point, double)}.
+     * Verifies correct and incorrect sphere constructions.
+     */
+    @Test
+    void testConstructor() {
+
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Correct sphere with positive radius
+        assertDoesNotThrow(() -> new Sphere(CENTER, 1d), ERROR_CONSTRUCTOR);
+
+        // =============== Boundary Values Tests ==================
+
+        // TC11: Zero radius
+        assertThrows(IllegalArgumentException.class, () -> new Sphere(CENTER, 0d), ERROR_RADIUS);
+
+        // TC12: Negative radius
+        assertThrows(IllegalArgumentException.class, () -> new Sphere(CENTER, -1d), ERROR_RADIUS);
+    }
 
     /**
      * Test method for {@link Sphere#getNormal(Point)}.

@@ -7,15 +7,18 @@ import primitives.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for class {@link Cylinder}.
  * The tests verify:
  * <ul>
+ * <li>{@link Cylinder#Cylinder(double, Ray, double)}</li>
  * <li>{@link Cylinder#getNormal(Point)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
+ *  * @author Ambash and Elyasaf
  */
 class CylinderTests {
     /**
@@ -67,6 +70,18 @@ class CylinderTests {
     private static final double DELTA = 1e-6;
 
     /**
+     * Error message for wrong cylinder construction
+     */
+    private static final String ERROR_CONSTRUCTOR = "Failed constructing a correct cylinder";
+    /**
+     * Error message for non-positive cylinder radius
+     */
+    private static final String ERROR_RADIUS = "Constructed a cylinder with a non-positive radius";
+    /**
+     * Error message for non-positive cylinder height
+     */
+    private static final String ERROR_HEIGHT = "Constructed a cylinder with a non-positive height";
+    /**
      * Error message for wrong getNormal execution
      */
     private static final String ERROR_GET_NORMAL = "getNormal() threw unexpected exception";
@@ -102,6 +117,33 @@ class CylinderTests {
      * Error message for wrong seventh cylinder normal direction
      */
     private static final String ERROR_NORMAL_DIRECTION7 = "Cylinder normal has wrong direction for the seventh point";
+
+    /**
+     * Test method for {@link Cylinder#Cylinder(double, Ray, double)}.
+     * Verifies correct and incorrect cylinder constructions.
+     */
+    @Test
+    void testConstructor() {
+
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Correct cylinder with positive radius and height
+        assertDoesNotThrow(() -> new Cylinder(1d, AXIS, 2d), ERROR_CONSTRUCTOR);
+
+        // =============== Boundary Values Tests ==================
+
+        // TC11: Zero radius
+        assertThrows(IllegalArgumentException.class, () -> new Cylinder(0d, AXIS, 2d), ERROR_RADIUS);
+
+        // TC12: Negative radius
+        assertThrows(IllegalArgumentException.class, () -> new Cylinder(-1d, AXIS, 2d), ERROR_RADIUS);
+
+        // TC13: Zero height
+        assertThrows(IllegalArgumentException.class, () -> new Cylinder(1d, AXIS, 0d), ERROR_HEIGHT);
+
+        // TC14: Negative height
+        assertThrows(IllegalArgumentException.class, () -> new Cylinder(1d, AXIS, -2d), ERROR_HEIGHT);
+    }
 
     /**
      * Test method for {@link Cylinder#getNormal(Point)}.

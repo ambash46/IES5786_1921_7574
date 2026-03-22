@@ -44,6 +44,13 @@ public final class Sphere extends RadialGeometry {
         return point.subtract(_center).normalize();
     }
 
+    /**
+     * Compares this sphere with another object.
+     *
+     * @param obj the object to compare with
+     * @return {@code true} if the other object is a sphere with equal center
+     * and radius
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -53,11 +60,21 @@ public final class Sphere extends RadialGeometry {
                 && Objects.equals(_center, other._center);
     }
 
+    /**
+     * Returns a hash code for this sphere.
+     *
+     * @return the hash code of the center and radius
+     */
     @Override
     public int hashCode() {
         return Objects.hash(_center, _radius);
     }
 
+    /**
+     * Returns a string representation of this sphere.
+     *
+     * @return the sphere center and radius
+     */
     @Override
     public String toString() {
         return "Sphere{center=" + _center + ", radius=" + _radius + "}";

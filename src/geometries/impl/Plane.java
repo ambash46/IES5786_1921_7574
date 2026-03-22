@@ -60,6 +60,13 @@ public final class Plane extends Geometry {
         return _normal;
     }
 
+    /**
+     * Compares this plane with another object.
+     *
+     * @param obj the object to compare with
+     * @return {@code true} if the other object is a plane with equal point and
+     * normal
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -69,11 +76,21 @@ public final class Plane extends Geometry {
                 && Objects.equals(_normal, other._normal);
     }
 
+    /**
+     * Returns a hash code for this plane.
+     *
+     * @return the hash code of the defining point and normal
+     */
     @Override
     public int hashCode() {
         return Objects.hash(_point, _normal);
     }
 
+    /**
+     * Returns a string representation of this plane.
+     *
+     * @return the plane point and normal
+     */
     @Override
     public String toString() {
         return "Plane{point=" + _point + ", normal=" + _normal + "}";

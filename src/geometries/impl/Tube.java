@@ -49,6 +49,13 @@ public class Tube extends RadialGeometry {
         return point.subtract(axisPoint).normalize();
     }
 
+    /**
+     * Compares this tube with another object.
+     *
+     * @param obj the object to compare with
+     * @return {@code true} if the other object is a tube with equal axis and
+     * radius
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -58,11 +65,21 @@ public class Tube extends RadialGeometry {
                 && Objects.equals(_axis, other._axis);
     }
 
+    /**
+     * Returns a hash code for this tube.
+     *
+     * @return the hash code of the axis ray and radius
+     */
     @Override
     public int hashCode() {
         return Objects.hash(_axis, _radius);
     }
 
+    /**
+     * Returns a string representation of this tube.
+     *
+     * @return the tube axis and radius
+     */
     @Override
     public String toString() {
         return "Tube{axis=" + _axis + ", radius=" + _radius + "}";

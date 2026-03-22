@@ -50,6 +50,13 @@ public final class Ray {
         return _origin;
     }
 
+    /**
+     * Compares this ray with another object.
+     *
+     * @param obj the object to compare with
+     * @return {@code true} if the other object is a ray with equal origin and
+     * direction
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -59,11 +66,21 @@ public final class Ray {
                 && Objects.equals(_direction, other._direction);
     }
 
+    /**
+     * Returns a hash code for this ray.
+     *
+     * @return the hash code of the origin and direction
+     */
     @Override
     public int hashCode() {
         return Objects.hash(_origin, _direction);
     }
 
+    /**
+     * Returns a string representation of this ray.
+     *
+     * @return the ray origin and direction
+     */
     @Override
     public String toString() {
         return "Ray{origin=" + _origin + ", direction=" + _direction + "}";

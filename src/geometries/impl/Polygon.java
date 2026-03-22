@@ -88,6 +88,13 @@ public class Polygon extends Geometry {
         return _plane.getNormal(point);
     }
 
+    /**
+     * Compares this polygon with another object.
+     *
+     * @param obj the object to compare with
+     * @return {@code true} if the other object is a polygon with equal
+     * vertices, plane and size
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -98,11 +105,21 @@ public class Polygon extends Geometry {
                 && Objects.equals(_plane, other._plane);
     }
 
+    /**
+     * Returns a hash code for this polygon.
+     *
+     * @return the hash code of the vertices, supporting plane and size
+     */
     @Override
     public int hashCode() {
         return Objects.hash(_vertices, _plane, _size);
     }
 
+    /**
+     * Returns a string representation of this polygon.
+     *
+     * @return the polygon vertices
+     */
     @Override
     public String toString() {
         return "Polygon{vertices=" + _vertices + "}";

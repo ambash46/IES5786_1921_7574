@@ -87,11 +87,23 @@ public class Point {
         return Math.sqrt(distanceSquared(other));
     }
 
+    /**
+     * Returns a string representation of this point.
+     *
+     * @return the point coordinates as a string
+     */
     @Override
     public String toString() {
         return "" + _xyz;
     }
 
+    /**
+     * Compares this point with another object.
+     *
+     * @param obj the object to compare with
+     * @return {@code true} if the other object is a point with equal
+     * coordinates
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -99,6 +111,11 @@ public class Point {
         return _xyz.equals(((Point) obj)._xyz);
     }
 
+    /**
+     * Returns a hash code for this point.
+     *
+     * @return the hash code of the point coordinates
+     */
     @Override
     public int hashCode() {
         return _xyz.hashCode();
