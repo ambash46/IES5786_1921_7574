@@ -1,9 +1,14 @@
 package geometries.impl;
 
 import geometries.api.Geometry;
+import java.util.List;
 import java.util.Objects;
 import primitives.Point;
+import primitives.Ray;
 import primitives.Vector;
+
+import static primitives.Util.alignZero;
+import static primitives.Util.isZero;
 
 /**
  * Represents a plane in a three-dimensional Cartesian coordinate system.
@@ -58,6 +63,26 @@ public final class Plane extends Geometry {
     @Override
     public Vector getNormal(Point point) {
         return _normal;
+    }
+
+    /**
+     * Finds all intersection points between the plane and the given ray.
+     *
+     * @param ray the ray to intersect with
+     * @return the intersection points, or {@code null} if not implemented yet
+     */
+    @Override
+    public List<Point> findIntersections(Ray ray) {
+        Point p0 = ray.origin();
+        Vector v = ray.direction();
+
+        if (_point.equals(p0)) return null;
+
+        double nv = _normal.dotProduct(v);
+        if (isZero(nv)) return null;
+
+        double t = alignZero(_normal.dotProduct(_point.subtract(p0)) / nv);
+        return t <= 0 ? null : List.of(p0.add(v.scale(t)));
     }
 
     /**

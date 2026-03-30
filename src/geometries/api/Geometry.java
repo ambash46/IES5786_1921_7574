@@ -10,7 +10,7 @@ import primitives.Vector;
  * </p>
  * @author Ambash and Elyasaf
  */
-public abstract class Geometry {
+public abstract class Geometry extends Intersectable {
     /**
      * Returns the normal vector to the geometry at a given point.
      * @param point a point on the geometry

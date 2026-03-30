@@ -1,6 +1,7 @@
 package geometries.impl;
 
 import geometries.api.RadialGeometry;
+import java.util.List;
 import java.util.Objects;
 import primitives.Point;
 import primitives.Ray;
@@ -47,6 +48,17 @@ public class Tube extends RadialGeometry {
         double projection = direction.dotProduct(point.subtract(origin));
         Point axisPoint = isZero(projection) ? origin : origin.add(direction.scale(projection));
         return point.subtract(axisPoint).normalize();
+    }
+
+    /**
+     * Finds all intersection points between the tube and the given ray.
+     *
+     * @param ray the ray to intersect with
+     * @return the intersection points, or {@code null} if not implemented yet
+     */
+    @Override
+    public List<Point> findIntersections(Ray ray) {
+        return null;
     }
 
     /**

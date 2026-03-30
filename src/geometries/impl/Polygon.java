@@ -89,6 +89,17 @@ public class Polygon extends Geometry {
     }
 
     /**
+     * Finds all intersection points between the polygon and the given ray.
+     *
+     * @param ray the ray to intersect with
+     * @return the intersection points, or {@code null} if not implemented yet
+     */
+    @Override
+    public List<Point> findIntersections(Ray ray) {
+        return null;
+    }
+
+    /**
      * Compares this polygon with another object.
      *
      * @param obj the object to compare with
