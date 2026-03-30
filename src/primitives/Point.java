@@ -18,7 +18,7 @@ public class Point {
     /**
      * The origin point (0,0,0).
      */
-    public static final Point ZERO = new Point(0, 0, 0);
+    public static final Point ZERO = new Point(Double3.ZERO);
 
     /**
      * Constructs a point from a coordinate triplet.

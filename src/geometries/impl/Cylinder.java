@@ -60,8 +60,6 @@ public final class Cylinder extends Tube {
         if (isZero(projection - _height)) {
             return direction;
         }
-
-
         return super.getNormal(point);
     }
 

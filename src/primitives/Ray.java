@@ -28,8 +28,8 @@ public final class Ray {
      * @param direction the direction of the ray
      */
     public Ray(Point origin, Vector direction) {
-        this._origin = origin;
-        this._direction = direction.normalize();
+        _origin = origin;
+        _direction = direction.normalize();
     }
 
     /**
