@@ -7,6 +7,7 @@ import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
 
+import static primitives.Util.alignZero;
 import static primitives.Util.isZero;
 
 /**
@@ -50,10 +51,35 @@ public final class Sphere extends RadialGeometry {
      * Finds all intersection points between the sphere and the given ray.
      *
      * @param ray the ray to intersect with
-     * @return the intersection points, or {@code null} if not implemented yet
+     * @return the intersection points, or {@code null} if there is no intersection
      */
     @Override
     public List<Point> findIntersections(Ray ray) {
+        Point p0 = ray.origin();
+        Vector v = ray.direction();
+
+        if (_center.equals(p0)) {
+            return List.of(p0.add(v.scale(_radius)));
+        }
+
+        Vector u = _center.subtract(p0);
+        double tm = alignZero(v.dotProduct(u));
+        double dSquared = alignZero(u.lengthSquared() - tm * tm);
+        if (dSquared >= _radiusSquared) return null;
+
+        double th = Math.sqrt(_radiusSquared - dSquared);
+        double t1 = alignZero(tm - th);
+        double t2 = alignZero(tm + th);
+
+        if (t1 > 0 && t2 > 0) {
+            return List.of(p0.add(v.scale(t1)), p0.add(v.scale(t2)));
+        }
+        if (t1 > 0) {
+            return List.of(p0.add(v.scale(t1)));
+        }
+        if (t2 > 0) {
+            return List.of(p0.add(v.scale(t2)));
+        }
         return null;
     }
 

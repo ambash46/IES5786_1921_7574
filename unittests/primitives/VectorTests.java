@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for class {@link Vector}.
@@ -17,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <li>{@link Vector#scale(double)}</li>
  * <li>{@link Vector#dotProduct(Vector)}</li>
  * <li>{@link Vector#crossProduct(Vector)}</li>
+ * <li>{@link Vector#isParallel(Vector)}</li>
  * <li>{@link Vector#lengthSquared()}</li>
  * <li>{@link Vector#length()}</li>
  * <li>{@link Vector#normalize()}</li>
@@ -65,6 +68,10 @@ class VectorTests {
      * Error message for wrong cross product.
      */
     private static final String CROSS_PRODUCT_ERROR = "Vector.crossProduct() returned an unexpected vector";
+    /**
+     * Error message for wrong parallelism result.
+     */
+    private static final String PARALLEL_ERROR = "Vector.isParallel() returned an unexpected result";
     /**
      * Error message for wrong squared length.
      */
@@ -222,6 +229,26 @@ class VectorTests {
         // =============== Boundary Values Tests ==================
         // TC11: Cross product of parallel vectors
         assertThrows(IllegalArgumentException.class, () -> V1.crossProduct(V2), CROSS_PRODUCT_ERROR);
+    }
+
+    /**
+     * Test method for {@link Vector#isParallel(Vector)}.
+     */
+    @Test
+    void testIsParallel() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Vectors in the same direction
+        assertTrue(assertDoesNotThrow(() -> V1.isParallel(new Vector(2, 4, 6)), PARALLEL_ERROR), PARALLEL_ERROR);
+        // TC02: Vectors in opposite directions
+        assertTrue(assertDoesNotThrow(() -> V1.isParallel(V2), PARALLEL_ERROR), PARALLEL_ERROR);
+        // TC03: Non-parallel vectors
+        assertFalse(assertDoesNotThrow(() -> V1.isParallel(V3), PARALLEL_ERROR), PARALLEL_ERROR);
+
+        // =============== Boundary Values Tests ==================
+        // TC11: The exact same vector
+        assertTrue(assertDoesNotThrow(() -> V1.isParallel(V1), PARALLEL_ERROR), PARALLEL_ERROR);
+        // TC12: Orthogonal vectors
+        assertFalse(assertDoesNotThrow(() -> V1.isParallel(V3), PARALLEL_ERROR), PARALLEL_ERROR);
     }
 
     /**

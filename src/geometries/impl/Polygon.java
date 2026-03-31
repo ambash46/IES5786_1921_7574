@@ -91,12 +91,24 @@ public class Polygon extends Geometry {
 
     /**
      * Finds all intersection points between the polygon and the given ray.
+     * <p>
+     * The algorithm works in two stages.
+     * First, the ray is intersected with the polygon's supporting plane.
+     * If there is no plane intersection, there is no polygon intersection.
+     * Second, the candidate point is tested against every polygon edge:
+     * for a convex polygon, the cross products between each edge and the vector
+     * from that edge to the candidate point must all have the same orientation
+     * relative to the polygon normal.
+     * Points on edges, on vertices, or on edge extensions are rejected.
+     * </p>
      *
      * @param ray the ray to intersect with
-     * @return the intersection points, or {@code null} if not implemented yet
+     * @return a list containing the plane intersection point if it lies strictly
+     * inside the polygon, or {@code null} otherwise
      */
     @Override
     public List<Point> findIntersections(Ray ray) {
+        // Step 1: intersect with the infinite supporting plane.
         List<Point> planeIntersections = _plane.findIntersections(ray);
         if (planeIntersections == null) return null;
 
@@ -104,21 +116,22 @@ public class Polygon extends Geometry {
         Vector normal = _plane.getNormal(intersection);
         boolean positive = false;
 
+        // Step 2: verify that the candidate point stays on the same side of
+        // every directed edge. A sign flip means the point is outside.
         for (int i = 0; i < _size; i++) {
             Point current = _vertices.get(i);
             Point next = _vertices.get((i + 1) % _size);
 
+            // Exact vertex hits are considered boundary cases and are rejected.
             if (intersection.equals(current) || intersection.equals(next)) return null;
 
             Vector edge = next.subtract(current);
             Vector toIntersection = intersection.subtract(current);
+            // If the candidate lies on the edge line, the hit is on an edge or
+            // its extension, so it is not considered an interior intersection.
+            if (edge.isParallel(toIntersection)) return null;
 
-            double sign;
-            try {
-                sign = alignZero(edge.crossProduct(toIntersection).dotProduct(normal));
-            } catch (IllegalArgumentException ignore) {
-                return null;
-            }
+            double sign = alignZero(edge.crossProduct(toIntersection).dotProduct(normal));
 
             if (isZero(sign)) return null;
             if (i == 0) {

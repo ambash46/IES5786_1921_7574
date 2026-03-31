@@ -145,7 +145,8 @@ class PolygonTests {
                 new Point(1, 5, 13));
 
         Vector normal = new Vector(1, 2, -1);
-        Vector edge = new Vector(1, 0, 1);
+        Vector AB = new Vector(1, 0, 1);
+        Vector BC = new Vector(2, 3, 8);
         Vector regular = new Vector(1, 0, 0);
 
         Point inside = new Point(5, 4, 15);
@@ -229,81 +230,81 @@ class PolygonTests {
         // ============ Equivalence Partitions Tests ==============
 
         // TC16: Starts above the plane, projected line passes over the polygon (0 points)
-        assertNull(polygon.findIntersections(new Ray(overPolygonAbove, edge)),
+        assertNull(polygon.findIntersections(new Ray(overPolygonAbove, AB)),
                 ERROR_POLYGON);
 
         // TC17: Starts above the plane, projected line does not pass over the polygon (0 points)
-        assertNull(polygon.findIntersections(new Ray(outsideAbove, edge)),
+        assertNull(polygon.findIntersections(new Ray(outsideAbove, BC)),
                 ERROR_POLYGON);
 
         // TC18: Starts below the plane, projected line passes over the polygon (0 points)
-        assertNull(polygon.findIntersections(new Ray(overPolygonBelow, edge)),
+        assertNull(polygon.findIntersections(new Ray(overPolygonBelow, AB)),
                 ERROR_POLYGON);
 
         // TC19: Starts below the plane, projected line does not pass over the polygon (0 points)
-        assertNull(polygon.findIntersections(new Ray(outsideBelow, edge)),
+        assertNull(polygon.findIntersections(new Ray(outsideBelow, BC)),
                 ERROR_POLYGON);
 
         // =============== Boundary Values Tests ==================
 
         // TC20: Ray lies on an edge, start before the first vertex (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(1, 2, 7), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(1, 2, 7), AB)),
                 ERROR_POLYGON);
 
         // TC21: Ray lies on an edge, start on the first vertex (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(2, 2, 8), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(2, 2, 8), AB)),
                 ERROR_POLYGON);
 
         // TC22: Ray lies on an edge, start inside the edge segment (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(4, 2, 10), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(4, 2, 10), AB)),
                 ERROR_POLYGON);
 
         // TC23: Ray lies on an edge, start on the second vertex (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(7, 2, 13), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(7, 2, 13), AB)),
                 ERROR_POLYGON);
 
         // TC24: Ray lies on an edge, start after the second vertex (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(8, 2, 14), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(8, 2, 14), AB)),
                 ERROR_POLYGON);
 
         // TC25: Ray is tangent at a vertex, start before the tangent vertex (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(2, 8, 20), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(2, 8, 20), AB)),
                 ERROR_POLYGON);
 
         // TC26: Ray is tangent at a vertex, start on the tangent vertex (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(5, 8, 23), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(5, 8, 23), AB)),
                 ERROR_POLYGON);
 
         // TC27: Ray is tangent at a vertex, start after the tangent vertex (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(8, 8, 26), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(8, 8, 26), AB)),
                 ERROR_POLYGON);
 
         // TC28: Ray crosses the polygon, start before entering it (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(1, 4, 11), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(1, 4, 11), AB)),
                 ERROR_POLYGON);
 
         // TC29: Ray crosses the polygon, start on the first border (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(4d / 3d, 4, 34d / 3d), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(4d / 3d, 4, 34d / 3d), AB)),
                 ERROR_POLYGON);
 
         // TC30: Ray crosses the polygon, start inside the polygon (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(4, 4, 14), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(4, 4, 14), AB)),
                 ERROR_POLYGON);
 
         // TC31: Ray crosses the polygon, start on the second border (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(25d / 3d, 4, 55d / 3d), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(25d / 3d, 4, 55d / 3d), AB)),
                 ERROR_POLYGON);
 
         // TC32: Ray crosses the polygon, start after leaving it (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(9, 4, 19), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(9, 4, 19), AB)),
                 ERROR_POLYGON);
 
         // TC33: Ray stays outside the polygon entirely (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(1, 9, 21), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(1, 9, 21), new Vector(0, 1, 2))),
                 ERROR_POLYGON);
 
         // TC34: Ray is parallel to an edge and does not hit the polygon (0 points)
-        assertNull(polygon.findIntersections(new Ray(new Point(0, 1, 4), edge)),
+        assertNull(polygon.findIntersections(new Ray(new Point(0, 1, 4), AB)),
                 ERROR_POLYGON);
 
         // ============ Group 3: General ray ============

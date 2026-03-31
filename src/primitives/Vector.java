@@ -90,10 +90,27 @@ public final class Vector extends Point {
      * @throws IllegalArgumentException if the result is the zero vector
      */
     public Vector crossProduct(Vector other) {
+        if (isParallel(other)) {
+            throw new IllegalArgumentException("Cross product is undefined for parallel vectors");
+        }
         double x = this._xyz._d2() * other._xyz._d3() - this._xyz._d3() * other._xyz._d2();
         double y = this._xyz._d3() * other._xyz._d1() - this._xyz._d1() * other._xyz._d3();
         double z = this._xyz._d1() * other._xyz._d2() - this._xyz._d2() * other._xyz._d1();
         return new Vector(x, y, z);
+    }
+
+    /**
+     * Checks whether this vector is parallel to another vector.
+     * Parallel vectors may point in the same or in opposite directions.
+     *
+     * @param other the other vector
+     * @return {@code true} if the vectors are parallel, {@code false} otherwise
+     */
+    public boolean isParallel(Vector other) {
+        double x = this._xyz._d2() * other._xyz._d3() - this._xyz._d3() * other._xyz._d2();
+        double y = this._xyz._d3() * other._xyz._d1() - this._xyz._d1() * other._xyz._d3();
+        double z = this._xyz._d1() * other._xyz._d2() - this._xyz._d2() * other._xyz._d1();
+        return Util.isZero(x) && Util.isZero(y) && Util.isZero(z);
     }
 
     /**

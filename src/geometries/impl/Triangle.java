@@ -30,6 +30,14 @@ public final class Triangle extends Polygon {
 
     /**
      * Finds all intersection points between the triangle and the given ray.
+     * <p>
+     * The implementation uses the Moller-Trumbore barycentric test:
+     * first it builds two triangle edges from one reference vertex,
+     * then it computes the barycentric coordinates of the ray-plane hit.
+     * An intersection is accepted only when the ray reaches the triangle plane
+     * in front of the ray origin and the barycentric coordinates place the hit
+     * strictly inside the triangle, excluding edges and vertices.
+     * </p>
      *
      * @param ray the ray to intersect with
      * @return a list containing the single intersection point, or {@code null}
@@ -45,31 +53,32 @@ public final class Triangle extends Polygon {
         Vector edge2 = vertex2.subtract(vertex0);
         Vector direction = ray.direction();
 
-        Vector pVec;
-        try {
-            pVec = direction.crossProduct(edge2);
-        } catch (IllegalArgumentException ignore) {
-            return null;
-        }
+        // If the ray direction is parallel to one triangle edge in this setup,
+        // the determinant becomes zero and the ray cannot produce a valid
+        // interior hit in the Moller-Trumbore test.
+        if (direction.isParallel(edge2)) return null;
+        Vector pVec = direction.crossProduct(edge2);
         double determinant = alignZero(edge1.dotProduct(pVec));
         if (isZero(determinant)) return null;
 
         double inverseDeterminant = 1d / determinant;
         if (ray.origin().equals(vertex0)) return null;
 
+        // u is the first barycentric coordinate; values outside (0,1)
+        // place the hit outside the triangle or exactly on its boundary.
         Vector tVec = ray.origin().subtract(vertex0);
         double u = alignZero(tVec.dotProduct(pVec) * inverseDeterminant);
         if (u <= 0 || u >= 1) return null;
 
-        Vector qVec;
-        try {
-            qVec = tVec.crossProduct(edge1);
-        } catch (IllegalArgumentException ignore) {
-            return null;
-        }
+        // qVec helps compute the second barycentric coordinate v.
+        // Parallelism here means the candidate hit degenerates to an edge case.
+        if (tVec.isParallel(edge1)) return null;
+        Vector qVec = tVec.crossProduct(edge1);
         double v = alignZero(direction.dotProduct(qVec) * inverseDeterminant);
         if (v <= 0 || alignZero(u + v) >= 1) return null;
 
+        // t is the signed distance along the ray direction.
+        // Only positive t values represent intersections in front of the ray.
         double t = alignZero(edge2.dotProduct(qVec) * inverseDeterminant);
         return t <= 0 ? null : List.of(ray.origin().add(direction.scale(t)));
     }
