@@ -147,7 +147,7 @@ class PolygonTests {
         Vector normal = new Vector(1, 2, -1);
         Vector AB = new Vector(1, 0, 1);
         Vector BC = new Vector(2, 3, 8);
-        Vector regular = new Vector(1, 0, 0);
+        Vector regular = Vector.AXIS_X;
 
         Point inside = new Point(5, 4, 15);
         Point outside = new Point(10, 4, 20);

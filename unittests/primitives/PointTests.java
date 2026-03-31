@@ -105,7 +105,7 @@ class PointTests {
         // TC02: Subtracting a point with negative coordinates
         assertEquals(new Vector(3, 6, 9), assertDoesNotThrow(() -> P2.subtract(NEGATIVE_POINT), SUBTRACT_RESULT_ERROR), SUBTRACT_RESULT_ERROR);
         // TC03: Subtracting the origin from an axis point
-        assertEquals(new Vector(1, 0, 0), assertDoesNotThrow(() -> AXIS_POINT.subtract(Point.ZERO), SUBTRACT_RESULT_ERROR), SUBTRACT_RESULT_ERROR);
+        assertEquals(Vector.AXIS_X, assertDoesNotThrow(() -> AXIS_POINT.subtract(Point.ZERO), SUBTRACT_RESULT_ERROR), SUBTRACT_RESULT_ERROR);
 
         // =============== Boundary Values Tests ==================
         // TC11: Subtracting a point from itself

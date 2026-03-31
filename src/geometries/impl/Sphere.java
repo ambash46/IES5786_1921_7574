@@ -49,6 +49,22 @@ public final class Sphere extends RadialGeometry {
 
     /**
      * Finds all intersection points between the sphere and the given ray.
+     * <p>
+     * The method projects the vector from the ray origin to the sphere center
+     * onto the ray direction. This gives {@code tm}, the signed distance from
+     * the ray origin to the closest point on the ray to the center.
+     * From that projection we compute {@code d^2}, the squared distance from
+     * the center to the ray. If {@code d} is greater than or equal to the
+     * sphere radius, the ray misses the sphere or is tangent to it, and no
+     * intersection is returned.
+     * </p>
+     * <p>
+     * Otherwise, the half-chord length {@code th} is computed and the two
+     * candidate ray parameters are {@code t1 = tm - th} and
+     * {@code t2 = tm + th}. Only positive {@code t} values are accepted,
+     * because intersections behind the ray origin or exactly at the origin are
+     * not considered valid ray intersections.
+     * </p>
      *
      * @param ray the ray to intersect with
      * @return the intersection points, or {@code null} if there is no intersection
@@ -58,19 +74,25 @@ public final class Sphere extends RadialGeometry {
         Point p0 = ray.origin();
         Vector v = ray.direction();
 
+        // Special case: if the ray starts at the center, there is exactly one
+        // forward intersection at distance radius along the ray direction.
         if (_center.equals(p0)) {
             return List.of(p0.add(v.scale(_radius)));
         }
 
         Vector u = _center.subtract(p0);
+        // tm is the projection of the center vector on the ray direction.
         double tm = alignZero(v.dotProduct(u));
+        // d^2 is the squared distance from the sphere center to the ray.
         double dSquared = alignZero(u.lengthSquared() - tm * tm);
         if (dSquared >= _radiusSquared) return null;
 
+        // th is half the chord length inside the sphere.
         double th = Math.sqrt(_radiusSquared - dSquared);
         double t1 = alignZero(tm - th);
         double t2 = alignZero(tm + th);
 
+        // Keep only intersections that are strictly in front of the ray origin.
         if (t1 > 0 && t2 > 0) {
             return List.of(p0.add(v.scale(t1)), p0.add(v.scale(t2)));
         }
