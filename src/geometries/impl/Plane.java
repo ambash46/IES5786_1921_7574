@@ -69,7 +69,7 @@ public final class Plane extends Geometry {
      * Finds all intersection points between the plane and the given ray.
      *
      * @param ray the ray to intersect with
-     * @return the intersection points, or {@code null} if not implemented yet
+     * @return the intersection points, or {@code null}
      */
     @Override
     public List<Point> findIntersections(Ray ray) {
@@ -89,26 +89,27 @@ public final class Plane extends Geometry {
      * Compares this plane with another object.
      *
      * @param obj the object to compare with
-     * @return {@code true} if the other object is a plane with equal point and
-     * normal
+     * @return {@code true} if the other object represents the same geometric
+     * plane
      */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Plane other = (Plane) obj;
-        return Objects.equals(_point, other._point)
-                && Objects.equals(_normal, other._normal);
+        if (!_normal.isParallel(other._normal)) return false;
+        if (_point.equals(other._point)) return true;
+        return isZero(_normal.dotProduct(other._point.subtract(_point)));
     }
 
     /**
      * Returns a hash code for this plane.
      *
-     * @return the hash code of the defining point and normal
+     * @return the hash code of the geometric plane representation
      */
     @Override
     public int hashCode() {
-        return Objects.hash(_point, _normal);
+        return Objects.hash(_normal, _point);
     }
 
     /**
@@ -120,4 +121,6 @@ public final class Plane extends Geometry {
     public String toString() {
         return "Plane{point=" + _point + ", normal=" + _normal + "}";
     }
+
+
 }

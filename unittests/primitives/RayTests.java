@@ -34,7 +34,13 @@ class RayTests {
     /**
      * Error message for wrong ray direction.
      */
-    private static final String DIRECTION_ERROR = "Ray constructor stored an unexpected normalized direction";
+    private static final String DIRECTION_VALUE_ERROR =
+            "Ray constructor stored the wrong direction vector after normalization";
+    /**
+     * Error message for wrong ray direction normalization.
+     */
+    private static final String DIRECTION_NORMALIZATION_ERROR =
+            "Ray constructor should normalize the direction vector to unit length";
 
     /**
      * Origin point for ray constructor tests
@@ -52,16 +58,16 @@ class RayTests {
     void testConstructor() {
         // ============ Equivalence Partitions Tests ==============
         // TC01: Constructing a ray with a non-unit direction
-        Ray ray = assertDoesNotThrow(() -> new Ray(ORIGIN, DIAGONAL_DIRECTION), DIRECTION_ERROR);
+        Ray ray = assertDoesNotThrow(() -> new Ray(ORIGIN, DIAGONAL_DIRECTION), DIRECTION_VALUE_ERROR);
         assertEquals(ORIGIN, ray.origin(), ORIGIN_ERROR);
-        assertEquals(new Vector(0, 0.6, 0.8), ray.direction(), DIRECTION_ERROR);
-        assertEquals(1d, ray.direction().length(), DELTA, DIRECTION_ERROR);
+        assertEquals(new Vector(0, 0.6, 0.8), ray.direction(), DIRECTION_VALUE_ERROR);
+        assertEquals(1d, ray.direction().length(), DELTA, DIRECTION_NORMALIZATION_ERROR);
 
         // =============== Boundary Values Tests ==================
         // TC11: Constructing a ray with an already normalized direction
-        Ray axisRay = assertDoesNotThrow(() -> new Ray(Point.ZERO, Vector.AXIS_Z), DIRECTION_ERROR);
+        Ray axisRay = assertDoesNotThrow(() -> new Ray(Point.ZERO, Vector.AXIS_Z), DIRECTION_VALUE_ERROR);
         assertEquals(Point.ZERO, axisRay.origin(), ORIGIN_ERROR);
-        assertEquals(Vector.AXIS_Z, axisRay.direction(), DIRECTION_ERROR);
-        assertEquals(1d, axisRay.direction().length(), DELTA, DIRECTION_ERROR);
+        assertEquals(Vector.AXIS_Z, axisRay.direction(), DIRECTION_VALUE_ERROR);
+        assertEquals(1d, axisRay.direction().length(), DELTA, DIRECTION_NORMALIZATION_ERROR);
     }
 }

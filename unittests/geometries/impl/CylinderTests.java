@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
- *  * @author Ambash and Elyasaf
+ * @author Ambash and Elyasaf
  */
 class CylinderTests {
     /**
@@ -84,39 +84,46 @@ class CylinderTests {
     /**
      * Error message for wrong getNormal execution
      */
-    private static final String ERROR_GET_NORMAL = "getNormal() threw unexpected exception";
+    private static final String ERROR_GET_NORMAL = "Cylinder.getNormal() should not throw for valid points on the cylinder";
     /**
      * Error message for non-unit cylinder normal
      */
-    private static final String ERROR_NORMAL_LENGTH = "Cylinder normal is not a unit vector";
+    private static final String ERROR_NORMAL_LENGTH = "Cylinder.getNormal() should return a unit-length normal vector";
     /**
      * Error message for wrong first cylinder normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION1 = "Cylinder normal has wrong direction for the first point";
+    private static final String ERROR_NORMAL_DIRECTION1 =
+            "Cylinder.getNormal() returned the wrong normal on the curved surface";
     /**
      * Error message for wrong second cylinder normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION2 = "Cylinder normal has wrong direction for the second point";
+    private static final String ERROR_NORMAL_DIRECTION2 =
+            "Cylinder.getNormal() returned the wrong normal on the bottom base";
     /**
      * Error message for wrong third cylinder normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION3 = "Cylinder normal has wrong direction for the third point";
+    private static final String ERROR_NORMAL_DIRECTION3 =
+            "Cylinder.getNormal() returned the wrong normal on the top base";
     /**
      * Error message for wrong fourth cylinder normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION4 = "Cylinder normal has wrong direction for the fourth point";
+    private static final String ERROR_NORMAL_DIRECTION4 =
+            "Cylinder.getNormal() returned the wrong normal at the bottom rim";
     /**
      * Error message for wrong fifth cylinder normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION5 = "Cylinder normal has wrong direction for the fifth point";
+    private static final String ERROR_NORMAL_DIRECTION5 =
+            "Cylinder.getNormal() returned the wrong normal at the top rim";
     /**
      * Error message for wrong sixth cylinder normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION6 = "Cylinder normal has wrong direction for the sixth point";
+    private static final String ERROR_NORMAL_DIRECTION6 =
+            "Cylinder.getNormal() returned the wrong normal at the bottom-base center";
     /**
      * Error message for wrong seventh cylinder normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION7 = "Cylinder normal has wrong direction for the seventh point";
+    private static final String ERROR_NORMAL_DIRECTION7 =
+            "Cylinder.getNormal() returned the wrong normal at the top-base center";
 
     /**
      * Test method for {@link Cylinder#Cylinder(double, Ray, double)}.

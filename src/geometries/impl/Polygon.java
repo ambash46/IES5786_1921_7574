@@ -1,13 +1,14 @@
 package geometries.impl;
 
-import static primitives.Util.alignZero;
-import static primitives.Util.isZero;
-
+import geometries.api.Geometry;
 import java.util.List;
 import java.util.Objects;
+import primitives.Point;
+import primitives.Ray;
+import primitives.Vector;
 
-import geometries.api.Geometry;
-import primitives.*;
+import static primitives.Util.alignZero;
+import static primitives.Util.isZero;
 
 /**
  * Represents a convex polygon in a 3D Cartesian coordinate system.
@@ -149,22 +150,30 @@ public class Polygon extends Geometry {
      *
      * @param obj the object to compare with
      * @return {@code true} if the other object is a polygon with equal
-     * vertices, plane and size
+     * vertices and size
      */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Polygon other = (Polygon) obj;
-        return _size == other._size
-                && Objects.equals(_vertices, other._vertices)
-                && Objects.equals(_plane, other._plane);
+        if (_size != other._size) return false;
+
+        int startIndex = other._vertices.indexOf(_vertices.get(0));
+        if (startIndex < 0) return false;
+
+        for (int i = 0; i < _size; i++) {
+            if (!_vertices.get(i).equals(other._vertices.get((startIndex + i) % _size))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
      * Returns a hash code for this polygon.
      *
-     * @return the hash code of the vertices, supporting plane and size
+     * @return the hash code of the vertices and size
      */
     @Override
     public int hashCode() {

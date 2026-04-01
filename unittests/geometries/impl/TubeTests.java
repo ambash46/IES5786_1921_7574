@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
- *  * @author Ambash and Elyasaf
+ * @author Ambash and Elyasaf
  */
 class TubeTests {
     /**
@@ -59,23 +59,26 @@ class TubeTests {
     /**
      * Error message for wrong getNormal execution
      */
-    private static final String ERROR_GET_NORMAL = "getNormal() threw unexpected exception";
+    private static final String ERROR_GET_NORMAL = "Tube.getNormal() should not throw for valid points on the tube";
     /**
      * Error message for non-unit tube normal
      */
-    private static final String ERROR_NORMAL_LENGTH = "Tube normal is not a unit vector";
+    private static final String ERROR_NORMAL_LENGTH = "Tube.getNormal() should return a unit-length normal vector";
     /**
      * Error message for wrong first tube normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION1 = "Tube normal has wrong direction for the first point";
+    private static final String ERROR_NORMAL_DIRECTION1 =
+            "Tube.getNormal() returned the wrong normal for a side point opposite an interior axis point";
     /**
      * Error message for wrong second tube normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION2 = "Tube normal has wrong direction for the second point";
+    private static final String ERROR_NORMAL_DIRECTION2 =
+            "Tube.getNormal() returned the wrong normal for a second side point opposite an interior axis point";
     /**
      * Error message for wrong boundary tube normal direction
      */
-    private static final String ERROR_NORMAL_DIRECTION3 = "Tube normal has wrong direction for the boundary point";
+    private static final String ERROR_NORMAL_DIRECTION3 =
+            "Tube.getNormal() returned the wrong normal for the boundary point opposite the axis head";
 
     /**
      * Test method for {@link Tube#Tube(double, Ray)}.

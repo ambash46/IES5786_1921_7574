@@ -19,34 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
- *  * @author Ambash and Elyasaf
+ * @author Ambash and Elyasaf
  */
 class TriangleTests {
-    /**
-     * Applies an affine transform that maps the easy plane z=1
-     * to the general plane z=x+2y+1.
-     *
-     * @param x original x coordinate
-     * @param y original y coordinate
-     * @param z original z coordinate
-     * @return transformed point
-     */
-    private static Point p(double x, double y, double z) {
-        return new Point(x, y, z + x + 2 * y);
-    }
-
-    /**
-     * Applies the linear part of the affine transform used for test rays.
-     *
-     * @param x original x component
-     * @param y original y component
-     * @param z original z component
-     * @return transformed vector
-     */
-    private static Vector v(double x, double y, double z) {
-        return new Vector(x, y, z + x + 2 * y);
-    }
-
     /**
      * Default constructor to satisfy JavaDoc generator
      */
@@ -89,6 +64,142 @@ class TriangleTests {
      * Vertex C used in triangle intersection tests.
      */
     private static final Point TRIANGLE_C = new Point(4, 7, 19);
+    /**
+     * Point inside the triangle for intersection tests.
+     */
+    private static final Point INSIDE_POINT = new Point(4, 3, 11);
+    /**
+     * Point outside the triangle for intersection tests.
+     */
+    private static final Point OUTSIDE_POINT = new Point(8, 4, 17);
+    /**
+     * Point on a triangle edge for intersection tests.
+     */
+    private static final Point ON_EDGE_POINT = new Point(5, 2, 10);
+    /**
+     * Point on an extension of a triangle edge for intersection tests.
+     */
+    private static final Point ON_EDGE_EXTENSION_POINT = new Point(9, 2, 14);
+    /**
+     * Point on the AC edge before the first vertex.
+     */
+    private static final Point AC_BEFORE_FIRST_POINT = new Point(1, -0.5, 1);
+    /**
+     * Point on the AC edge inside the segment.
+     */
+    private static final Point AC_INSIDE_SEGMENT_POINT = new Point(3, 4.5, 13);
+    /**
+     * Point on the AC edge after the second vertex.
+     */
+    private static final Point AC_AFTER_SECOND_POINT = new Point(6, 12, 31);
+    /**
+     * Point before the tangent vertex along AB.
+     */
+    private static final Point TANGENT_BEFORE_VERTEX_POINT = new Point(2, 7, 17);
+    /**
+     * Point after the tangent vertex along AB.
+     */
+    private static final Point TANGENT_AFTER_VERTEX_POINT = new Point(9, 7, 24);
+    /**
+     * Point before entering the triangle along the crossing ray.
+     */
+    private static final Point CROSSING_BEFORE_ENTRY_POINT = new Point(4, 1, 7);
+    /**
+     * Point on the first border of the crossing ray.
+     */
+    private static final Point CROSSING_FIRST_BORDER_POINT = new Point(5, 2, 10);
+    /**
+     * Point inside the triangle along the crossing ray.
+     */
+    private static final Point CROSSING_INSIDE_POINT = new Point(6, 3, 13);
+    /**
+     * Point on the second border of the crossing ray.
+     */
+    private static final Point CROSSING_SECOND_BORDER_POINT = new Point(6 + 2d / 3, 3 + 2d / 3, 15);
+    /**
+     * Point after leaving the triangle along the crossing ray.
+     */
+    private static final Point CROSSING_AFTER_EXIT_POINT = new Point(8, 5, 19);
+    /**
+     * Point for a crossing ray that stays outside the triangle.
+     */
+    private static final Point CROSSING_OUTSIDE_POINT = new Point(10, 0, 10);
+    /**
+     * Point for a ray parallel to an edge and missing the triangle.
+     */
+    private static final Point PARALLEL_MISS_POINT = new Point(0, 0, 1);
+    /**
+     * Point above the plane with an inside projected hit for the general ray.
+     */
+    private static final Point GENERAL_ABOVE_INSIDE_POINT = new Point(6, 3, 9);
+    /**
+     * Point above the plane with an outside projected hit for the general ray.
+     */
+    private static final Point GENERAL_ABOVE_OUTSIDE_POINT = new Point(9, 4, 16);
+    /**
+     * Point above the plane with a projected hit on a triangle edge.
+     */
+    private static final Point GENERAL_ABOVE_EDGE_POINT = new Point(6, 2, 9);
+    /**
+     * Point above the plane with a projected hit on a triangle vertex.
+     */
+    private static final Point GENERAL_ABOVE_VERTEX_POINT = new Point(3, 2, 6);
+    /**
+     * Point above the plane with a projected hit on an edge extension.
+     */
+    private static final Point GENERAL_ABOVE_EDGE_EXTENSION_POINT = new Point(10, 2, 13);
+    /**
+     * Point below the plane with an outside projected hit for the general ray.
+     */
+    private static final Point GENERAL_BELOW_OUTSIDE_POINT = new Point(7, 4, 18);
+    /**
+     * Point below the plane with a projected hit on a triangle edge.
+     */
+    private static final Point GENERAL_BELOW_EDGE_POINT = new Point(4, 2, 11);
+    /**
+     * Point below the plane with a projected hit on a triangle vertex.
+     */
+    private static final Point GENERAL_BELOW_VERTEX_POINT = new Point(1, 2, 8);
+    /**
+     * Point below the plane with a projected hit on an edge extension.
+     */
+    private static final Point GENERAL_BELOW_EDGE_EXTENSION_POINT = new Point(8, 2, 15);
+    /**
+     * Normal direction used in triangle intersection tests.
+     */
+    private static final Vector INTERSECTION_NORMAL = new Vector(1, 2, -1);
+    /**
+     * Direction along the AB line used in triangle intersection tests.
+     */
+    private static final Vector AB_DIRECTION = new Vector(1, 0, 1);
+    /**
+     * Direction along the AC line used in triangle intersection tests.
+     */
+    private static final Vector AC_DIRECTION = new Vector(2, 5, 12);
+    /**
+     * General direction used in triangle intersection tests.
+     */
+    private static final Vector GENERAL_DIRECTION = new Vector(1, 0, -1);
+    /**
+     * Crossing direction used in triangle intersection tests.
+     */
+    private static final Vector CROSSING_DIRECTION = new Vector(1, 1, 3);
+    /**
+     * Point above the triangle plane over the inside point.
+     */
+    private static final Point ABOVE_INSIDE_POINT = INSIDE_POINT.add(INTERSECTION_NORMAL);
+    /**
+     * Point above the triangle plane over the edge extension point.
+     */
+    private static final Point ABOVE_EDGE_EXTENSION_POINT = ON_EDGE_EXTENSION_POINT.add(INTERSECTION_NORMAL);
+    /**
+     * Point below the triangle plane under the inside point.
+     */
+    private static final Point BELOW_INSIDE_POINT = INSIDE_POINT.add(INTERSECTION_NORMAL.scale(-1));
+    /**
+     * Point below the triangle plane under the edge extension point.
+     */
+    private static final Point BELOW_EDGE_EXTENSION_POINT = ON_EDGE_EXTENSION_POINT.add(INTERSECTION_NORMAL.scale(-1));
 
     /**
      * Delta value for accuracy when comparing double values.
@@ -98,35 +209,58 @@ class TriangleTests {
     /**
      * Error message for wrong triangle construction
      */
-    private static final String ERROR_CONSTRUCTOR = "Failed constructing a correct triangle";
+    private static final String ERROR_CONSTRUCTOR =
+            "Triangle constructor should accept three distinct non-collinear vertices";
     /**
      * Error message for duplicate points in triangle construction
      */
-    private static final String ERROR_DUPLICATE_POINTS = "Constructed a triangle with duplicate points";
+    private static final String ERROR_DUPLICATE_POINTS =
+            "Triangle constructor should reject duplicate vertices";
     /**
      * Error message for collinear points in triangle construction
      */
-    private static final String ERROR_COLLINEAR_POINTS = "Constructed a triangle with collinear points";
+    private static final String ERROR_COLLINEAR_POINTS =
+            "Triangle constructor should reject three collinear vertices";
     /**
      * Error message for wrong getNormal execution
      */
-    private static final String ERROR_GET_NORMAL = "getNormal() threw unexpected exception";
+    private static final String ERROR_GET_NORMAL =
+            "Triangle.getNormal() should not throw for a point on the triangle plane";
     /**
      * Error message for non-unit triangle normal
      */
-    private static final String ERROR_NORMAL_LENGTH = "Triangle normal is not a unit vector";
+    private static final String ERROR_NORMAL_LENGTH =
+            "Triangle.getNormal() should return a unit-length normal vector";
     /**
      * Error message for wrong orthogonality to the first edge
      */
-    private static final String ERROR_ORTHOGONAL_EDGE1 = "Triangle normal is not orthogonal to edge 1";
+    private static final String ERROR_ORTHOGONAL_EDGE1 =
+            "Triangle.getNormal() result is not orthogonal to edge POINT1->POINT2";
     /**
      * Error message for wrong orthogonality to the second edge
      */
-    private static final String ERROR_ORTHOGONAL_EDGE2 = "Triangle normal is not orthogonal to edge 2";
+    private static final String ERROR_ORTHOGONAL_EDGE2 =
+            "Triangle.getNormal() result is not orthogonal to edge POINT1->POINT3";
     /**
      * Error message for wrong triangle intersection result.
      */
-    private static final String ERROR_TRIANGLE_INTERSECTION = "Wrong triangle intersection result";
+    private static final String ERROR_TRIANGLE_INTERSECTION_PARALLEL =
+            "Triangle.findIntersections() returned an unexpected result for rays parallel to the triangle normal";
+    /**
+     * Error message for wrong triangle intersection result on plane-boundary cases.
+     */
+    private static final String ERROR_TRIANGLE_INTERSECTION_ON_PLANE =
+            "Triangle.findIntersections() returned an unexpected result for rays starting on the triangle plane";
+    /**
+     * Error message for wrong triangle intersection result for perpendicular rays.
+     */
+    private static final String ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR =
+            "Triangle.findIntersections() returned an unexpected result for rays perpendicular to the triangle normal";
+    /**
+     * Error message for wrong triangle intersection result for general rays.
+     */
+    private static final String ERROR_TRIANGLE_INTERSECTION_GENERAL =
+            "Triangle.findIntersections() returned an unexpected result for general triangle-ray cases";
 
     /**
      * Test method for {@link Triangle#Triangle(Point, Point, Point)}.
@@ -180,234 +314,217 @@ class TriangleTests {
     void testFindIntersections() {
         Triangle triangle = new Triangle(TRIANGLE_A, TRIANGLE_B, TRIANGLE_C);
 
-        Vector normal = new Vector(1, 2, -1);
-        Vector AB = new Vector(1, 0, 1);
-        Vector AC = new Vector(2, 5, 12);
-        Vector regular = v(1, 0, -1);
-        Vector on = new Vector(1, 1, 3);
-
-        Point inside = new Point(4, 3, 11);
-        Point outside = new Point(8, 4, 17);
-        Point onEdge = new Point(5, 2, 10);
-        Point onVertex = TRIANGLE_A;
-        Point onEdgeExtension = new Point(9, 2, 14);
-
-        Point overTriangleAbove = inside.add(normal);
-        Point outsideAbove = onEdgeExtension.add(normal);
-        Point overTriangleBelow = inside.add(normal.scale(-1));
-        Point outsideBelow = onEdgeExtension.add(normal.scale(-1));
-
         // ============ Group 1: Ray parallel to normal ============
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Starts above the plane, projected hit is on a triangle edge (0 points)
-        assertNull(triangle.findIntersections(new Ray(onEdge.add(normal), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ON_EDGE_POINT.add(INTERSECTION_NORMAL), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // TC02: Starts above the plane, projected hit is on a triangle vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(onVertex.add(normal), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(TRIANGLE_A.add(INTERSECTION_NORMAL), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // TC03: Starts above the plane, projected hit is inside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(inside.add(normal), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(INSIDE_POINT.add(INTERSECTION_NORMAL), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // TC04: Starts above the plane, projected hit is outside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(outside.add(normal), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(OUTSIDE_POINT.add(INTERSECTION_NORMAL), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // TC05: Starts above the plane, projected hit is on an edge extension (0 points)
-        assertNull(triangle.findIntersections(new Ray(onEdgeExtension.add(normal), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ON_EDGE_EXTENSION_POINT.add(INTERSECTION_NORMAL), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // TC06: Starts below the plane, projected hit is on a triangle edge (0 points)
-        assertNull(triangle.findIntersections(new Ray(onEdge.add(normal.scale(-1)), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ON_EDGE_POINT.add(INTERSECTION_NORMAL.scale(-1)), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // TC07: Starts below the plane, projected hit is on a triangle vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(onVertex.add(normal.scale(-1)), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(TRIANGLE_A.add(INTERSECTION_NORMAL.scale(-1)), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // TC08: Starts below the plane, projected hit is inside the triangle (1 point)
-        assertEquals(java.util.List.of(inside),
-                triangle.findIntersections(new Ray(inside.add(normal.scale(-1)), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertEquals(java.util.List.of(INSIDE_POINT),
+                triangle.findIntersections(new Ray(INSIDE_POINT.add(INTERSECTION_NORMAL.scale(-1)), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // TC09: Starts below the plane, projected hit is outside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(outside.add(normal.scale(-1)), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(OUTSIDE_POINT.add(INTERSECTION_NORMAL.scale(-1)), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // TC10: Starts below the plane, projected hit is on an edge extension (0 points)
-        assertNull(triangle.findIntersections(new Ray(onEdgeExtension.add(normal.scale(-1)), normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ON_EDGE_EXTENSION_POINT.add(INTERSECTION_NORMAL.scale(-1)), INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_PARALLEL);
 
         // =============== Boundary Values Tests ==================
 
         // TC11: Starts on the plane on a triangle edge (0 points)
-        assertNull(triangle.findIntersections(new Ray(onEdge, normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ON_EDGE_POINT, INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
 
         // TC12: Starts on the plane on a triangle vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(onVertex, normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(TRIANGLE_A, INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
 
         // TC13: Starts on the plane inside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(inside, normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(INSIDE_POINT, INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
 
         // TC14: Starts on the plane outside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(outside, normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(OUTSIDE_POINT, INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
 
         // TC15: Starts on the plane on an edge extension (0 points)
-        assertNull(triangle.findIntersections(new Ray(onEdgeExtension, normal)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ON_EDGE_EXTENSION_POINT, INTERSECTION_NORMAL)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
 
         // ============ Group 2: Ray perpendicular to normal ============
         // ============ Equivalence Partitions Tests ==============
 
         // TC16: Starts above the plane, projected line passes over the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(overTriangleAbove, AB)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ABOVE_INSIDE_POINT, AB_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC17: Starts above the plane, projected line does not pass over the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(outsideAbove, AB)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ABOVE_EDGE_EXTENSION_POINT, AB_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC18: Starts below the plane, projected line passes over the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(overTriangleBelow, AB)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(BELOW_INSIDE_POINT, AB_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC19: Starts below the plane, projected line does not pass over the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(outsideBelow, AB)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(BELOW_EDGE_EXTENSION_POINT, AB_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // =============== Boundary Values Tests ==================
 
         // TC20: Ray lies on an edge, start before the first vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(new Point(1, -0.5, 1), AC)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(AC_BEFORE_FIRST_POINT, AC_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC21: Ray lies on an edge, start on the first vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(new Point(2, 2, 7), AC)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(TRIANGLE_A, AC_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC22: Ray lies on an edge, start inside the edge segment (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(3, 4.5, 13), AC)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(AC_INSIDE_SEGMENT_POINT, AC_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC23: Ray lies on an edge, start on the second vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(4, 7, 19), AC)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(TRIANGLE_C, AC_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC24: Ray lies on an edge, start after the second vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(6, 12, 31), AC)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(AC_AFTER_SECOND_POINT, AC_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC25: Ray is tangent at a vertex, start before the tangent vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(2, 7, 17), AB)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(TANGENT_BEFORE_VERTEX_POINT, AB_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC26: Ray is tangent at a vertex, start on the tangent vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(4, 7, 19), AB)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(TRIANGLE_C, AB_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC27: Ray is tangent at a vertex, start after the tangent vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(9, 7, 24), AB)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(TANGENT_AFTER_VERTEX_POINT, AB_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 //
         // TC28: Ray crosses the triangle, start before entering it (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(4, 1, 7), on)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(CROSSING_BEFORE_ENTRY_POINT, CROSSING_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC29: Ray crosses the triangle, start on the first border (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(5, 2, 10), on)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(CROSSING_FIRST_BORDER_POINT, CROSSING_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC30: Ray crosses the triangle, start inside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(6, 3, 13), on)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(CROSSING_INSIDE_POINT, CROSSING_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC31: Ray crosses the triangle, start on the second border (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(6 + 2 / 3, 3 + 2 / 3, 15), on)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(CROSSING_SECOND_BORDER_POINT, CROSSING_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC32: Ray crosses the triangle, start after leaving it (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(8, 5, 19), on)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(CROSSING_AFTER_EXIT_POINT, CROSSING_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC33: Ray stays outside the triangle entirely (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(10, 0, 10), on)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(CROSSING_OUTSIDE_POINT, CROSSING_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC34: Ray is parallel to an edge and does not hit the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(0, 0, 1), AB)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(PARALLEL_MISS_POINT, AB_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // ============ Group 3: General ray ============
         // ============ Equivalence Partitions Tests ==============
 
         // TC35: Starts above the plane, projected hit is inside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(6, 3, 9), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(GENERAL_ABOVE_INSIDE_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC36: Starts above the plane, projected hit is outside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(9, 4, 16), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(GENERAL_ABOVE_OUTSIDE_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC37: Starts above the plane, projected hit is on a triangle edge (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(6, 2, 9), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(GENERAL_ABOVE_EDGE_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC38: Starts above the plane, projected hit is on a triangle vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(3, 2, 6), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(GENERAL_ABOVE_VERTEX_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC39: Starts above the plane, projected hit is on an edge extension (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(10, 2, 13), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(GENERAL_ABOVE_EDGE_EXTENSION_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC40: Starts below the plane, projected hit is inside the triangle (1 point)
-        assertEquals(java.util.List.of(inside),
-                triangle.findIntersections(new Ray(new Point(2, 3, 11), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertEquals(java.util.List.of(INSIDE_POINT),
+                triangle.findIntersections(new Ray(INSIDE_POINT.add(GENERAL_DIRECTION.scale(-1)), GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC41: Starts below the plane, projected hit is outside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(7, 4, 18), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(GENERAL_BELOW_OUTSIDE_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC42: Starts below the plane, projected hit is on a triangle edge (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(4, 2, 11), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(GENERAL_BELOW_EDGE_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC43: Starts below the plane, projected hit is on a triangle vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(1, 2, 8), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(GENERAL_BELOW_VERTEX_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // TC44: Starts below the plane, projected hit is on an edge extension (0 points)
-        assertNull(triangle.findIntersections(new Ray(p(8, 2, 15), regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(GENERAL_BELOW_EDGE_EXTENSION_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_GENERAL);
 
         // =============== Boundary Values Tests ==================
 
         // TC45: Starts on the plane inside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(inside, regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(INSIDE_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
 
         // TC46: Starts on the plane outside the triangle (0 points)
-        assertNull(triangle.findIntersections(new Ray(outside, regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(OUTSIDE_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
 
         // TC47: Starts on the plane on a triangle edge (0 points)
-        assertNull(triangle.findIntersections(new Ray(onEdge, regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ON_EDGE_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
 
         // TC48: Starts on the plane on a triangle vertex (0 points)
-        assertNull(triangle.findIntersections(new Ray(onVertex, regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(TRIANGLE_A, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
 
         // TC49: Starts on the plane on an edge extension (0 points)
-        assertNull(triangle.findIntersections(new Ray(onEdgeExtension, regular)),
-                ERROR_TRIANGLE_INTERSECTION);
+        assertNull(triangle.findIntersections(new Ray(ON_EDGE_EXTENSION_POINT, GENERAL_DIRECTION)),
+                ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
     }
 }

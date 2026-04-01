@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
- *  * @author Ambash and Elyasaf
+ * @author Ambash and Elyasaf
  */
 class PlaneTests {
     /**
@@ -179,6 +179,26 @@ class PlaneTests {
      */
     private static final Point BELOW_GENERAL_NON_REF_NEG = new Point(5, -2, -1);
     /**
+     * Positive normal direction used in plane intersection tests.
+     */
+    private static final Vector POSITIVE_NORMAL_DIRECTION = new Vector(2, 3, 4);
+    /**
+     * Negative normal direction used in plane intersection tests.
+     */
+    private static final Vector NEGATIVE_NORMAL_DIRECTION = new Vector(-2, -3, -4);
+    /**
+     * Direction perpendicular to the plane normal used in parallel-line tests.
+     */
+    private static final Vector PARALLEL_DIRECTION = new Vector(3, -2, 0);
+    /**
+     * General direction with positive normal component.
+     */
+    private static final Vector GENERAL_POSITIVE_DIRECTION = new Vector(5, 1, 4);
+    /**
+     * General direction with negative normal component.
+     */
+    private static final Vector GENERAL_NEGATIVE_DIRECTION = new Vector(1, -5, -4);
+    /**
      * Error message for wrong plane intersection result.
      */
     private static final String ERROR_PLANE_INTERSECTION = "Wrong plane intersection result";
@@ -282,86 +302,86 @@ class PlaneTests {
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Direction +normal, starts above the plane, line through reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_REF, new Vector(2, 3, 4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_REF, POSITIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC02: Direction +normal, starts above the plane, line not through reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_NON_REF, new Vector(2, 3, 4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_NON_REF, POSITIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC03: Direction +normal, starts below the plane, line through reference point (1 point)
         assertEquals(java.util.List.of(REF_POINT),
-                INTERSECTION_PLANE.findIntersections(new Ray(BELOW_REF, new Vector(2, 3, 4))),
+                INTERSECTION_PLANE.findIntersections(new Ray(BELOW_REF, POSITIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC04: Direction +normal, starts below the plane, line not through reference point (1 point)
         assertEquals(java.util.List.of(PLANE_POINT),
-                INTERSECTION_PLANE.findIntersections(new Ray(BELOW_NON_REF, new Vector(2, 3, 4))),
+                INTERSECTION_PLANE.findIntersections(new Ray(BELOW_NON_REF, POSITIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC05: Direction -normal, starts above the plane, line through reference point (1 point)
         assertEquals(java.util.List.of(REF_POINT),
-                INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_REF, new Vector(-2, -3, -4))),
+                INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_REF, NEGATIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC06: Direction -normal, starts above the plane, line not through reference point (1 point)
         assertEquals(java.util.List.of(PLANE_POINT),
-                INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_NON_REF_NEG, new Vector(-2, -3, -4))),
+                INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_NON_REF_NEG, NEGATIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC07: Direction -normal, starts below the plane, line through reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_REF, new Vector(-2, -3, -4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_REF, NEGATIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC08: Direction -normal, starts below the plane, line not through reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_NON_REF, new Vector(-2, -3, -4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_NON_REF, NEGATIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // =============== Boundary Values Tests ==================
 
         // TC09: Direction +normal, starts on the plane at the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, new Vector(2, 3, 4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, POSITIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC10: Direction +normal, starts on the plane away from the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, new Vector(2, 3, 4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, POSITIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC11: Direction -normal, starts on the plane at the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, new Vector(-2, -3, -4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, NEGATIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC12: Direction -normal, starts on the plane away from the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, new Vector(-2, -3, -4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, NEGATIVE_NORMAL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // ============ Group 2: Ray perpendicular to normal ============
         // ============ Equivalence Partitions Tests ==============
 
         // TC13: Starts above the plane, projected line passes through the plane area in a general case (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_PARALLEL_GENERAL, new Vector(3, -2, 0))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_PARALLEL_GENERAL, PARALLEL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC14: Starts below the plane, projected line passes through the plane area in a general case (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_PARALLEL_GENERAL, new Vector(3, -2, 0))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_PARALLEL_GENERAL, PARALLEL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // =============== Boundary Values Tests ==================
 
         // TC15: Starts on the plane, line passes the reference point, before it (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ON_PLANE_BEFORE_REF, new Vector(3, -2, 0))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ON_PLANE_BEFORE_REF, PARALLEL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC16: Starts on the plane, line passes the reference point, at it (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, new Vector(3, -2, 0))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, PARALLEL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC17: Starts on the plane, line passes the reference point, after it (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ON_PLANE_AFTER_REF, new Vector(3, -2, 0))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ON_PLANE_AFTER_REF, PARALLEL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC18: Starts on the plane, line does not pass the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, new Vector(3, -2, 0))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, PARALLEL_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // ============ Group 3: General ray ============
@@ -369,56 +389,56 @@ class PlaneTests {
 
         // TC19: Positive normal component, starts below, line passes the reference point, before it (1 point)
         assertEquals(java.util.List.of(REF_POINT),
-                INTERSECTION_PLANE.findIntersections(new Ray(BELOW_GENERAL_REF, new Vector(5, 1, 4))),
+                INTERSECTION_PLANE.findIntersections(new Ray(BELOW_GENERAL_REF, GENERAL_POSITIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC20: Positive normal component, starts below, line does not pass the reference point (1 point)
         assertEquals(java.util.List.of(PLANE_POINT),
-                INTERSECTION_PLANE.findIntersections(new Ray(BELOW_GENERAL_NON_REF, new Vector(5, 1, 4))),
+                INTERSECTION_PLANE.findIntersections(new Ray(BELOW_GENERAL_NON_REF, GENERAL_POSITIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC21: Positive normal component, starts above, line passes the reference point, after it (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_GENERAL_REF, new Vector(5, 1, 4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_GENERAL_REF, GENERAL_POSITIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC22: Positive normal component, starts above, line does not pass the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_GENERAL_NON_REF, new Vector(5, 1, 4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_GENERAL_NON_REF, GENERAL_POSITIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC23: Negative normal component, starts above, line passes the reference point, before it (1 point)
         assertEquals(java.util.List.of(REF_POINT),
-                INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_GENERAL_REF_NEG, new Vector(1, -5, -4))),
+                INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_GENERAL_REF_NEG, GENERAL_NEGATIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC24: Negative normal component, starts above, line does not pass the reference point (1 point)
         assertEquals(java.util.List.of(PLANE_POINT),
-                INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_GENERAL_NON_REF_NEG, new Vector(1, -5, -4))),
+                INTERSECTION_PLANE.findIntersections(new Ray(ABOVE_GENERAL_NON_REF_NEG, GENERAL_NEGATIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC25: Negative normal component, starts below, line passes the reference point, after it (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_GENERAL_REF_NEG, new Vector(1, -5, -4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_GENERAL_REF_NEG, GENERAL_NEGATIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC26: Negative normal component, starts below, line does not pass the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_GENERAL_NON_REF_NEG, new Vector(1, -5, -4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(BELOW_GENERAL_NON_REF_NEG, GENERAL_NEGATIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // =============== Boundary Values Tests ==================
 
         // TC27: Positive normal component, starts on the plane at the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, new Vector(5, 1, 4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, GENERAL_POSITIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC28: Positive normal component, starts on the plane away from the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, new Vector(5, 1, 4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, GENERAL_POSITIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC29: Negative normal component, starts on the plane at the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, new Vector(1, -5, -4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(REF_POINT, GENERAL_NEGATIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
 
         // TC30: Negative normal component, starts on the plane away from the reference point (0 points)
-        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, new Vector(1, -5, -4))),
+        assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, GENERAL_NEGATIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
     }
 }
