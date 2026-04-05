@@ -59,6 +59,12 @@ public class Polygon extends Geometry {
         _vertices = List.of(vertices);
         _size = vertices.length;
 
+        // Check for duplicate vertices
+        for (int i = 0; i < _size; i++)
+            for (int j = i + 1; j < _size; j++)
+                if (vertices[i].equals(vertices[j]))
+                    throw new IllegalArgumentException("Polygon vertices must be distinct (duplicate at indices " + i + " and " + j + ")");
+
         // Create the supporting plane using the first three vertices.
         // The plane stores the constant normal of the polygon.
         _plane = new Plane(vertices[0], vertices[1], vertices[2]);
