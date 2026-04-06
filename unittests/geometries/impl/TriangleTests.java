@@ -447,19 +447,19 @@ class TriangleTests {
 
         // TC31: Ray crosses the triangle, start on the second border (0 points)
         assertNull(triangle.findIntersections(new Ray(CROSSING_SECOND_BORDER_POINT, CROSSING_DIRECTION)),
-                ERROR_TRIANGLE_INTERSECTION_GENERAL);
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC32: Ray crosses the triangle, start after leaving it (0 points)
         assertNull(triangle.findIntersections(new Ray(CROSSING_AFTER_EXIT_POINT, CROSSING_DIRECTION)),
-                ERROR_TRIANGLE_INTERSECTION_GENERAL);
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC33: Ray stays outside the triangle entirely (0 points)
         assertNull(triangle.findIntersections(new Ray(CROSSING_OUTSIDE_POINT, CROSSING_DIRECTION)),
-                ERROR_TRIANGLE_INTERSECTION_GENERAL);
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // TC34: Ray is parallel to an edge and does not hit the triangle (0 points)
         assertNull(triangle.findIntersections(new Ray(PARALLEL_MISS_POINT, AB_DIRECTION)),
-                ERROR_TRIANGLE_INTERSECTION_GENERAL);
+                ERROR_TRIANGLE_INTERSECTION_PERPENDICULAR);
 
         // ============ Group 3: General ray ============
         // ============ Equivalence Partitions Tests ==============

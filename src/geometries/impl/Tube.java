@@ -7,6 +7,7 @@ import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
 
+import static primitives.Util.alignZero;
 import static primitives.Util.isZero;
 
 /**
@@ -52,12 +53,61 @@ public class Tube extends RadialGeometry {
 
     /**
      * Finds all intersection points between the tube and the given ray.
+     * <p>
+     * The infinite tube is defined by all points whose perpendicular distance
+     * from the axis ray is equal to the tube radius. For the tested ray, the
+     * method removes the components parallel to the tube axis from both the ray
+     * direction and the vector from the axis origin to the ray origin. This
+     * produces a quadratic equation in the ray parameter {@code t}. Positive
+     * roots correspond to forward intersections with the tube surface.
+     * </p>
      *
      * @param ray the ray to intersect with
-     * @return the intersection points, or {@code null} if not implemented yet
+     * @return the intersection points, or {@code null} if there is no
+     * intersection
      */
     @Override
     public List<Point> findIntersections(Ray ray) {
+        Point p0 = ray.origin();
+        Point pa = _axis.origin();
+        Vector v = ray.direction();
+        Vector va = _axis.direction();
+
+        double vVa = v.dotProduct(va);
+
+        if (p0.equals(pa)) {
+            double aAtAxis = alignZero(v.dotProduct(v) - vVa * vVa);
+            if (isZero(aAtAxis)) return null;
+            double t = alignZero(_radius / Math.sqrt(aAtAxis));
+            return t <= 0 ? null : List.of(p0.add(v.scale(t)));
+        }
+
+        Vector deltaP = p0.subtract(pa);
+        double dpVa = deltaP.dotProduct(va);
+
+        double a = alignZero(v.dotProduct(v) - vVa * vVa);
+        if (isZero(a)) return null;
+
+        double b = alignZero(2d * (v.dotProduct(deltaP) - vVa * dpVa));
+        double c = alignZero(deltaP.dotProduct(deltaP) - dpVa * dpVa - _radiusSquared);
+
+        double discriminant = alignZero(b * b - 4d * a * c);
+        if (discriminant <= 0) return null;
+
+        double sqrtDiscriminant = Math.sqrt(discriminant);
+        double denominator = 2d * a;
+        double t1 = alignZero((-b - sqrtDiscriminant) / denominator);
+        double t2 = alignZero((-b + sqrtDiscriminant) / denominator);
+
+        if (t1 > 0 && t2 > 0) {
+            return List.of(p0.add(v.scale(t1)), p0.add(v.scale(t2)));
+        }
+        if (t1 > 0) {
+            return List.of(p0.add(v.scale(t1)));
+        }
+        if (t2 > 0) {
+            return List.of(p0.add(v.scale(t2)));
+        }
         return null;
     }
 

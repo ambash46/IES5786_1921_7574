@@ -85,7 +85,7 @@ public final class Sphere extends RadialGeometry {
         double tm = alignZero(v.dotProduct(u));
         // d^2 is the squared distance from the sphere center to the ray.
         double dSquared = alignZero(u.lengthSquared() - tm * tm);
-        if (dSquared >= _radiusSquared) return null;
+        if (dSquared > _radiusSquared || isZero(dSquared - _radiusSquared)) return null;
 
         // th is half the chord length inside the sphere.
         double th = Math.sqrt(_radiusSquared - dSquared);

@@ -72,7 +72,7 @@ public class Polygon extends Geometry {
         // Cross product of consecutive edges determines orientation.
         // All edge pairs must produce the same sign relative to the normal,
         // otherwise the polygon is concave or vertices are unordered.
-        boolean positive = edge1.crossProduct(edge2).dotProduct(n) > 0;
+        boolean positive = alignZero(edge1.crossProduct(edge2).dotProduct(n)) > 0;
         for (var i = 1; i < _size; ++i) {
             // Test that the point is in the same plane as calculated originally
             if (!isZero(vertices[i].subtract(vertices[0]).dotProduct(n)))
@@ -80,7 +80,7 @@ public class Polygon extends Geometry {
             // Test the consequent edges have
             edge1 = edge2;
             edge2 = vertices[i].subtract(vertices[i - 1]);
-            if (positive != (edge1.crossProduct(edge2).dotProduct(n) > 0))
+            if (positive != (alignZero(edge1.crossProduct(edge2).dotProduct(n)) > 0))
                 throw new IllegalArgumentException("All vertices must be ordered and the polygon must be convex");
         }
     }

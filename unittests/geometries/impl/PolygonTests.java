@@ -395,19 +395,19 @@ class PolygonTests {
 
         // TC31: Ray crosses the polygon, start on the second border (0 points)
         assertNull(polygon.findIntersections(new Ray(CROSSING_SECOND_BORDER_POINT, AB_DIRECTION)),
-                ERROR_POLYGON_INTERSECTION_GENERAL);
+                ERROR_POLYGON_INTERSECTION_PERPENDICULAR);
 
         // TC32: Ray crosses the polygon, start after leaving it (0 points)
         assertNull(polygon.findIntersections(new Ray(CROSSING_AFTER_EXIT_POINT, AB_DIRECTION)),
-                ERROR_POLYGON_INTERSECTION_GENERAL);
+                ERROR_POLYGON_INTERSECTION_PERPENDICULAR);
 
         // TC33: Ray stays outside the polygon entirely (0 points)
         assertNull(polygon.findIntersections(new Ray(CROSSING_OUTSIDE_POINT, OUTSIDE_CROSSING_DIRECTION)),
-                ERROR_POLYGON_INTERSECTION_GENERAL);
+                ERROR_POLYGON_INTERSECTION_PERPENDICULAR);
 
         // TC34: Ray is parallel to an edge and does not hit the polygon (0 points)
         assertNull(polygon.findIntersections(new Ray(PARALLEL_MISS_POINT, AB_DIRECTION)),
-                ERROR_POLYGON_INTERSECTION_GENERAL);
+                ERROR_POLYGON_INTERSECTION_PERPENDICULAR);
 
         // ============ Group 3: General ray ============
         // ============ Equivalence Partitions Tests ==============

@@ -28,9 +28,10 @@ public abstract class RadialGeometry extends Geometry {
      * @throws IllegalArgumentException if the radius is zero
      */
     public RadialGeometry(double radius) {
-        this._radius = radius;
-        this._radiusSquared = radius * radius;
         if (Util.isZero(radius) || radius < 0)
             throw new IllegalArgumentException("Radius must be positive");
+        this._radius = radius;
+        this._radiusSquared = radius * radius;
+
     }
 }
