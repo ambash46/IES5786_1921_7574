@@ -94,14 +94,7 @@ class TubeTests {
      * Tube radius used in the intersection tests.
      */
     private static final double INTERSECTION_RADIUS = 1d;
-    /**
-     * 1/sqrt(2) used by the general tube axis and several general rays.
-     */
-    private static final double INV_SQRT2 = 1d / Math.sqrt(2d);
-    /**
-     * sqrt(3)/2 used in offset intersection cases.
-     */
-    private static final double SQRT3_OVER_2 = Math.sqrt(3d) / 2d;
+
 
     /**
      * Verifies the exact list of intersection points up to a small tolerance.
@@ -230,9 +223,6 @@ class TubeTests {
         Vector direction = Vector.AXIS_X;
         Point onPlaneCenter = new Point(1, -2, 3);
         Point offPlaneCenter = onPlaneCenter.add(new Vector(0, 2, 2));
-        Vector halfX = Vector.AXIS_X.scale(1d / 2d);
-        Vector oneX = Vector.AXIS_X;
-        Vector twoX = Vector.AXIS_X.scale(2);
 
         // ============ Equivalence Partitions Tests ==============
 
@@ -286,7 +276,6 @@ class TubeTests {
     void testFindIntersectionsGroup3PerpendicularOffAxis() {
         Tube tube = new Tube(INTERSECTION_RADIUS, INTERSECTION_AXIS);
         Vector direction = Vector.AXIS_X;
-        Vector axisDirection = INTERSECTION_AXIS.direction();
         Point pointInsideCircle = new Point(1, -1.5, 2.5);
         Point pointInsideCircleAfter = pointInsideCircle.add(new Vector(0, 2, 2));
         Point first1 = new Point((2 - Math.sqrt(2d)) / 2, -1.5, 2.5);
@@ -361,10 +350,6 @@ class TubeTests {
     void testFindIntersectionsGroup5PerpendicularMiss() {
         Tube tube = new Tube(INTERSECTION_RADIUS, INTERSECTION_AXIS);
         Vector direction = Vector.AXIS_X;
-        Vector axisDirection = INTERSECTION_AXIS.direction();
-        Vector missOffset = new Vector(0, 2d * INV_SQRT2, -2d * INV_SQRT2);
-        Point onPlaneMiss = new Point(1, -2, 3).add(missOffset);
-        Point offPlaneMiss = onPlaneMiss.add(axisDirection.scale(2));
 
         // ============ Equivalence Partitions Tests ==============
 
@@ -607,7 +592,6 @@ class TubeTests {
     void testFindIntersectionsGroup10GeneralMiss() {
         Tube tube = new Tube(INTERSECTION_RADIUS, INTERSECTION_AXIS);
         Vector direction = Vector.AXIS_Z;
-        Vector axisDirection = INTERSECTION_AXIS.direction();
         Point onPlaneMiss = new Point(4, -4, 5);
         Point offPlaneMiss = onPlaneMiss.add(direction.scale(2));
 
