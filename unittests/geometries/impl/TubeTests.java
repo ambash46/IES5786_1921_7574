@@ -82,14 +82,52 @@ class TubeTests {
      */
     private static final String ERROR_NORMAL_DIRECTION3 = "Tube normal has wrong direction for the boundary point";
     /**
-     * Error message for wrong tube intersection result.
+     * Error message for wrong intersection result for a ray parallel to the axis.
      */
-    private static final String ERROR_INTERSECTION = "Wrong tube intersection result";
+    private static final String ERROR_INTERSECTION_PARALLEL =
+            "Tube.findIntersections() returned wrong result for a ray parallel to the axis";
+    /**
+     * Error message for wrong intersection result for a perpendicular ray through the axis.
+     */
+    private static final String ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS =
+            "Tube.findIntersections() returned wrong result for a perpendicular ray through the axis";
+    /**
+     * Error message for wrong intersection result for a perpendicular ray off the axis.
+     */
+    private static final String ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS =
+            "Tube.findIntersections() returned wrong result for a perpendicular ray off the axis";
+    /**
+     * Error message for wrong intersection result for a tangent ray.
+     */
+    private static final String ERROR_INTERSECTION_TANGENT =
+            "Tube.findIntersections() returned wrong result for a tangent ray";
+    /**
+     * Error message for wrong intersection result for a ray that misses the tube.
+     */
+    private static final String ERROR_INTERSECTION_MISS =
+            "Tube.findIntersections() returned wrong result for a ray that misses the tube";
+    /**
+     * Error message for wrong intersection result for a general ray.
+     */
+    private static final String ERROR_INTERSECTION_GENERAL =
+            "Tube.findIntersections() returned wrong result for a general ray";
 
     /**
      * Origin point of the tube axis used in the intersection tests.
      */
     private static final Point AXIS_HEAD = new Point(1, -2, 3);
+    /**
+     * Right surface point on the reference plane (axis + radius in the +X direction).
+     */
+    private static final Point SURFACE_RIGHT_ON_PLANE = new Point(2, -2, 3);
+    /**
+     * Left surface point on the reference plane (axis - radius in the +X direction).
+     */
+    private static final Point SURFACE_LEFT_ON_PLANE = new Point(0, -2, 3);
+    /**
+     * Tube radius used in the intersection tests.
+     */
+    private static final double INTERSECTION_RADIUS = 1d;
     /**
      * Direction of the tube axis used in the intersection tests.
      */
@@ -98,16 +136,10 @@ class TubeTests {
      * General tube axis used in the intersection tests.
      */
     private static final Ray INTERSECTION_AXIS = new Ray(AXIS_HEAD, AXIS_DIRECTION);
-
-    /**
-     * Tube radius used in the intersection tests.
-     */
-    private static final double INTERSECTION_RADIUS = 1d;
     /**
      * Tube used in the intersection tests.
      */
     private static final Tube INTERSECTION_TUBE = new Tube(INTERSECTION_RADIUS, INTERSECTION_AXIS);
-
 
     /**
      * Verifies the exact list of intersection points up to a small tolerance.
@@ -191,43 +223,42 @@ class TubeTests {
      */
     @Test
     void testFindIntersectionsGroup1ParallelToAxis() {
-        Vector direction = AXIS_DIRECTION;
-        Point onPlaneO = new Point(4, -2, 3);
-        Point onPlaneI = new Point(3d / 2d, -2, 3);
-        Point onPlaneM = new Point(2, -2, 3);
-        Point onPlaneX = AXIS_HEAD;
+        Vector direction = new Vector(0, 1, 1);
+        Point outsidePoint = new Point(4, -2, 3);
+        Point insidePoint = new Point(3d / 2d, -2, 3);
+        Point mantlePoint = SURFACE_RIGHT_ON_PLANE;
 
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Ray head outside the tube, before the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneO.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(outsidePoint.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_PARALLEL);
         // TC02: Ray head outside the tube, on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneO, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(outsidePoint, direction)), ERROR_INTERSECTION_PARALLEL);
         // TC03: Ray head outside the tube, after the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneO.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(outsidePoint.add(direction), direction)), ERROR_INTERSECTION_PARALLEL);
 
         // TC04: Ray head inside the tube, before the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneI.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(insidePoint.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_PARALLEL);
         // TC05: Ray head inside the tube, on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneI, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(insidePoint, direction)), ERROR_INTERSECTION_PARALLEL);
         // TC06: Ray head inside the tube, after the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneI.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(insidePoint.add(direction), direction)), ERROR_INTERSECTION_PARALLEL);
 
         // =============== Boundary Values Tests ==================
 
         // TC11: Ray head on the tube mantle, before the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneM.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(mantlePoint.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_PARALLEL);
         // TC12: Ray head on the tube mantle, on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneM, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(mantlePoint, direction)), ERROR_INTERSECTION_PARALLEL);
         // TC13: Ray head on the tube mantle, after the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneM.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(mantlePoint.add(direction), direction)), ERROR_INTERSECTION_PARALLEL);
 
         // TC14: Ray head on the tube axis, before the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneX.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_PARALLEL);
         // TC15: Ray head on the tube axis, on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneX, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD, direction)), ERROR_INTERSECTION_PARALLEL);
         // TC16: Ray head on the tube axis, after the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneX.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction), direction)), ERROR_INTERSECTION_PARALLEL);
     }
 
     /**
@@ -240,52 +271,51 @@ class TubeTests {
     @Test
     void testFindIntersectionsGroup2PerpendicularThroughAxis() {
         Vector direction = Vector.AXIS_X;
-        Point onPlaneCenter = AXIS_HEAD;
-        Point offPlaneCenter = AXIS_HEAD.add(AXIS_DIRECTION.scale(2 * Math.sqrt(2)));
+        Point axisOffPlane = AXIS_HEAD.add(AXIS_DIRECTION.scale(2 * Math.sqrt(2)));
 
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Ray head before first intersection, not on the reference plane (2 points)
         assertIntersectionsEquals(List.of(new Point(0, 0, 5), new Point(2, 0, 5)),
-                INTERSECTION_TUBE.findIntersections(new Ray(offPlaneCenter.add(direction.scale(-2)), direction)), ERROR_INTERSECTION);
+                INTERSECTION_TUBE.findIntersections(new Ray(axisOffPlane.add(direction.scale(-2)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC02: Ray head on first intersection, not on the reference plane (1 point)
         assertIntersectionsEquals(List.of(new Point(2, 0, 5)),
-                INTERSECTION_TUBE.findIntersections(new Ray(offPlaneCenter.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+                INTERSECTION_TUBE.findIntersections(new Ray(axisOffPlane.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC03: Ray head inside tube before center, not on the reference plane (1 point)
         assertIntersectionsEquals(List.of(new Point(2, 0, 5)),
-                INTERSECTION_TUBE.findIntersections(new Ray(offPlaneCenter.add(direction.scale(-0.5)), direction)), ERROR_INTERSECTION);
+                INTERSECTION_TUBE.findIntersections(new Ray(axisOffPlane.add(direction.scale(-0.5)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC04: Ray head at center, not on the reference plane (1 point)
         assertIntersectionsEquals(List.of(new Point(2, 0, 5)),
-                INTERSECTION_TUBE.findIntersections(new Ray(offPlaneCenter, direction)), ERROR_INTERSECTION);
+                INTERSECTION_TUBE.findIntersections(new Ray(axisOffPlane, direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC05: Ray head inside tube after center, not on the reference plane (1 point)
         assertIntersectionsEquals(List.of(new Point(2, 0, 5)),
-                INTERSECTION_TUBE.findIntersections(new Ray(offPlaneCenter.add(direction.scale(0.5)), direction)), ERROR_INTERSECTION);
+                INTERSECTION_TUBE.findIntersections(new Ray(axisOffPlane.add(direction.scale(0.5)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC06: Ray head on second intersection, not on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(offPlaneCenter.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(axisOffPlane.add(direction), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC07: Ray head after second intersection, not on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(offPlaneCenter.add(direction.scale(2)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(axisOffPlane.add(direction.scale(2)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
 
         // =============== Boundary Values Tests ==================
 
         // TC11: Ray head before first intersection, on the reference plane (2 points)
-        assertIntersectionsEquals(List.of(new Point(0, -2, 3), new Point(2, -2, 3)),
-                INTERSECTION_TUBE.findIntersections(new Ray(onPlaneCenter.add(direction.scale(-2)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(SURFACE_LEFT_ON_PLANE, SURFACE_RIGHT_ON_PLANE),
+                INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(-2)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC12: Ray head on first intersection, on the reference plane (1 point)
-        assertIntersectionsEquals(List.of(new Point(2, -2, 3)),
-                INTERSECTION_TUBE.findIntersections(new Ray(onPlaneCenter.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(SURFACE_RIGHT_ON_PLANE),
+                INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC13: Ray head inside tube before center, on the reference plane (1 point)
-        assertIntersectionsEquals(List.of(new Point(2, -2, 3)),
-                INTERSECTION_TUBE.findIntersections(new Ray(onPlaneCenter.add(direction.scale(-0.5)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(SURFACE_RIGHT_ON_PLANE),
+                INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(-0.5)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC14: Ray head at center, on the reference plane (1 point)
-        assertIntersectionsEquals(List.of(new Point(2, -2, 3)),
-                INTERSECTION_TUBE.findIntersections(new Ray(onPlaneCenter, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(SURFACE_RIGHT_ON_PLANE),
+                INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD, direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC15: Ray head inside tube after center, on the reference plane (1 point)
-        assertIntersectionsEquals(List.of(new Point(2, -2, 3)),
-                INTERSECTION_TUBE.findIntersections(new Ray(onPlaneCenter.add(direction.scale(0.5)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(SURFACE_RIGHT_ON_PLANE),
+                INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(0.5)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC16: Ray head on second intersection, on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneCenter.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC17: Ray head after second intersection, on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneCenter.add(direction.scale(2)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(2)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
     }
 
     /**
@@ -298,45 +328,44 @@ class TubeTests {
     @Test
     void testFindIntersectionsGroup3PerpendicularOffAxis() {
         Vector direction = Vector.AXIS_X;
-        Point pointInsideCircle = new Point(1, -1.5, 2.5);
-        Point pointInsideCircleAfter = pointInsideCircle.add(new Vector(0, 2, 2));
-        Point first1 = new Point((2 - Math.sqrt(2d)) / 2, -1.5, 2.5);
-        Point second1 = new Point((2 + Math.sqrt(2d)) / 2, -1.5, 2.5);
-        Point first2 = new Point((2 - Math.sqrt(2d)) / 2, 0.5, 4.5);
-        Point second2 = new Point((2 + Math.sqrt(2d)) / 2, 0.5, 4.5);
-
+        Point chordMidOnPlane = new Point(1, -1.5, 2.5);
+        Point chordMidOffPlane = chordMidOnPlane.add(new Vector(0, 2, 2));
+        Point firstOnPlane = new Point((2 - Math.sqrt(2d)) / 2, -1.5, 2.5);
+        Point secondOnPlane = new Point((2 + Math.sqrt(2d)) / 2, -1.5, 2.5);
+        Point firstOffPlane = new Point((2 - Math.sqrt(2d)) / 2, 0.5, 4.5);
+        Point secondOffPlane = new Point((2 + Math.sqrt(2d)) / 2, 0.5, 4.5);
 
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Ray head before first intersection, not on the reference plane (2 points)
-        assertIntersectionsEquals(List.of(first2, second2),
-                INTERSECTION_TUBE.findIntersections(new Ray(pointInsideCircleAfter.add(direction.scale(-2)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(firstOffPlane, secondOffPlane),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidOffPlane.add(direction.scale(-2)), direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
         // TC02: Ray head on first intersection, not on the reference plane (1 point)
-        assertIntersectionsEquals(List.of(second2),
-                INTERSECTION_TUBE.findIntersections(new Ray(first2, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondOffPlane),
+                INTERSECTION_TUBE.findIntersections(new Ray(firstOffPlane, direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
         // TC03: Ray head between intersections, not on the reference plane (1 point)
-        assertIntersectionsEquals(List.of(second2),
-                INTERSECTION_TUBE.findIntersections(new Ray(pointInsideCircleAfter, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondOffPlane),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidOffPlane, direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
         // TC04: Ray head on second intersection, not on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(second2, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondOffPlane, direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
         // TC05: Ray head after second intersection, not on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(pointInsideCircleAfter.add(direction.scale(2)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(chordMidOffPlane.add(direction.scale(2)), direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
 
         // =============== Boundary Values Tests ==================
 
         // TC11: Ray head before first intersection, on the reference plane (2 points)
-        assertIntersectionsEquals(List.of(first1, second1),
-                INTERSECTION_TUBE.findIntersections(new Ray(pointInsideCircle.add(direction.scale(-2)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(firstOnPlane, secondOnPlane),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidOnPlane.add(direction.scale(-2)), direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
         // TC12: Ray head on first intersection, on the reference plane (1 point)
-        assertIntersectionsEquals(List.of(second1),
-                INTERSECTION_TUBE.findIntersections(new Ray(first1, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondOnPlane),
+                INTERSECTION_TUBE.findIntersections(new Ray(firstOnPlane, direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
         // TC13: Ray head between intersections, on the reference plane (1 point)
-        assertIntersectionsEquals(List.of(second1),
-                INTERSECTION_TUBE.findIntersections(new Ray(pointInsideCircle, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondOnPlane),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidOnPlane, direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
         // TC14: Ray head on second intersection, on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(second1, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondOnPlane, direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
         // TC15: Ray head after second intersection, on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray((pointInsideCircle.add(direction.scale(2))), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray((chordMidOnPlane.add(direction.scale(2))), direction)), ERROR_INTERSECTION_PERPENDICULAR_OFF_AXIS);
     }
 
     /**
@@ -349,26 +378,26 @@ class TubeTests {
     @Test
     void testFindIntersectionsGroup4PerpendicularTangent() {
         Vector direction = Vector.AXIS_X;
-        Point onPlaneTangent = new Point(1, -2 + 1 / Math.sqrt(2), 3 - 1 / Math.sqrt(2));
-        Point offPlaneTangent = onPlaneTangent.add(AXIS_DIRECTION.scale(-2));
+        Point tangentOnPlane = new Point(1, -2 + 1 / Math.sqrt(2), 3 - 1 / Math.sqrt(2));
+        Point tangentOffPlane = tangentOnPlane.add(AXIS_DIRECTION.scale(-2));
 
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Tangent on reference plane, ray head before tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneTangent.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOnPlane.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_TANGENT);
         // TC02: Tangent on reference plane, ray head on tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneTangent, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOnPlane, direction)), ERROR_INTERSECTION_TANGENT);
         // TC03: Tangent on reference plane, ray head after tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneTangent.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOnPlane.add(direction), direction)), ERROR_INTERSECTION_TANGENT);
 
         // =============== Boundary Values Tests ==================
 
         // TC11: Tangent not on reference plane, ray head before tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(offPlaneTangent.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOffPlane.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_TANGENT);
         // TC12: Tangent not on reference plane, ray head on tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(offPlaneTangent, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOffPlane, direction)), ERROR_INTERSECTION_TANGENT);
         // TC13: Tangent not on reference plane, ray head after tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(offPlaneTangent.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOffPlane.add(direction), direction)), ERROR_INTERSECTION_TANGENT);
     }
 
     /**
@@ -384,12 +413,12 @@ class TubeTests {
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Ray misses the tube, ray head on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(new Point(-8, -3, 4), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(new Point(-8, -3, 4), direction)), ERROR_INTERSECTION_MISS);
 
         // =============== Boundary Values Tests ==================
 
         // TC11: Ray misses the tube, ray head not on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(new Point(1, 5, 7), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(new Point(1, 5, 7), direction)), ERROR_INTERSECTION_MISS);
     }
 
     /**
@@ -403,82 +432,82 @@ class TubeTests {
     @Test
     void testFindIntersectionsGroup6GeneralThroughAxis() {
         Vector direction = new Vector(1, 0.5, 0.5);
-        Point centerA = new Point(1, 8, 13);
-        Point centerB = new Point(1, -2.5, 2.5);
-        Point centerC = new Point(1, -7d / 4, 13d / 4);
-        Point firstA = new Point(0, 7.5, 12.5);
-        Point secondA = new Point(2, 8.5, 13.5);
-        Point firstB = new Point(0, -3, 2);
-        Point secondB = new Point(2, -2, 3);
-        Point firstC = new Point(0, -9d / 4, 11d / 4);
-        Point secondC = new Point(2, -5d / 4, 15d / 4);
+        Point axisPointA = new Point(1, 8, 13);
+        Point axisPointB = new Point(1, -2.5, 2.5);
+        Point axisPointC = new Point(1, -7d / 4, 13d / 4);
+        Point firstHitA = new Point(0, 7.5, 12.5);
+        Point secondHitA = new Point(2, 8.5, 13.5);
+        Point firstHitB = new Point(0, -3, 2);
+        Point secondHitB = SURFACE_RIGHT_ON_PLANE;
+        Point firstHitC = new Point(0, -9d / 4, 11d / 4);
+        Point secondHitC = new Point(2, -5d / 4, 15d / 4);
 
         // ============ Equivalence Partitions Tests ==============
 
         // EP: both intersections are before the reference plane
         // TC01: Ray head before first intersection, both intersections before reference plane (2 points)
-        assertIntersectionsEquals(List.of(firstA, secondA),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerA.add(direction.scale(-3)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(firstHitA, secondHitA),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointA.add(direction.scale(-3)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC02: Ray head on first intersection, both intersections before reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondA),
-                INTERSECTION_TUBE.findIntersections(new Ray(firstA, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitA),
+                INTERSECTION_TUBE.findIntersections(new Ray(firstHitA, direction)), ERROR_INTERSECTION_GENERAL);
         // TC03: Ray head between intersections before center, both intersections before reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondA),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerA.add(direction.scale(-1d / 2d)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitA),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointA.add(direction.scale(-1d / 2d)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC04: Ray head at center, both intersections before reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondA),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerA, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitA),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointA, direction)), ERROR_INTERSECTION_GENERAL);
         // TC05: Ray head between intersections after center, both intersections before reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondA),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerA.add(direction.scale(1d / 2d)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitA),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointA.add(direction.scale(1d / 2d)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC06: Ray head on second intersection, both intersections before reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondA, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondHitA, direction)), ERROR_INTERSECTION_GENERAL);
         // TC07: Ray head after second intersection, both intersections before reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(centerA.add(direction.scale(3)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(axisPointA.add(direction.scale(3)), direction)), ERROR_INTERSECTION_GENERAL);
 
         // EP: second intersection is on the reference plane
         // TC08: Ray head before first intersection, second intersection on reference plane (2 points)
-        assertIntersectionsEquals(List.of(firstB, secondB),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerB.add(direction.scale(-3)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(firstHitB, secondHitB),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointB.add(direction.scale(-3)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC09: Ray head on first intersection, second intersection on reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondB),
-                INTERSECTION_TUBE.findIntersections(new Ray(firstB, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitB),
+                INTERSECTION_TUBE.findIntersections(new Ray(firstHitB, direction)), ERROR_INTERSECTION_GENERAL);
         // TC10: Ray head between intersections before center, second intersection on reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondB),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerB.add(direction.scale(-1d / 2d)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitB),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointB.add(direction.scale(-1d / 2d)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC11: Ray head at center, second intersection on reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondB),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerB, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitB),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointB, direction)), ERROR_INTERSECTION_GENERAL);
         // TC12: Ray head between intersections after center, second intersection on reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondB),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerB.add(direction.scale(1d / 2d)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitB),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointB.add(direction.scale(1d / 2d)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC13: Ray head on second intersection, second intersection on reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondB, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondHitB, direction)), ERROR_INTERSECTION_GENERAL);
         // TC14: Ray head after second intersection, second intersection on reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(centerB.add(direction.scale(3)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(axisPointB.add(direction.scale(3)), direction)), ERROR_INTERSECTION_GENERAL);
 
         // =============== Boundary Values Tests ==================
 
         // BVA: reference plane lies between the two intersections
         // TC15: Ray head before first intersection, reference plane between intersections (2 points)
-        assertIntersectionsEquals(List.of(firstC, secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerC.add(direction.scale(-3)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(firstHitC, secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointC.add(direction.scale(-3)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC16: Ray head on first intersection, reference plane between intersections (1 point)
-        assertIntersectionsEquals(List.of(secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(firstC, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(firstHitC, direction)), ERROR_INTERSECTION_GENERAL);
         // TC17: Ray head between intersections before center, reference plane between intersections (1 point)
-        assertIntersectionsEquals(List.of(secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerC.add(direction.scale(-0.5)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointC.add(direction.scale(-0.5)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC18: Ray head at center on the reference plane, reference plane between intersections (1 point)
-        assertIntersectionsEquals(List.of(secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerC, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointC, direction)), ERROR_INTERSECTION_GENERAL);
         // TC19: Ray head between intersections after center, reference plane between intersections (1 point)
-        assertIntersectionsEquals(List.of(secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerC.add(direction.scale(0.5)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(axisPointC.add(direction.scale(0.5)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC20: Ray head on second intersection, reference plane between intersections (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondC, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondHitC, direction)), ERROR_INTERSECTION_GENERAL);
         // TC21: Ray head after second intersection, reference plane between intersections (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(centerC.add(direction.scale(3)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(axisPointC.add(direction.scale(3)), direction)), ERROR_INTERSECTION_GENERAL);
     }
 
     /**
@@ -492,70 +521,70 @@ class TubeTests {
     @Test
     void testFindIntersectionsGroup7GeneralOffAxis() {
         Vector direction = new Vector(1, 1.5, 0.5).normalize();
-        Point centerA = new Point(1, -0.5, 5.5);
-        Point centerB = new Point(4d / 3, -3, 8d / 3);
-        Point centerC = new Point(4d / 3, -2, 11d / 3);
-        Point firstA = new Point(2d / 3, -1, 16d / 3);
-        Point secondA = new Point(2, 1, 6);
-        Point firstB = new Point(2d / 3, -4, 7d / 3);
-        Point secondB = new Point(2, -2, 3);
-        Point firstC = new Point(2d / 3, -3, 10d / 3);
-        Point secondC = new Point(2, -1, 4);
+        Point chordMidA = new Point(1, -0.5, 5.5);
+        Point chordMidB = new Point(4d / 3, -3, 8d / 3);
+        Point chordMidC = new Point(4d / 3, -2, 11d / 3);
+        Point firstHitA = new Point(2d / 3, -1, 16d / 3);
+        Point secondHitA = new Point(2, 1, 6);
+        Point firstHitB = new Point(2d / 3, -4, 7d / 3);
+        Point secondHitB = SURFACE_RIGHT_ON_PLANE;
+        Point firstHitC = new Point(2d / 3, -3, 10d / 3);
+        Point secondHitC = new Point(2, -1, 4);
 
         // ============ Equivalence Partitions Tests ==============
 
         // EP: both intersections are before the reference plane
         // TC01: Ray head before first intersection, both intersections before reference plane (2 points)
-        assertIntersectionsEquals(List.of(firstA, secondA),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerA.add(direction.scale(-3)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(firstHitA, secondHitA),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidA.add(direction.scale(-3)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC02: Ray head on first intersection, both intersections before reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondA),
-                INTERSECTION_TUBE.findIntersections(new Ray(firstA, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitA),
+                INTERSECTION_TUBE.findIntersections(new Ray(firstHitA, direction)), ERROR_INTERSECTION_GENERAL);
         // TC03: Ray head between intersections, both intersections before reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondA),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerA, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitA),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidA, direction)), ERROR_INTERSECTION_GENERAL);
         // TC04: Ray head on second intersection, both intersections before reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondA, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondHitA, direction)), ERROR_INTERSECTION_GENERAL);
         // TC05: Ray head after second intersection, both intersections before reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(centerA.add(direction.scale(3)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(chordMidA.add(direction.scale(3)), direction)), ERROR_INTERSECTION_GENERAL);
 
         // EP: second intersection is on the reference plane
         // TC06: Ray head before first intersection, second intersection on reference plane (2 points)
-        assertIntersectionsEquals(List.of(firstB, secondB),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerB.add(direction.scale(-9)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(firstHitB, secondHitB),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidB.add(direction.scale(-9)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC07: Ray head on first intersection, second intersection on reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondB),
-                INTERSECTION_TUBE.findIntersections(new Ray(firstB, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitB),
+                INTERSECTION_TUBE.findIntersections(new Ray(firstHitB, direction)), ERROR_INTERSECTION_GENERAL);
         // TC08: Ray head between intersections, second intersection on reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondB),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerB, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitB),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidB, direction)), ERROR_INTERSECTION_GENERAL);
         // TC09: Ray head on second intersection, second intersection on reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondB, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondHitB, direction)), ERROR_INTERSECTION_GENERAL);
         // TC10: Ray head after second intersection, second intersection on reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(centerB.add(direction.scale(9)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(chordMidB.add(direction.scale(9)), direction)), ERROR_INTERSECTION_GENERAL);
 
         // =============== Boundary Values Tests ==================
 
         // BVA: reference plane lies between the two intersections
         // TC11: Ray head before first intersection, reference plane between intersections (2 points)
-        assertIntersectionsEquals(List.of(firstC, secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerC.add(direction.scale(-3)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(firstHitC, secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidC.add(direction.scale(-3)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC12: Ray head on first intersection, reference plane between intersections (1 point)
-        assertIntersectionsEquals(List.of(secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(firstC, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(firstHitC, direction)), ERROR_INTERSECTION_GENERAL);
         // TC13: Ray head between intersections, before the reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerC.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidC.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC14: Ray head between intersections, on the reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerC, direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidC, direction)), ERROR_INTERSECTION_GENERAL);
         // TC15: Ray head between intersections, after the reference plane (1 point)
-        assertIntersectionsEquals(List.of(secondC),
-                INTERSECTION_TUBE.findIntersections(new Ray(centerC.add(direction), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHitC),
+                INTERSECTION_TUBE.findIntersections(new Ray(chordMidC.add(direction), direction)), ERROR_INTERSECTION_GENERAL);
         // TC16: Ray head on second intersection, reference plane between intersections (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondC, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondHitC, direction)), ERROR_INTERSECTION_GENERAL);
         // TC17: Ray head after second intersection, reference plane between intersections (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(centerC.add(direction.scale(3)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(chordMidC.add(direction.scale(3)), direction)), ERROR_INTERSECTION_GENERAL);
     }
 
     /**
@@ -567,34 +596,33 @@ class TubeTests {
     @Test
     void testFindIntersectionsGroup8GeneralThroughAxisHead() {
         Vector direction = new Vector(1, 0.5, 0.5);
-        Point center = AXIS_HEAD;
-        Point first = new Point(0, -2.5, 2.5);
-        Point second = new Point(2, -1.5, 3.5);
+        Point firstHit = new Point(0, -2.5, 2.5);
+        Point secondHit = new Point(2, -1.5, 3.5);
 
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Ray head before first intersection, line through axis head (2 points)
-        assertIntersectionsEquals(List.of(first, second),
-                INTERSECTION_TUBE.findIntersections(new Ray(center.add(direction.scale(-3)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(firstHit, secondHit),
+                INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(-3)), direction)), ERROR_INTERSECTION_GENERAL);
         // TC02: Ray head on first intersection, line through axis head (1 point)
-        assertIntersectionsEquals(List.of(second),
-                INTERSECTION_TUBE.findIntersections(new Ray(first, direction)), ERROR_INTERSECTION);
-        // TC03: Ray head inside tube before center, line through axis head (1 point)
-        assertIntersectionsEquals(List.of(second),
-                INTERSECTION_TUBE.findIntersections(new Ray(center.add(direction.scale(-1d / 2d)), direction)), ERROR_INTERSECTION);
-        // TC04: Ray head at the axis head (center), line through axis head (1 point)
-        assertIntersectionsEquals(List.of(second),
-                INTERSECTION_TUBE.findIntersections(new Ray(center, direction)), ERROR_INTERSECTION);
-        // TC05: Ray head inside tube after center, line through axis head (1 point)
-        assertIntersectionsEquals(List.of(second),
-                INTERSECTION_TUBE.findIntersections(new Ray(center.add(direction.scale(1d / 2d)), direction)), ERROR_INTERSECTION);
+        assertIntersectionsEquals(List.of(secondHit),
+                INTERSECTION_TUBE.findIntersections(new Ray(firstHit, direction)), ERROR_INTERSECTION_GENERAL);
+        // TC03: Ray head inside tube before the axis head, line through axis head (1 point)
+        assertIntersectionsEquals(List.of(secondHit),
+                INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(-1d / 2d)), direction)), ERROR_INTERSECTION_GENERAL);
+        // TC04: Ray head at the axis head, line through axis head (1 point)
+        assertIntersectionsEquals(List.of(secondHit),
+                INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD, direction)), ERROR_INTERSECTION_GENERAL);
+        // TC05: Ray head inside tube after the axis head, line through axis head (1 point)
+        assertIntersectionsEquals(List.of(secondHit),
+                INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(1d / 2d)), direction)), ERROR_INTERSECTION_GENERAL);
 
         // =============== Boundary Values Tests ==================
 
         // TC11: Ray head on second intersection, line through axis head (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(second, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(secondHit, direction)), ERROR_INTERSECTION_GENERAL);
         // TC12: Ray head after second intersection, line through axis head (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(center.add(direction.scale(3)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(AXIS_HEAD.add(direction.scale(3)), direction)), ERROR_INTERSECTION_GENERAL);
     }
 
     /**
@@ -607,26 +635,26 @@ class TubeTests {
     @Test
     void testFindIntersectionsGroup9GeneralTangent() {
         Vector direction = Vector.AXIS_Z;
-        Point onPlaneTangent = new Point(0, -2, 3);
-        Point offPlaneTangent = onPlaneTangent.add(AXIS_DIRECTION.scale(-2));
+        Point tangentOnPlane = SURFACE_LEFT_ON_PLANE;
+        Point tangentOffPlane = tangentOnPlane.add(AXIS_DIRECTION.scale(-2));
 
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Tangent on reference plane, ray head before tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneTangent.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOnPlane.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_TANGENT);
         // TC02: Tangent on reference plane, ray head on tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneTangent, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOnPlane, direction)), ERROR_INTERSECTION_TANGENT);
         // TC03: Tangent on reference plane, ray head after tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneTangent.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOnPlane.add(direction), direction)), ERROR_INTERSECTION_TANGENT);
 
         // =============== Boundary Values Tests ==================
 
         // TC11: Tangent not on reference plane, ray head before tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(offPlaneTangent.add(direction.scale(-1)), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOffPlane.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_TANGENT);
         // TC12: Tangent not on reference plane, ray head on tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(offPlaneTangent, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOffPlane, direction)), ERROR_INTERSECTION_TANGENT);
         // TC13: Tangent not on reference plane, ray head after tangent point (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(offPlaneTangent.add(direction), direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(tangentOffPlane.add(direction), direction)), ERROR_INTERSECTION_TANGENT);
     }
 
     /**
@@ -638,17 +666,17 @@ class TubeTests {
     @Test
     void testFindIntersectionsGroup10GeneralMiss() {
         Vector direction = Vector.AXIS_Z;
-        Point onPlaneMiss = new Point(4, -4, 5);
-        Point offPlaneMiss = onPlaneMiss.add(direction.scale(2));
+        Point missOnPlane = new Point(4, -4, 5);
+        Point missOffPlane = missOnPlane.add(direction.scale(2));
 
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Ray misses the tube, ray head on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(onPlaneMiss, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(missOnPlane, direction)), ERROR_INTERSECTION_MISS);
 
         // =============== Boundary Values Tests ==================
 
         // TC11: Ray misses the tube, ray head not on the reference plane (0 points)
-        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(offPlaneMiss, direction)), ERROR_INTERSECTION);
+        assertNull(INTERSECTION_TUBE.findIntersections(new Ray(missOffPlane, direction)), ERROR_INTERSECTION_MISS);
     }
 }
