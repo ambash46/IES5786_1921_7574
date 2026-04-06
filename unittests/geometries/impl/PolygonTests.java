@@ -217,9 +217,13 @@ class PolygonTests {
         assertThrows(IllegalArgumentException.class, () -> new Polygon(POINT_Z, POINT_X, POINT_Y, POINT_Z),
                 "Constructed a polygon with duplicate first/last vertex");
 
-        // TC13: Co-located points
+        // TC13: Co-located adjacent points
         assertThrows(IllegalArgumentException.class, () -> new Polygon(POINT_Z, POINT_X, POINT_Y, POINT_Y),
-                "Constructed a polygon with co-located vertices");
+                "Constructed a polygon with co-located adjacent vertices");
+
+        // TC14: Co-located non-adjacent points (indices 0 and 2)
+        assertThrows(IllegalArgumentException.class, () -> new Polygon(POINT_Z, POINT_X, POINT_Z, POINT1),
+                "Constructed a polygon with co-located non-adjacent vertices");
     }
 
     /**
