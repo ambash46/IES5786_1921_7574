@@ -68,37 +68,73 @@ public class Tube extends RadialGeometry {
      */
     @Override
     public List<Point> findIntersections(Ray ray) {
+        // p0 = ray origin, pa = axis origin, v = ray direction (unit), va = axis direction (unit)
         Point p0 = ray.origin();
         Point pa = _axis.origin();
         Vector v = ray.direction();
         Vector va = _axis.direction();
 
+        // Scalar projection of the ray direction onto the axis direction.
+        // Used to strip the axis-parallel component from v.
         double vVa = v.dotProduct(va);
 
+        // --- Special case: ray origin coincides with the axis origin ---
+        // deltaP = p0 - pa would be the zero vector, which is not a valid Vector
+        // object. We handle this branch separately to avoid that construction.
         if (p0.equals(pa)) {
+            // |v_perp|² = |v|² - (v·va)²  (since v is a unit vector, |v|² = 1)
+            // This is the squared magnitude of the component of v that is
+            // perpendicular to the axis. If it is zero, v is parallel to the
+            // axis and the ray never reaches the tube surface.
             double aAtAxis = alignZero(v.dotProduct(v) - vVa * vVa);
             if (isZero(aAtAxis)) return null;
+
+            // The ray starts exactly on the axis and shoots outward. The tube
+            // surface is hit at the single positive parameter:
+            //   r² = (t·v_perp)²  =>  t = r / |v_perp|
             double t = alignZero(_radius / Math.sqrt(aAtAxis));
             return t <= 0 ? null : List.of(ray.getPoint(t));
         }
 
+        // --- General case ---
+        // ΔP = p0 - pa  (vector from axis origin to ray origin)
         Vector deltaP = p0.subtract(pa);
+
+        // Scalar projection of ΔP onto the axis direction.
+        // Used to strip the axis-parallel component from ΔP.
         double dpVa = deltaP.dotProduct(va);
 
+        // Coefficients of the quadratic  a·t² + b·t + c = 0
+        // that results from substituting the ray equation P(t) = p0 + t·v
+        // into the tube-surface condition |P_perp - axis_perp|² = r²,
+        // where "_perp" denotes the component perpendicular to the axis.
+        //
+        //   a = |v_perp|²    = v·v  - (v·va)²
+        //   b = 2·(v_perp · ΔP_perp)  = 2·[v·ΔP - (v·va)(ΔP·va)]
+        //   c = |ΔP_perp|² - r²       = ΔP·ΔP - (ΔP·va)² - r²
+
+        // a = |v_perp|²  (zero iff the ray is parallel to the axis)
         double a = alignZero(v.dotProduct(v) - vVa * vVa);
-        if (isZero(a)) return null;
+        if (isZero(a)) return null;   // ray is parallel to the axis → no intersection
 
         double b = alignZero(2d * (v.dotProduct(deltaP) - vVa * dpVa));
         double c = alignZero(deltaP.dotProduct(deltaP) - dpVa * dpVa - _radiusSquared);
 
+        // discriminant = b² - 4ac
+        // > 0  → two distinct intersections
+        // = 0  → tangent (one touching point, not counted as an intersection)
+        // < 0  → no real intersection
         double discriminant = alignZero(b * b - 4d * a * c);
         if (discriminant <= 0) return null;
 
         double sqrtDiscriminant = Math.sqrt(discriminant);
         double denominator = 2d * a;
+
+        // t1 ≤ t2 always (t1 uses the minus sign in the quadratic formula)
         double t1 = alignZero((-b - sqrtDiscriminant) / denominator);
         double t2 = alignZero((-b + sqrtDiscriminant) / denominator);
 
+        // Only positive t values represent intersections in front of the ray origin.
         if (t1 > 0 && t2 > 0) {
             return List.of(ray.getPoint(t1), ray.getPoint(t2));
         }
