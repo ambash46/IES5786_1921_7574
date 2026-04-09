@@ -79,7 +79,7 @@ public class Tube extends RadialGeometry {
             double aAtAxis = alignZero(v.dotProduct(v) - vVa * vVa);
             if (isZero(aAtAxis)) return null;
             double t = alignZero(_radius / Math.sqrt(aAtAxis));
-            return t <= 0 ? null : List.of(p0.add(v.scale(t)));
+            return t <= 0 ? null : List.of(ray.getPoint(t));
         }
 
         Vector deltaP = p0.subtract(pa);
@@ -100,13 +100,13 @@ public class Tube extends RadialGeometry {
         double t2 = alignZero((-b + sqrtDiscriminant) / denominator);
 
         if (t1 > 0 && t2 > 0) {
-            return List.of(p0.add(v.scale(t1)), p0.add(v.scale(t2)));
+            return List.of(ray.getPoint(t1), ray.getPoint(t2));
         }
         if (t1 > 0) {
-            return List.of(p0.add(v.scale(t1)));
+            return List.of(ray.getPoint(t1));
         }
         if (t2 > 0) {
-            return List.of(p0.add(v.scale(t2)));
+            return List.of(ray.getPoint(t2));
         }
         return null;
     }

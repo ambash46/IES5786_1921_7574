@@ -82,7 +82,7 @@ public final class Plane extends Geometry {
         if (isZero(nv)) return null;
 
         double t = alignZero(_normal.dotProduct(_point.subtract(p0)) / nv);
-        return t <= 0 ? null : List.of(p0.add(v.scale(t)));
+        return t <= 0 ? null : List.of(ray.getPoint(t));
     }
 
     /**

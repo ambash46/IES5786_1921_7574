@@ -2,6 +2,8 @@ package primitives;
 
 import java.util.Objects;
 
+import static primitives.Util.isZero;
+
 /**
  * Represents a ray in a three-dimensional Cartesian coordinate system.
  * <p>
@@ -48,6 +50,21 @@ public final class Ray {
      */
     public Point origin() {
         return _origin;
+    }
+
+    /**
+     * Returns the point on the ray at parameter {@code t}.
+     * <p>
+     * The point is computed as {@code origin + t * direction}.
+     * Only positive values of {@code t} represent points in front of the ray origin;
+     * this method accepts any value of {@code t} (positive, negative, or zero).
+     * </p>
+     *
+     * @param t the scalar parameter along the ray direction
+     * @return the point {@code origin + t * direction}
+     */
+    public Point getPoint(double t) {
+        return isZero(t) ? _origin : _origin.add(_direction.scale(t));
     }
 
     /**

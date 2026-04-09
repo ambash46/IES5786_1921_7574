@@ -80,7 +80,7 @@ public final class Triangle extends Polygon {
         // t is the signed distance along the ray direction.
         // Only positive t values represent intersections in front of the ray.
         double t = alignZero(edge2.dotProduct(qVec) * inverseDeterminant);
-        return t <= 0 ? null : List.of(ray.origin().add(direction.scale(t)));
+        return t <= 0 ? null : List.of(ray.getPoint(t));
     }
 
 }

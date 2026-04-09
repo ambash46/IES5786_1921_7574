@@ -175,7 +175,7 @@ public final class Cylinder extends Tube {
      * @return the point on the ray at parameter {@code t}
      */
     private static Point rayPoint(Ray ray, double t) {
-        return isZero(t) ? ray.origin() : ray.origin().add(ray.direction().scale(t));
+        return ray.getPoint(t);
     }
 
     /**
@@ -200,9 +200,7 @@ public final class Cylinder extends Tube {
      * @return the axis point at that projection
      */
     private Point axisPoint(double projection) {
-        return isZero(projection)
-                ? _axis.origin()
-                : _axis.origin().add(_axis.direction().scale(projection));
+        return _axis.getPoint(projection);
     }
 
     /**
