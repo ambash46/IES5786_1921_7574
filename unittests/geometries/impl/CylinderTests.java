@@ -133,6 +133,11 @@ class CylinderTests {
      */
     private static final String ERROR_INTERSECTION_PARALLEL =
             "Cylinder.findIntersections() returned wrong result for a ray parallel to the axis";
+    /**
+     * Error message for wrong intersection result for a ray that misses the cylinder.
+     */
+    private static final String ERROR_INTERSECTION_MISS =
+            "Cylinder.findIntersections() returned wrong result for a ray that misses the cylinder";
 
     /**
      * Direction of the cylinder axis used in the intersection tests.
@@ -329,5 +334,27 @@ class CylinderTests {
         assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(TOP_CAP_CENTER, direction)), ERROR_INTERSECTION_PARALLEL);
         // TC20: Ray head on the axis, after the top cap (0 points)
         assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(TOP_CAP_CENTER.add(direction.scale(5)), direction)), ERROR_INTERSECTION_PARALLEL);
+    }
+
+    /**
+     * Group 2: ray perpendicular to the cylinder axis, line does not intersect the cylinder.
+     * Three distinct reasons for missing:
+     * (TC01) the ray line crosses the infinite tube but both intersections lie before the bottom cap,
+     * (TC02) the ray line crosses the infinite tube but both intersections lie after the top cap,
+     * (TC03) the ray line misses the infinite tube altogether.
+     * Expected: always 0 intersection points.
+     */
+    @Test
+    void testFindIntersectionsGroup2PerpendicularMiss() {
+        Vector direction = Vector.AXIS_X;
+
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Ray line crosses the infinite tube, both intersections before the bottom cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(new Point(3, -1, -1), direction)), ERROR_INTERSECTION_MISS);
+        // TC02: Ray line crosses the infinite tube, both intersections after the top cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(new Point(3, 11, 15), direction)), ERROR_INTERSECTION_MISS);
+        // TC03: Ray line misses the infinite tube entirely (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(new Point(6, 5, 7), direction)), ERROR_INTERSECTION_MISS);
     }
 }
