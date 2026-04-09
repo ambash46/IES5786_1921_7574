@@ -1,5 +1,6 @@
 package geometries.impl;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import primitives.Point;
 import primitives.Ray;
@@ -7,6 +8,8 @@ import primitives.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -15,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <ul>
  * <li>{@link Cylinder#Cylinder(double, Ray, double)}</li>
  * <li>{@link Cylinder#getNormal(Point)}</li>
+ * <li>{@link Cylinder#findIntersections(Ray)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -124,6 +128,56 @@ class CylinderTests {
      */
     private static final String ERROR_NORMAL_DIRECTION7 =
             "Cylinder.getNormal() returned the wrong normal at the top-base center";
+    /**
+     * Error message for wrong intersection result for a ray parallel to the axis.
+     */
+    private static final String ERROR_INTERSECTION_PARALLEL =
+            "Cylinder.findIntersections() returned wrong result for a ray parallel to the axis";
+
+    /**
+     * Direction of the cylinder axis used in the intersection tests.
+     */
+    private static final Vector INTERSECTION_AXIS_DIRECTION = new Vector(0, 3, 4).normalize();
+    /**
+     * Cylinder axis used in the intersection tests.
+     */
+    private static final Ray INTERSECTION_AXIS = new Ray(new Point(1, 2, 3), INTERSECTION_AXIS_DIRECTION);
+    /**
+     * Cylinder radius used in the intersection tests.
+     */
+    private static final double INTERSECTION_RADIUS = 4d;
+    /**
+     * Cylinder height used in the intersection tests.
+     */
+    private static final double INTERSECTION_HEIGHT = 10d;
+    /**
+     * Cylinder used in the intersection tests.
+     */
+    private static final Cylinder INTERSECTION_CYLINDER =
+            new Cylinder(INTERSECTION_RADIUS, INTERSECTION_AXIS, INTERSECTION_HEIGHT);
+    /**
+     * Center of the bottom cap of the intersection cylinder.
+     */
+    private static final Point BOTTOM_CAP_CENTER = new Point(1, 2, 3);
+    /**
+     * Center of the top cap of the intersection cylinder.
+     */
+    private static final Point TOP_CAP_CENTER = new Point(1, 8, 11);
+
+    /**
+     * Verifies the exact list of intersection points up to a small tolerance.
+     *
+     * @param expected expected intersection points in ray order
+     * @param actual   actual intersection list
+     * @param message  assertion message
+     */
+    private static void assertIntersectionsEquals(List<Point> expected, List<Point> actual, String message) {
+        assertNotNull(actual, message);
+        assertEquals(expected.size(), actual.size(), message);
+        for (int i = 0; i < expected.size(); ++i) {
+            assertEquals(0d, expected.get(i).distance(actual.get(i)), DELTA, message);
+        }
+    }
 
     /**
      * Test method for {@link Cylinder#Cylinder(double, Ray, double)}.
@@ -204,5 +258,76 @@ class CylinderTests {
         result = CYLINDER.getNormal(POINT7);
         assertEquals(1d, result.length(), DELTA, ERROR_NORMAL_LENGTH);
         assertEquals(Vector.AXIS_Z, result, ERROR_NORMAL_DIRECTION7);
+    }
+
+    /**
+     * Group 1: ray parallel to the cylinder axis, same direction (+).
+     * A parallel ray never intersects the mantle. It can only enter or exit through
+     * the flat caps when the ray passes through the cylinder's interior cross-section.
+     * Four radial positions are tested: outside, on the mantle, inside (not on axis), on the axis.
+     * For each, the ray head is placed at five axial positions:
+     * before the bottom cap / on the bottom cap / between the caps / on the top cap / after the top cap.
+     */
+    @Test
+    void testFindIntersectionsGroup1ParallelToAxis() {
+        Vector direction   = INTERSECTION_AXIS_DIRECTION;
+        Point outsideBase  = new Point(7, 2, 3);   // distance 6 from axis > radius 4
+        Point mantleBase   = new Point(5, 2, 3);   // distance 4 from axis = radius
+        Point insideBase   = new Point(3, 2, 3);   // distance 2 from axis < radius
+        Point topCapInside = new Point(3, 8, 11);  // insideBase projected onto the top cap
+
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Ray head outside the cylinder, before the bottom cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(outsideBase.add(direction.scale(-5)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC02: Ray head outside the cylinder, on the bottom cap plane (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(outsideBase, direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC03: Ray head outside the cylinder, between the caps (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(outsideBase.add(direction.scale(5)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC04: Ray head outside the cylinder, on the top cap plane (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(outsideBase.add(direction.scale(10)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC05: Ray head outside the cylinder, after the top cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(outsideBase.add(direction.scale(15)), direction)), ERROR_INTERSECTION_PARALLEL);
+
+        // TC06: Ray head on the mantle, before the bottom cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(mantleBase.add(direction.scale(-5)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC07: Ray head on the mantle, on the bottom cap plane (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(mantleBase, direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC08: Ray head on the mantle, between the caps (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(mantleBase.add(direction.scale(5)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC09: Ray head on the mantle, on the top cap plane (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(mantleBase.add(direction.scale(10)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC10: Ray head on the mantle, after the top cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(mantleBase.add(direction.scale(15)), direction)), ERROR_INTERSECTION_PARALLEL);
+
+        // =============== Boundary Values Tests ==================
+
+        // TC11: Ray head inside the cylinder (not on axis), before the bottom cap (2 points)
+        assertIntersectionsEquals(List.of(insideBase, topCapInside),
+                INTERSECTION_CYLINDER.findIntersections(new Ray(insideBase.add(direction.scale(-5)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC12: Ray head inside the cylinder (not on axis), on the bottom cap (1 point)
+        assertIntersectionsEquals(List.of(topCapInside),
+                INTERSECTION_CYLINDER.findIntersections(new Ray(insideBase, direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC13: Ray head inside the cylinder (not on axis), between the caps (1 point)
+        assertIntersectionsEquals(List.of(topCapInside),
+                INTERSECTION_CYLINDER.findIntersections(new Ray(insideBase.add(direction.scale(5)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC14: Ray head inside the cylinder (not on axis), on the top cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(topCapInside, direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC15: Ray head inside the cylinder (not on axis), after the top cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(insideBase.add(direction.scale(15)), direction)), ERROR_INTERSECTION_PARALLEL);
+
+        // TC16: Ray head on the axis, before the bottom cap (2 points)
+        assertIntersectionsEquals(List.of(BOTTOM_CAP_CENTER, TOP_CAP_CENTER),
+                INTERSECTION_CYLINDER.findIntersections(new Ray(BOTTOM_CAP_CENTER.add(direction.scale(-5)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC17: Ray head on the axis, on the bottom cap (1 point)
+        assertIntersectionsEquals(List.of(TOP_CAP_CENTER),
+                INTERSECTION_CYLINDER.findIntersections(new Ray(BOTTOM_CAP_CENTER, direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC18: Ray head on the axis, between the caps (1 point)
+        assertIntersectionsEquals(List.of(TOP_CAP_CENTER),
+                INTERSECTION_CYLINDER.findIntersections(new Ray(BOTTOM_CAP_CENTER.add(direction.scale(5)), direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC19: Ray head on the axis, on the top cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(TOP_CAP_CENTER, direction)), ERROR_INTERSECTION_PARALLEL);
+        // TC20: Ray head on the axis, after the top cap (0 points)
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(TOP_CAP_CENTER.add(direction.scale(5)), direction)), ERROR_INTERSECTION_PARALLEL);
     }
 }
