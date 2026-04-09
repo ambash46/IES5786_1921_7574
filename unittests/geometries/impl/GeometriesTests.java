@@ -74,9 +74,9 @@ class GeometriesTests {
 
         // ============ Equivalence Partitions Tests ==============
 
-        // TC01: Some (but not all) geometries are hit
-        assertEquals(3, new Geometries(SPHERE, TRIANGLE, PLANE)
-                        .findIntersections(new Ray(new Point(1, 0.5, -2), new Vector(0, 0, 1))).size(),
-                "Ray that hits triangle (1) + plane (1) + sphere (1 exit) should return 3 points");
+        // TC01: Some (but not all) geometries are hit — ray misses sphere, hits triangle and plane (2 points)
+        assertEquals(2, new Geometries(SPHERE, TRIANGLE, PLANE)
+                        .findIntersections(new Ray(new Point(0, -0.5, -2), new Vector(0, 0, 1))).size(),
+                "Ray that hits triangle (1) + plane (1) but misses sphere should return 2 points");
     }
 }
