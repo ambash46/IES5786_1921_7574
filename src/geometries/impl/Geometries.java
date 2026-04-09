@@ -1,6 +1,7 @@
 package geometries.impl;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import geometries.api.Intersectable;
@@ -10,7 +11,7 @@ import primitives.Ray;
 /**
  * Represents a collection of geometric objects (Composite design pattern).
  * Aggregates any number of {@link Intersectable} objects and treats the whole
- * collection as a single intersectable scene element.
+ * collection as a single {@link Intersectable} scene element.
  *
  * @author Ambash and Elyasaf
  */
@@ -40,8 +41,7 @@ public class Geometries extends Intersectable {
      * @param geometries the objects to add
      */
     public void add(Intersectable... geometries) {
-        for (Intersectable g : geometries)
-            this.geometries.add(g);
+        Collections.addAll(this.geometries, geometries);
     }
 
     /**

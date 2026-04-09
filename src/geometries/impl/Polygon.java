@@ -82,8 +82,8 @@ public class Polygon extends Geometry {
         for (var i = 1; i < _size; ++i) {
             // Test that the point is in the same plane as calculated originally
             if (!isZero(vertices[i].subtract(vertices[0]).dotProduct(n)))
-                throw new IllegalArgumentException("All vertices of a polygon must lay in the same plane");
-            // Test the consequent edges have
+                throw new IllegalArgumentException("All vertices of a polygon must lie in the same plane");
+            // Test that consecutive edge cross products maintain the same orientation.
             edge1 = edge2;
             edge2 = vertices[i].subtract(vertices[i - 1]);
             if (positive != (alignZero(edge1.crossProduct(edge2).dotProduct(n)) > 0))
@@ -119,7 +119,7 @@ public class Polygon extends Geometry {
         List<Point> planeIntersections = _plane.findIntersections(ray);
         if (planeIntersections == null) return null;
 
-        Point intersection = planeIntersections.get(0);
+        Point intersection = planeIntersections.getFirst();
         Vector normal = _plane.getNormal(intersection);
         boolean positive = false;
 
@@ -165,7 +165,7 @@ public class Polygon extends Geometry {
         Polygon other = (Polygon) obj;
         if (_size != other._size) return false;
 
-        int startIndex = other._vertices.indexOf(_vertices.get(0));
+        int startIndex = other._vertices.indexOf(_vertices.getFirst());
         if (startIndex < 0) return false;
 
         for (int i = 0; i < _size; i++) {

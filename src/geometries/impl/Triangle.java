@@ -31,7 +31,7 @@ public final class Triangle extends Polygon {
     /**
      * Finds all intersection points between the triangle and the given ray.
      * <p>
-     * The implementation uses the Moller-Trumbore barycentric test:
+     * The implementation uses the Möller–Trumbore barycentric test:
      * first it builds two triangle edges from one reference vertex,
      * then it computes the barycentric coordinates of the ray-plane hit.
      * An intersection is accepted only when the ray reaches the triangle plane
@@ -43,6 +43,7 @@ public final class Triangle extends Polygon {
      * @return a list containing the single intersection point, or {@code null}
      * if there is no intersection
      */
+    @SuppressWarnings("SpellCheckingInspection")
     @Override
     public List<Point> findIntersections(Ray ray) {
         Point vertex0 = _vertices.get(0);
@@ -55,7 +56,7 @@ public final class Triangle extends Polygon {
 
         // If the ray direction is parallel to one triangle edge in this setup,
         // the determinant becomes zero and the ray cannot produce a valid
-        // interior hit in the Moller-Trumbore test.
+        // interior hit in the Möller–Trumbore test.
         if (direction.isParallel(edge2)) return null;
         Vector pVec = direction.crossProduct(edge2);
         double determinant = alignZero(edge1.dotProduct(pVec));

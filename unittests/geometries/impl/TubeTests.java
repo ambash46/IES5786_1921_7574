@@ -205,13 +205,18 @@ class TubeTests {
 
         // =============== Boundary Values Tests ==================
 
-        // TC11: A point on the tube surface opposite the axis head
+        // TC11: A point on the tube surface opposite the axis head (projection = 0)
         assertDoesNotThrow(() -> tube.getNormal(POINT3), ERROR_GET_NORMAL);
         result = tube.getNormal(POINT3);
         // Ensure |n| = 1
         assertEquals(1d, result.length(), DELTA, ERROR_NORMAL_LENGTH);
         // Ensure normal direction is correct
         assertEquals(Vector.AXIS_X, result, ERROR_NORMAL_DIRECTION3);
+
+        // TC12: Point coinciding with the axis origin — not on the surface, must throw
+        assertThrows(IllegalArgumentException.class,
+                () -> tube.getNormal(Point.ZERO),
+                "getNormal() with a point at the axis origin should throw IllegalArgumentException");
     }
 
     /**

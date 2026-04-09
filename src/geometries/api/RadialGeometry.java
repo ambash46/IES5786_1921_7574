@@ -25,7 +25,7 @@ public abstract class RadialGeometry extends Geometry {
      * Constructs a radial geometry with the given radius.
      *
      * @param radius the radius of the geometry
-     * @throws IllegalArgumentException if the radius is zero
+     * @throws IllegalArgumentException if the radius is not positive (zero or negative)
      */
     public RadialGeometry(double radius) {
         if (Util.isZero(radius) || radius < 0)

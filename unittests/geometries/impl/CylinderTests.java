@@ -209,6 +209,16 @@ class CylinderTests {
      * Center of the top cap of the intersection cylinder.
      */
     private static final Point TOP_CAP_CENTER = new Point(1, 8, 11);
+    /**
+     * Direction perpendicular to the cylinder axis used to locate rim and
+     * off-axis points on the caps and mantle.
+     */
+    private static final Vector CAP_PERPENDICULAR = new Vector(0, 4, -3).normalize();
+    /**
+     * Midpoint of the cylinder axis at half the cylinder height.
+     */
+    private static final Point AXIS_MID =
+            BOTTOM_CAP_CENTER.add(INTERSECTION_AXIS_DIRECTION.scale(INTERSECTION_HEIGHT / 2d));
 
     /**
      * Verifies the exact list of intersection points up to a small tolerance.
@@ -413,16 +423,14 @@ class CylinderTests {
     @Test
     void testFindIntersectionsGroup3PerpendicularTangent() {
         Vector direction = Vector.AXIS_X;
-        Vector capPerpendicular = new Vector(0, 4, -3).normalize();
-        Point midAxisPoint = BOTTOM_CAP_CENTER.add(INTERSECTION_AXIS_DIRECTION.scale(INTERSECTION_HEIGHT / 2d));
 
-        Point mantleTangentPoint = midAxisPoint.add(capPerpendicular.scale(INTERSECTION_RADIUS));
+        Point mantleTangentPoint = AXIS_MID.add(CAP_PERPENDICULAR.scale(INTERSECTION_RADIUS));
 
-        Point bottomRimTangentPoint = BOTTOM_CAP_CENTER.add(capPerpendicular.scale(INTERSECTION_RADIUS));
-        Point topRimTangentPoint = TOP_CAP_CENTER.add(capPerpendicular.scale(INTERSECTION_RADIUS));
+        Point bottomRimTangentPoint = BOTTOM_CAP_CENTER.add(CAP_PERPENDICULAR.scale(INTERSECTION_RADIUS));
+        Point topRimTangentPoint = TOP_CAP_CENTER.add(CAP_PERPENDICULAR.scale(INTERSECTION_RADIUS));
 
-        Point bottomChordMid = BOTTOM_CAP_CENTER.add(capPerpendicular.scale(2d));
-        Point topChordMid = TOP_CAP_CENTER.add(capPerpendicular.scale(2d));
+        Point bottomChordMid = BOTTOM_CAP_CENTER.add(CAP_PERPENDICULAR.scale(2d));
+        Point topChordMid = TOP_CAP_CENTER.add(CAP_PERPENDICULAR.scale(2d));
         double chordHalfLength = 2d * Math.sqrt(3d);
         Point bottomChordFirst = bottomChordMid.add(direction.scale(-chordHalfLength));
         Point bottomChordSecond = bottomChordMid.add(direction.scale(chordHalfLength));
@@ -522,13 +530,11 @@ class CylinderTests {
     @Test
     void testFindIntersectionsGroup4PerpendicularBodyTwice() {
         Vector direction = Vector.AXIS_X;
-        Vector capPerpendicular = new Vector(0, 4, -3).normalize();
-        Point axisMid = BOTTOM_CAP_CENTER.add(INTERSECTION_AXIS_DIRECTION.scale(INTERSECTION_HEIGHT / 2d));
 
-        Point firstAxisHit = axisMid.add(direction.scale(-INTERSECTION_RADIUS));
-        Point secondAxisHit = axisMid.add(direction.scale(INTERSECTION_RADIUS));
+        Point firstAxisHit = AXIS_MID.add(direction.scale(-INTERSECTION_RADIUS));
+        Point secondAxisHit = AXIS_MID.add(direction.scale(INTERSECTION_RADIUS));
 
-        Point chordMid = axisMid.add(capPerpendicular.scale(2d));
+        Point chordMid = AXIS_MID.add(CAP_PERPENDICULAR.scale(2d));
         double chordHalfLength = 2d * Math.sqrt(3d);
         Point firstChordHit = chordMid.add(direction.scale(-chordHalfLength));
         Point secondChordHit = chordMid.add(direction.scale(chordHalfLength));
@@ -539,23 +545,23 @@ class CylinderTests {
 
         // TC01: Ray head before the first body intersection, line through the axis (2 points)
         assertIntersectionsEquals(List.of(firstAxisHit, secondAxisHit),
-                INTERSECTION_CYLINDER.findIntersections(new Ray(axisMid.add(direction.scale(-5)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
+                INTERSECTION_CYLINDER.findIntersections(new Ray(AXIS_MID.add(direction.scale(-5)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC02: Ray head on the first body intersection, line through the axis (1 point)
         assertIntersectionsEquals(List.of(secondAxisHit),
                 INTERSECTION_CYLINDER.findIntersections(new Ray(firstAxisHit, direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC03: Ray head after the first intersection and before the axis, line through the axis (1 point)
         assertIntersectionsEquals(List.of(secondAxisHit),
-                INTERSECTION_CYLINDER.findIntersections(new Ray(axisMid.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
+                INTERSECTION_CYLINDER.findIntersections(new Ray(AXIS_MID.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC04: Ray head on the axis, line through the axis (1 point)
         assertIntersectionsEquals(List.of(secondAxisHit),
-                INTERSECTION_CYLINDER.findIntersections(new Ray(axisMid, direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
+                INTERSECTION_CYLINDER.findIntersections(new Ray(AXIS_MID, direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC05: Ray head after the axis and before the second intersection, line through the axis (1 point)
         assertIntersectionsEquals(List.of(secondAxisHit),
-                INTERSECTION_CYLINDER.findIntersections(new Ray(axisMid.add(direction), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
+                INTERSECTION_CYLINDER.findIntersections(new Ray(AXIS_MID.add(direction), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC06: Ray head on the second body intersection, line through the axis (0 points)
         assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(secondAxisHit, direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
         // TC07: Ray head after the second body intersection, line through the axis (0 points)
-        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(axisMid.add(direction.scale(5)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(AXIS_MID.add(direction.scale(5)), direction)), ERROR_INTERSECTION_PERPENDICULAR_THROUGH_AXIS);
 
         // =============== Boundary Values Tests ==================
 
@@ -588,12 +594,10 @@ class CylinderTests {
      */
     @Test
     void testFindIntersectionsGroup5GeneralBasesOnly() {
-        Vector capPerpendicular = new Vector(0, 4, -3).normalize();
-
         Point bottomRim = BOTTOM_CAP_CENTER.add(Vector.AXIS_X.scale(INTERSECTION_RADIUS));
-        Point topRim = TOP_CAP_CENTER.add(capPerpendicular.scale(INTERSECTION_RADIUS));
-        Point bottomInner = BOTTOM_CAP_CENTER.add(Vector.AXIS_X.scale(2)).add(capPerpendicular);
-        Point topInner = TOP_CAP_CENTER.add(Vector.AXIS_X.scale(2)).add(capPerpendicular);
+        Point topRim = TOP_CAP_CENTER.add(CAP_PERPENDICULAR.scale(INTERSECTION_RADIUS));
+        Point bottomInner = BOTTOM_CAP_CENTER.add(Vector.AXIS_X.scale(2)).add(CAP_PERPENDICULAR);
+        Point topInner = TOP_CAP_CENTER.add(Vector.AXIS_X.scale(2)).add(CAP_PERPENDICULAR);
 
         Vector rimToRim = topRim.subtract(bottomRim);
         Vector rimToInner = topInner.subtract(bottomRim);
@@ -715,15 +719,13 @@ class CylinderTests {
      */
     @Test
     void testFindIntersectionsGroup6GeneralBodyTwice() {
-        Vector capPerpendicular = new Vector(0, 4, -3).normalize();
-        Point axisMid = BOTTOM_CAP_CENTER.add(INTERSECTION_AXIS_DIRECTION.scale(INTERSECTION_HEIGHT / 2d));
         Vector direction = (Vector.AXIS_X.add(INTERSECTION_AXIS_DIRECTION)).normalize();
 
         double throughAxisDistance = 4d * Math.sqrt(2d);
-        Point firstAxisHit = axisMid.add(direction.scale(-throughAxisDistance));
-        Point secondAxisHit = axisMid.add(direction.scale(throughAxisDistance));
+        Point firstAxisHit = AXIS_MID.add(direction.scale(-throughAxisDistance));
+        Point secondAxisHit = AXIS_MID.add(direction.scale(throughAxisDistance));
 
-        Point chordMid = axisMid.add(capPerpendicular.scale(2d));
+        Point chordMid = AXIS_MID.add(CAP_PERPENDICULAR.scale(2d));
         double offAxisDistance = 2d * Math.sqrt(6d);
         Point firstChordHit = chordMid.add(direction.scale(-offAxisDistance));
         Point secondChordHit = chordMid.add(direction.scale(offAxisDistance));
@@ -740,13 +742,13 @@ class CylinderTests {
                 INTERSECTION_CYLINDER.findIntersections(new Ray(firstAxisHit, direction)), ERROR_INTERSECTION_GENERAL_BODY_TWICE);
         // TC03: Ray head after the first intersection and before the axis, general line through the axis (1 point)
         assertIntersectionsEquals(List.of(secondAxisHit),
-                INTERSECTION_CYLINDER.findIntersections(new Ray(axisMid.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_GENERAL_BODY_TWICE);
+                INTERSECTION_CYLINDER.findIntersections(new Ray(AXIS_MID.add(direction.scale(-1)), direction)), ERROR_INTERSECTION_GENERAL_BODY_TWICE);
         // TC04: Ray head on the axis, general line through the axis (1 point)
         assertIntersectionsEquals(List.of(secondAxisHit),
-                INTERSECTION_CYLINDER.findIntersections(new Ray(axisMid, direction)), ERROR_INTERSECTION_GENERAL_BODY_TWICE);
+                INTERSECTION_CYLINDER.findIntersections(new Ray(AXIS_MID, direction)), ERROR_INTERSECTION_GENERAL_BODY_TWICE);
         // TC05: Ray head after the axis and before the second intersection, general line through the axis (1 point)
         assertIntersectionsEquals(List.of(secondAxisHit),
-                INTERSECTION_CYLINDER.findIntersections(new Ray(axisMid.add(direction), direction)), ERROR_INTERSECTION_GENERAL_BODY_TWICE);
+                INTERSECTION_CYLINDER.findIntersections(new Ray(AXIS_MID.add(direction), direction)), ERROR_INTERSECTION_GENERAL_BODY_TWICE);
         // TC06: Ray head on the second body intersection, general line through the axis (0 points)
         assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(secondAxisHit, direction)), ERROR_INTERSECTION_GENERAL_BODY_TWICE);
         // TC07: Ray head after the second body intersection, general line through the axis (0 points)
@@ -783,16 +785,13 @@ class CylinderTests {
      */
     @Test
     void testFindIntersectionsGroup7GeneralBaseAndBody() {
-        Vector capPerpendicular = new Vector(0, 4, -3).normalize();
-        Point axisMid = BOTTOM_CAP_CENTER.add(INTERSECTION_AXIS_DIRECTION.scale(INTERSECTION_HEIGHT / 2d));
-
         Point bottomRim = BOTTOM_CAP_CENTER.add(Vector.AXIS_X.scale(INTERSECTION_RADIUS));
         Point topRim = TOP_CAP_CENTER.add(Vector.AXIS_X.scale(INTERSECTION_RADIUS));
-        Point bottomInner = BOTTOM_CAP_CENTER.add(Vector.AXIS_X.scale(2)).add(capPerpendicular);
-        Point topInner = TOP_CAP_CENTER.add(Vector.AXIS_X.scale(2)).add(capPerpendicular);
+        Point bottomInner = BOTTOM_CAP_CENTER.add(Vector.AXIS_X.scale(2)).add(CAP_PERPENDICULAR);
+        Point topInner = TOP_CAP_CENTER.add(Vector.AXIS_X.scale(2)).add(CAP_PERPENDICULAR);
 
-        Point bodyExitFromBottom = axisMid.add(capPerpendicular.scale(INTERSECTION_RADIUS));
-        Point bodyExitFromTop = axisMid.add(capPerpendicular.scale(-INTERSECTION_RADIUS));
+        Point bodyExitFromBottom = AXIS_MID.add(CAP_PERPENDICULAR.scale(INTERSECTION_RADIUS));
+        Point bodyExitFromTop = AXIS_MID.add(CAP_PERPENDICULAR.scale(-INTERSECTION_RADIUS));
 
         Vector bottomRimToBody = bodyExitFromBottom.subtract(bottomRim);
         Vector bottomInnerToBody = bodyExitFromBottom.subtract(bottomInner);
@@ -902,15 +901,12 @@ class CylinderTests {
      */
     @Test
     void testFindIntersectionsGroup8GeneralTangent() {
-        Vector radialDirection = new Vector(0, 4, -3).normalize();
-        Point axisMid = BOTTOM_CAP_CENTER.add(INTERSECTION_AXIS_DIRECTION.scale(INTERSECTION_HEIGHT / 2d));
-
-        Point mantleTangentPoint = axisMid.add(radialDirection.scale(INTERSECTION_RADIUS));
-        Point bottomRimTangentPoint = BOTTOM_CAP_CENTER.add(radialDirection.scale(INTERSECTION_RADIUS));
-        Point topRimTangentPoint = TOP_CAP_CENTER.add(radialDirection.scale(INTERSECTION_RADIUS));
+        Point mantleTangentPoint = AXIS_MID.add(CAP_PERPENDICULAR.scale(INTERSECTION_RADIUS));
+        Point bottomRimTangentPoint = BOTTOM_CAP_CENTER.add(CAP_PERPENDICULAR.scale(INTERSECTION_RADIUS));
+        Point topRimTangentPoint = TOP_CAP_CENTER.add(CAP_PERPENDICULAR.scale(INTERSECTION_RADIUS));
 
         // Tangent to the circular cross-section at the chosen rim point.
-        Vector tangentialDirection = INTERSECTION_AXIS_DIRECTION.crossProduct(radialDirection).normalize();
+        Vector tangentialDirection = INTERSECTION_AXIS_DIRECTION.crossProduct(CAP_PERPENDICULAR).normalize();
         // General tangent to the mantle: tangential around the cylinder plus axial motion.
         Vector bodyDirection = tangentialDirection.add(INTERSECTION_AXIS_DIRECTION).normalize();
         // At the bottom rim we choose a direction that is tangent at the rim and immediately goes below the bottom cap.
@@ -954,18 +950,15 @@ class CylinderTests {
      */
     @Test
     void testFindIntersectionsGroup9GeneralMiss() {
-        Vector capPerpendicular = new Vector(0, 4, -3).normalize();
-        Point axisMid = BOTTOM_CAP_CENTER.add(INTERSECTION_AXIS_DIRECTION.scale(INTERSECTION_HEIGHT / 2d));
-
         // ============ Equivalence Partitions Tests ==============
 
         // TC01: Regular general miss - the ray misses both the infinite tube and the finite cylinder (0 points)
         assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(new Point(10, 15, 0), new Vector(1, -1, 0.5))), ERROR_INTERSECTION_GENERAL_MISS);
 
         // TC02: The ray would intersect the infinite tube twice off axis, but both intersections lie outside the finite cylinder (0 points)
-        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(axisMid.add(capPerpendicular.scale(2)).add(INTERSECTION_AXIS_DIRECTION.scale(8)), new Vector(1, -1, 0.5))), ERROR_INTERSECTION_GENERAL_MISS);
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray(AXIS_MID.add(CAP_PERPENDICULAR.scale(2)).add(INTERSECTION_AXIS_DIRECTION.scale(8)), new Vector(1, -1, 0.5))), ERROR_INTERSECTION_GENERAL_MISS);
 
         // TC03: The ray would intersect the infinite tube through the axis, but both intersections lie outside the finite cylinder (0 points)
-        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray((axisMid.add(capPerpendicular.scale(2)).add(INTERSECTION_AXIS_DIRECTION.scale(-8))), new Vector(1, -1, 0.5))), ERROR_INTERSECTION_GENERAL_MISS);
+        assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray((AXIS_MID.add(CAP_PERPENDICULAR.scale(2)).add(INTERSECTION_AXIS_DIRECTION.scale(-8))), new Vector(1, -1, 0.5))), ERROR_INTERSECTION_GENERAL_MISS);
     }
 }

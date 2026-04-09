@@ -118,7 +118,7 @@ public final class Sphere extends RadialGeometry {
         if (obj == null || getClass() != obj.getClass()) return false;
         Sphere other = (Sphere) obj;
         return isZero(other._radius - _radius)
-                && Objects.equals(_center, other._center);
+                && isZero(_center.distance(other._center));
     }
 
     /**

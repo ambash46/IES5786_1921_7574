@@ -44,11 +44,17 @@ public class Tube extends RadialGeometry {
      */
     @Override
     public Vector getNormal(Point point) {
-        Point origin = _axis.origin();
         Vector direction = _axis.direction();
+        Point origin = _axis.origin();
+        // Guard: point.subtract(origin) would produce the zero vector if the two
+        // points coincide, causing an IllegalArgumentException inside the Vector
+        // constructor.  A point that equals the axis origin cannot lie on the tube
+        // surface (radius > 0), so this is an invalid input.
+        if (point.equals(origin))
+            throw new IllegalArgumentException(
+                    "Point coincides with the tube axis origin and is not on the tube surface");
         double projection = direction.dotProduct(point.subtract(origin));
-        Point axisPoint = isZero(projection) ? origin : origin.add(direction.scale(projection));
-        return point.subtract(axisPoint).normalize();
+        return point.subtract(_axis.getPoint(projection)).normalize();
     }
 
     /**
@@ -66,6 +72,7 @@ public class Tube extends RadialGeometry {
      * @return the intersection points, or {@code null} if there is no
      * intersection
      */
+    @SuppressWarnings("SpellCheckingInspection")
     @Override
     public List<Point> findIntersections(Ray ray) {
         // p0 = ray origin, pa = axis origin, v = ray direction (unit), va = axis direction (unit)
@@ -159,8 +166,18 @@ public class Tube extends RadialGeometry {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Tube other = (Tube) obj;
-        return isZero(other._radius - _radius)
-                && Objects.equals(_axis, other._axis);
+        if (!isZero(other._radius - _radius)) return false;
+        // Two infinite tubes are equal when their axis *lines* are the same,
+        // regardless of which point was chosen as the ray origin or whether the
+        // direction is pointing the same way or the opposite.
+        // The axis lines are the same when:
+        //   (1) the directions are parallel (same or opposite), AND
+        //   (2) the vector between the two origins is also parallel to the direction
+        //       (i.e. the other origin lies on this tube's axis line).
+        Vector dir = _axis.direction();
+        if (!dir.isParallel(other._axis.direction())) return false;
+        if (_axis.origin().equals(other._axis.origin())) return true;
+        return dir.isParallel(other._axis.origin().subtract(_axis.origin()));
     }
 
     /**

@@ -1,7 +1,6 @@
 package geometries.api;
 
 import java.util.List;
-
 import primitives.Point;
 import primitives.Ray;
 
@@ -10,6 +9,7 @@ import primitives.Ray;
  *
  * @author Ambash and Elyasaf
  */
+@SuppressWarnings("SpellCheckingInspection")
 public abstract class Intersectable {
     /**
      * Finds all intersection points between this object and the given ray.
