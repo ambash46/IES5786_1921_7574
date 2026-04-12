@@ -91,6 +91,15 @@ public class Polygon extends Geometry {
         }
     }
 
+    /**
+     * Returns the normal vector of the polygon at the given point.
+     * <p>
+     * Delegates to the supporting plane, since the polygon is flat.
+     * </p>
+     *
+     * @param point a point on the polygon (used by the plane delegate)
+     * @return the unit normal vector of the polygon's plane
+     */
     @Override
     public Vector getNormal(Point point) {
         return _plane.getNormal(point);

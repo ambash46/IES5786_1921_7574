@@ -32,6 +32,5 @@ public abstract class RadialGeometry extends Geometry {
             throw new IllegalArgumentException("Radius must be positive");
         this._radius = radius;
         this._radiusSquared = radius * radius;
-
     }
 }

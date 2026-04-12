@@ -33,7 +33,6 @@ public final class Sphere extends RadialGeometry {
     public Sphere(Point center, double radius) {
         super(radius);
         this._center = center;
-
     }
 
     /**

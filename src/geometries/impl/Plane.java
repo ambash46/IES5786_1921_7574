@@ -67,9 +67,16 @@ public final class Plane extends Geometry {
 
     /**
      * Finds all intersection points between the plane and the given ray.
+     * <p>
+     * Returns {@code null} when the ray is parallel to the plane
+     * ({@code n · v = 0}), when the ray origin lies on the plane, or when the
+     * intersection parameter {@code t} is zero or negative (intersection behind
+     * or at the ray origin).
+     * </p>
      *
      * @param ray the ray to intersect with
-     * @return the intersection points, or {@code null}
+     * @return a list containing the single intersection point, or {@code null}
+     * if the ray misses or does not reach the plane in the forward direction
      */
     @Override
     public List<Point> findIntersections(Ray ray) {
@@ -121,6 +128,4 @@ public final class Plane extends Geometry {
     public String toString() {
         return "Plane{point=" + _point + ", normal=" + _normal + "}";
     }
-
-
 }

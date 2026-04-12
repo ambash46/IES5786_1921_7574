@@ -1,6 +1,5 @@
 package primitives;
 
-
 /**
  * Represents a point in a three-dimensional Cartesian coordinate system.
  * <p>
@@ -119,8 +118,5 @@ public class Point {
     @Override
     public int hashCode() {
         return _xyz.hashCode();
-
     }
-
-
 }
