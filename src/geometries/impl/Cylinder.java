@@ -324,8 +324,15 @@ public final class Cylinder extends Tube {
     // Small inline-style utilities kept as private methods for readability
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Returns {@code true} if {@code list} does not yet contain a value within
-     *  floating-point tolerance of {@code t} (i.e. {@code t} is a new candidate). */
+    /**
+     * Returns {@code true} if {@code list} does not yet contain a value within
+     * floating-point tolerance of {@code t} (i.e. {@code t} is a new candidate).
+     *
+     * @param list the list of already-collected candidate parameters
+     * @param t    the candidate parameter to check
+     * @return {@code true} if no existing entry in {@code list} is within
+     *         floating-point tolerance of {@code t}
+     */
     private static boolean isNewCandidate(List<Double> list, double t) {
         for (double v : list) if (isZero(v - t)) return false;
         return true;
