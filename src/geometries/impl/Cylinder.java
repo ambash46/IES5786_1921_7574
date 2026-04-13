@@ -26,15 +26,17 @@ public final class Cylinder extends Tube {
      * of the finite solid rather than a tangent touch or an overlap case.
      * <p>
      * The value must satisfy two constraints simultaneously:
+     * </p>
      * <ul>
      *   <li><b>Large enough</b> to be above floating-point noise: must be well
-     *       above {@code Util.ACCURACY} (~1e-10) so that the probed point is
+     *       above {@code Util.ACCURACY} (~1e-12) so that the probed point is
      *       reliably classified as inside or outside.</li>
      *   <li><b>Small enough</b> to stay within the same geometric region: must
      *       be much smaller than the minimum expected distance between two
      *       consecutive intersection parameters, so the probe does not jump
      *       across a neighbouring boundary.</li>
      * </ul>
+     * <p>
      * {@code 1e-7} sits comfortably between these two constraints for
      * scene-scale geometries.
      * </p>
@@ -95,6 +97,7 @@ public final class Cylinder extends Tube {
      * <b>Strategy — candidate gathering then filtering:</b><br>
      * Rather than handling every geometric configuration with its own branch,
      * the method works in two clean phases.
+     * </p>
      * <ol>
      *   <li><b>Gather candidates.</b> Compute every ray parameter {@code t}
      *       at which the ray could possibly touch the cylinder boundary:
@@ -103,12 +106,11 @@ public final class Cylinder extends Tube {
      *   <li><b>Filter.</b> For each candidate {@code t}, keep it only when two
      *       conditions hold simultaneously:
      *       (a) the resulting point actually lies on the finite cylinder boundary
-     *           ({@link #isOnCylinderBoundary}), and
+     *           ({@code isOnCylinderBoundary}), and
      *       (b) the ray truly crosses the cylinder interior at that point, i.e.
      *           it is not a tangency or a cap-plane overlap
-     *           ({@link #crossesCylinderInterior}).</li>
+     *           ({@code crossesCylinderInterior}).</li>
      * </ol>
-     * </p>
      *
      * @param ray the ray to intersect with
      * @return the intersection points, or {@code null} if there is no
@@ -267,14 +269,16 @@ public final class Cylinder extends Tube {
      * <p>
      * The idea is to probe the ray at {@code t - offset} and {@code t + offset}
      * for a small {@code offset}:
+     * </p>
      * <ul>
      *   <li>If one side is inside and the other outside, the ray crosses the
-     *       boundary — this is a real intersection. ✓</li>
+     *       boundary — this is a real intersection.</li>
      *   <li>If both sides are outside (tangency to the mantle, or a ray that
-     *       grazes the rim), there is no crossing. ✗</li>
+     *       grazes the rim), there is no crossing.</li>
      *   <li>If both sides are inside (ray lying flat in a cap plane, overlapping
-     *       the disk in a whole segment), there is no discrete crossing. ✗</li>
+     *       the disk in a whole segment), there is no discrete crossing.</li>
      * </ul>
+     * <p>
      * "Strictly inside" means {@code 0 < axisProjection < height} AND
      * {@code distanceSquared < r²} — both boundary surfaces excluded.
      * The offset is capped at {@code t / 2} so that the before-probe never

@@ -31,7 +31,6 @@ public final class Main {
     /**
      * Default constructor to satisfy JavaDoc generator
      */
-
     public Main() { /* to satisfy JavaDoc generator */ }
 
     /**

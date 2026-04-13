@@ -12,6 +12,11 @@ import primitives.Vector;
  */
 public abstract class Geometry extends Intersectable {
     /**
+     * Default constructor for use by subclasses.
+     */
+    protected Geometry() { /* no-op */ }
+
+    /**
      * Returns the normal vector to the geometry at a given point.
      * @param point a point on the geometry
      * @return the normal vector at the given point
