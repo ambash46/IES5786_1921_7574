@@ -29,6 +29,7 @@ public final class Sphere extends RadialGeometry {
      *
      * @param center the center of the sphere
      * @param radius the radius of the sphere
+     * @throws IllegalArgumentException if the radius is not positive
      */
     public Sphere(Point center, double radius) {
         super(radius);

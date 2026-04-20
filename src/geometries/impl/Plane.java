@@ -35,6 +35,8 @@ public final class Plane extends Geometry {
      * @param p1 the first point
      * @param p2 the second point
      * @param p3 the third point
+     * @throws IllegalArgumentException if the points are not distinct or do
+     *                                  not define a unique plane
      */
     public Plane(Point p1, Point p2, Point p3) {
         _point = p1;
@@ -48,6 +50,7 @@ public final class Plane extends Geometry {
      *
      * @param point  a point on the plane
      * @param normal a vector normal to the plane
+     * @throws IllegalArgumentException if {@code normal} is the zero vector
      */
     public Plane(Point point, Vector normal) {
         this._point = point;

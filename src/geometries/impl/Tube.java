@@ -30,6 +30,7 @@ public class Tube extends RadialGeometry {
      *
      * @param radius the radius of the tube
      * @param axis   the axis ray of the tube
+     * @throws IllegalArgumentException if the radius is not positive
      */
     public Tube(double radius, Ray axis) {
         super(radius);

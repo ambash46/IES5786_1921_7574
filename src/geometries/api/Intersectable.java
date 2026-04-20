@@ -20,7 +20,8 @@ public abstract class Intersectable {
      * Finds all intersection points between this object and the given ray.
      *
      * @param ray the ray to intersect with
-     * @return a list of intersection points
+     * @return a list of intersection points, or {@code null} if there are no
+     * intersections
      */
     public abstract List<Point> findIntersections(Ray ray);
 }
