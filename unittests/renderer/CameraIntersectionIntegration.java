@@ -31,9 +31,8 @@ import primitives.Vector;
  *   <li>{@link #testCameraRayPlaneIntegration()} — three standard plane cases</li>
  *   <li>{@link #testCameraRayTriangleIntegration()} — two standard triangle cases</li>
  * </ul>
- * Additional tests for {@link Polygon}, {@link Tube}, and {@link Cylinder} are
+ * <p>Additional tests for {@link Polygon}, {@link Tube}, and {@link Cylinder} are
  * included as bonus coverage.
- * </p>
  *
  * @author Ambash and Elyasaf
  */
@@ -104,7 +103,6 @@ class CameraIntersectionIntegration {
      *   <li>Camera inside sphere — each ray exits through the far side (9 intersections)</li>
      *   <li>Sphere behind camera — no ray reaches it (0 intersections)</li>
      * </ol>
-     * </p>
      */
     @Test
     void testCameraRaySphereIntegration() {
@@ -138,7 +136,6 @@ class CameraIntersectionIntegration {
      *   <li>Plane slightly tilted toward the camera — all 9 rays still hit (9 intersections)</li>
      *   <li>Plane steeply tilted — the top row of rays passes above the plane (6 intersections)</li>
      * </ol>
-     * </p>
      */
     @Test
     void testCameraRayPlaneIntegration() {
@@ -166,7 +163,6 @@ class CameraIntersectionIntegration {
      *   <li>Small triangle — fits within a single pixel; only the center ray hits (1 intersection)</li>
      *   <li>Tall narrow triangle — top vertex is far up; center and top-center rays hit (2 intersections)</li>
      * </ol>
-     * </p>
      */
     @Test
     void testCameraRayTriangleIntegration() {

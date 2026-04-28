@@ -121,9 +121,9 @@ public class Camera implements Cloneable {
      * @return the ray through the given pixel
      */
     public Ray constructRay(int xIndex, int yIndex) {
-        // מרחק מהפיקסל האמצעי: אינדקס 0 הוא שמאל/עליון, (nX-1)/2 הוא המרכז
+        // offset from center pixel: index 0 is left/top, (nX-1)/2 is the center
         double xOffset = (xIndex - (_nX - 1) / 2.0) * _pixelWidth;
-        // ציר Y של הפיקסלים הפוך: אינדקס גדל מטה, vUp מצביע מעלה — לכן חיסור
+        // Y-axis is inverted: pixel index grows downward, vUp points up — hence the subtraction
         double yOffset = ((_nY - 1) / 2.0 - yIndex) * _pixelHeight;
         Point pixelCenter = _vpCenter;
         if (!Util.isZero(xOffset)) pixelCenter = pixelCenter.add(_vRight.scale(xOffset));
@@ -145,8 +145,11 @@ public class Camera implements Cloneable {
      */
     public static class Builder {
 
-        /** Default constructor — use {@link Camera#getBuilder()} to obtain an instance. */
-        public Builder() { }
+        /**
+         * Default constructor — use {@link Camera#getBuilder()} to obtain an instance.
+         */
+        public Builder() {
+        }
 
         /**
          * The camera being assembled.
@@ -296,7 +299,7 @@ public class Camera implements Cloneable {
                 }
             }
 
-            // vRight = vTo × vUp: ניצב לשניהם, מצביע ימינה במערכת ימנית
+            // vRight = vTo × vUp: perpendicular to both, points right in a right-handed system
             try {
                 _camera._vRight = _vTo.crossProduct(_vUp).normalize();
             } catch (IllegalArgumentException e) {
@@ -305,8 +308,8 @@ public class Camera implements Cloneable {
             }
 
             _camera._vTo = _vTo.normalize();
-            // vUp האמיתי = vRight × vTo: מבטיח אורתוגונליות מלאה של הבסיס,
-            // כי vUp של המשתמש לא בהכרח ניצב ל-vTo
+            // true vUp = vRight × vTo: guarantees full orthogonality of the basis,
+            // because the caller's vUp is not necessarily perpendicular to vTo
             _camera._vUp = _camera._vRight.crossProduct(_camera._vTo);
         }
 
@@ -320,7 +323,7 @@ public class Camera implements Cloneable {
             if (_camera._distance < 0 || _camera._width < 0 || _camera._height < 0 || Util.isZero(_camera._distance) || Util.isZero(_camera._width) || Util.isZero(_camera._height))
                 throw new IllegalArgumentException("View plane values must be positive");
 
-            // מרכז המשטח = p0 + vTo * distance (הזזה לאורך ציר הראייה)
+            // view-plane center = p0 + vTo * distance (shift along the viewing axis)
             _camera._vpCenter = _camera._p0.add(_camera._vTo.scale(_camera._distance));
             _camera._pixelWidth = _camera._width / _camera._nX;
             _camera._pixelHeight = _camera._height / _camera._nY;
@@ -335,9 +338,9 @@ public class Camera implements Cloneable {
          * Builder calls cannot mutate it.</p>
          *
          * @return the fully constructed and validated Camera
-         * @throws IllegalArgumentException  if any numeric parameter is non-positive,
-         *                                   or if the direction and up vectors are parallel
-         * @throws MissingResourceException  if the location or direction has not been set
+         * @throws IllegalArgumentException if any numeric parameter is non-positive,
+         *                                  or if the direction and up vectors are parallel
+         * @throws MissingResourceException if the location or direction has not been set
          */
         public Camera build() {
             checkResolution();
