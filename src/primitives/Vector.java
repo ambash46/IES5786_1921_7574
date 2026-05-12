@@ -141,23 +141,11 @@ public final class Vector extends Point {
         return new Vector(this._xyz.divide(this.length()));
     }
 
-    /**
-     * Returns a string representation of this vector.
-     *
-     * @return the vector coordinates prefixed to distinguish it from a point
-     */
     @Override
     public String toString() {
         return "->" + super.toString();
     }
 
-    /**
-     * Compares this vector with another object.
-     *
-     * @param obj the object to compare with
-     * @return {@code true} if the other object is a vector with equal
-     * coordinates
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;

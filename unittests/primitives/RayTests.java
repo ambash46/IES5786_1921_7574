@@ -1,9 +1,16 @@
 package primitives;
 
+import static geometries.api.Intersectable.Intersection;
+
+import geometries.impl.Sphere;
 import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 /**
  * Unit tests for class {@link Ray}.
@@ -11,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <ul>
  * <li>{@link Ray#Ray(Point, Vector)}</li>
  * <li>{@link Ray#getPoint(double)}</li>
+ * <li>{@link Ray#findClosestPoint(List)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -49,9 +57,50 @@ class RayTests {
     private static final String GET_POINT_ERROR = "Ray.getPoint() returned the wrong point";
 
     /**
-     * Origin point for ray constructor tests
+     * Error message for wrong findClosestPoint result.
+     */
+    private static final String CLOSEST_POINT_ERROR = "Ray.findClosestPoint() returned the wrong point";
+
+    /**
+     * Error message for wrong findClosestIntersection result.
+     */
+    private static final String CLOSEST_INTERSECTION_ERROR =
+            "Ray.findClosestIntersection() returned the wrong intersection";
+
+    /**
+     * Origin point for ray constructor tests.
      */
     private static final Point ORIGIN = new Point(1, 2, 3);
+
+    // --- findClosestPoint test fixtures ---
+
+    /** Ray used in findClosestPoint tests: origin at (0,0,0), direction along +X. */
+    private static final Ray   RAY_CLOSEST = new Ray(Point.ZERO, Vector.AXIS_X);
+
+    /** Close point — distance 1 from origin along X. */
+    private static final Point P_CLOSE     = new Point(1, 0, 0);
+
+    /** Medium point — distance 3 from origin along X. */
+    private static final Point P_MEDIUM    = new Point(3, 0, 0);
+
+    /** Far point — distance 5 from origin along X. */
+    private static final Point P_FAR       = new Point(5, 0, 0);
+
+    // --- findClosestIntersection test fixtures ---
+
+    /** Geometry placed at the close point. */
+    private static final Sphere SPHERE_CLOSE  = new Sphere(P_CLOSE,  1);
+    /** Geometry placed at the medium point. */
+    private static final Sphere SPHERE_MEDIUM = new Sphere(P_MEDIUM, 1);
+    /** Geometry placed at the far point. */
+    private static final Sphere SPHERE_FAR    = new Sphere(P_FAR,    1);
+
+    /** Intersection at the close point. */
+    private static final Intersection I_CLOSE  = new Intersection(SPHERE_CLOSE,  P_CLOSE);
+    /** Intersection at the medium point. */
+    private static final Intersection I_MEDIUM = new Intersection(SPHERE_MEDIUM, P_MEDIUM);
+    /** Intersection at the far point. */
+    private static final Intersection I_FAR    = new Intersection(SPHERE_FAR,    P_FAR);
     /**
      * Non-unit direction for constructor tests
      */
@@ -99,5 +148,62 @@ class RayTests {
 
         // TC11: t = 0 — should return the origin exactly
         assertEquals(ORIGIN, RAY.getPoint(0), GET_POINT_ERROR);
+    }
+
+    /**
+     * Test method for {@link Ray#findClosestPoint(List)}.
+     * Verifies that the point closest to the ray's origin is returned correctly.
+     */
+    @Test
+    void testFindClosestPoint() {
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Middle point in the list is the closest
+        assertEquals(P_CLOSE, RAY_CLOSEST.findClosestPoint(List.of(P_FAR, P_CLOSE, P_MEDIUM)),
+                CLOSEST_POINT_ERROR);
+
+        // =============== Boundary Values Tests ==================
+
+        // TC11: Null list — should return null
+        assertNull(RAY_CLOSEST.findClosestPoint(null), CLOSEST_POINT_ERROR);
+
+        // TC12: First point in the list is the closest
+        assertEquals(P_CLOSE, RAY_CLOSEST.findClosestPoint(List.of(P_CLOSE, P_MEDIUM, P_FAR)),
+                CLOSEST_POINT_ERROR);
+
+        // TC13: Last point in the list is the closest
+        assertEquals(P_CLOSE, RAY_CLOSEST.findClosestPoint(List.of(P_MEDIUM, P_FAR, P_CLOSE)),
+                CLOSEST_POINT_ERROR);
+    }
+
+    /**
+     * Test method for {@link Ray#findClosestIntersection(List)}.
+     * Verifies that the intersection whose point is closest to the ray's origin
+     * is returned, and that the returned geometry object is the exact same
+     * reference (checked with {@code assertSame}).
+     */
+    @Test
+    void testFindClosestIntersection() {
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: Closest intersection is in the middle of the list
+        assertSame(SPHERE_CLOSE,
+                RAY_CLOSEST.findClosestIntersection(List.of(I_FAR, I_CLOSE, I_MEDIUM)).geometry,
+                CLOSEST_INTERSECTION_ERROR);
+
+        // =============== Boundary Values Tests ==================
+
+        // TC11: Null list — should return null
+        assertNull(RAY_CLOSEST.findClosestIntersection(null), CLOSEST_INTERSECTION_ERROR);
+
+        // TC12: Closest intersection is first in the list
+        assertSame(SPHERE_CLOSE,
+                RAY_CLOSEST.findClosestIntersection(List.of(I_CLOSE, I_MEDIUM, I_FAR)).geometry,
+                CLOSEST_INTERSECTION_ERROR);
+
+        // TC13: Closest intersection is last in the list
+        assertSame(SPHERE_CLOSE,
+                RAY_CLOSEST.findClosestIntersection(List.of(I_MEDIUM, I_FAR, I_CLOSE)).geometry,
+                CLOSEST_INTERSECTION_ERROR);
     }
 }

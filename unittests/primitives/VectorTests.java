@@ -247,8 +247,8 @@ class VectorTests {
         // =============== Boundary Values Tests ==================
         // TC11: The exact same vector
         assertTrue(assertDoesNotThrow(() -> V1.isParallel(V1), PARALLEL_ERROR), PARALLEL_ERROR);
-        // TC12: Orthogonal vectors
-        assertFalse(assertDoesNotThrow(() -> V1.isParallel(V3), PARALLEL_ERROR), PARALLEL_ERROR);
+        // TC12: Orthogonal vectors (perpendicular: dot-product = 0, cross-product ≠ 0)
+        assertFalse(assertDoesNotThrow(() -> Vector.AXIS_X.isParallel(Vector.AXIS_Y), PARALLEL_ERROR), PARALLEL_ERROR);
     }
 
     /**

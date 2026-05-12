@@ -1,11 +1,12 @@
 package geometries.impl;
 
+import static geometries.api.Intersectable.Intersection;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import geometries.api.Intersectable;
-import primitives.Point;
 import primitives.Ray;
 
 /**
@@ -15,7 +16,7 @@ import primitives.Ray;
  *
  * @author Ambash and Elyasaf
  */
-public class Geometries extends Intersectable {
+public final class Geometries extends Intersectable {
     /**
      * Default constructor to satisfy JavaDoc generator.
      */
@@ -44,23 +45,11 @@ public class Geometries extends Intersectable {
         Collections.addAll(this.geometries, geometries);
     }
 
-    /**
-     * Finds all intersection points between the ray and every geometry in the
-     * collection.
-     * <p>
-     * Each geometry is queried independently (delegation). Results from all
-     * geometries are merged into a single list. If no geometry is hit, returns
-     * {@code null}.
-     * </p>
-     *
-     * @param ray the ray to intersect with
-     * @return a list of all intersection points, or {@code null} if there are none
-     */
     @Override
-    public List<Point> findIntersections(Ray ray) {
-        List<Point> result = null;
+    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
+        List<Intersection> result = null;
         for (Intersectable g : geometries) {
-            List<Point> hits = g.findIntersections(ray);
+            List<Intersection> hits = g.calcIntersections(ray);
             if (hits != null) {
                 if (result == null)
                     result = new ArrayList<>(hits);

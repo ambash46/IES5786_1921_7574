@@ -1,5 +1,7 @@
 package geometries.impl;
 
+import static geometries.api.Intersectable.Intersection;
+
 import geometries.api.Geometry;
 import java.util.List;
 import java.util.Objects;
@@ -123,8 +125,9 @@ public class Polygon extends Geometry {
      * inside the polygon, or {@code null} otherwise
      */
     @Override
-    public List<Point> findIntersections(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
         // Step 1: intersect with the infinite supporting plane.
+        // Flat bodies delegate to findIntersections on the contained plane.
         List<Point> planeIntersections = _plane.findIntersections(ray);
         if (planeIntersections == null) return null;
 
@@ -157,7 +160,7 @@ public class Polygon extends Geometry {
             }
         }
 
-        return planeIntersections;
+        return List.of(new Intersection(this, intersection));
     }
 
     /**

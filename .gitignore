@@ -35,6 +35,7 @@ bin/
 # Log file
 *.log
 
+
 # BlueJ files
 *.ctxt
 
@@ -57,3 +58,4 @@ replay_pid*
 
 # Generated images
 images/
+*.pdf

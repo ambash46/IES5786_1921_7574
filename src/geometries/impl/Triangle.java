@@ -1,5 +1,7 @@
 package geometries.impl;
 
+import static geometries.api.Intersectable.Intersection;
+
 import java.util.List;
 import primitives.Point;
 import primitives.Ray;
@@ -30,24 +32,14 @@ public final class Triangle extends Polygon {
         super(p1, p2, p3);
     }
 
-    /**
-     * Finds all intersection points between the triangle and the given ray.
-     * <p>
-     * The implementation uses the Möller–Trumbore barycentric test:
-     * first it builds two triangle edges from one reference vertex,
-     * then it computes the barycentric coordinates of the ray-plane hit.
-     * An intersection is accepted only when the ray reaches the triangle plane
-     * in front of the ray origin and the barycentric coordinates place the hit
-     * strictly inside the triangle, excluding edges and vertices.
-     * </p>
-     *
-     * @param ray the ray to intersect with
-     * @return a list containing the single intersection point, or {@code null}
-     * if there is no intersection
+    /*
+     * Möller–Trumbore: builds two edges from vertex0, computes barycentric
+     * coordinates u and v. Accepts only strictly interior hits (u>0, v>0, u+v<1)
+     * in front of the ray (t>0), excluding edges and vertices.
      */
     @SuppressWarnings("SpellCheckingInspection")
     @Override
-    public List<Point> findIntersections(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
         Point vertex0 = _vertices.get(0);
         Point vertex1 = _vertices.get(1);
         Point vertex2 = _vertices.get(2);
@@ -83,7 +75,7 @@ public final class Triangle extends Polygon {
         // t is the signed distance along the ray direction.
         // Only positive t values represent intersections in front of the ray.
         double t = alignZero(edge2.dotProduct(qVec) * inverseDeterminant);
-        return t <= 0 ? null : List.of(ray.getPoint(t));
+        return t <= 0 ? null : List.of(new Intersection(this, ray.getPoint(t)));
     }
 
 }

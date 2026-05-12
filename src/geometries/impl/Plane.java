@@ -1,5 +1,7 @@
 package geometries.impl;
 
+import static geometries.api.Intersectable.Intersection;
+
 import geometries.api.Geometry;
 import java.util.List;
 import java.util.Objects;
@@ -57,32 +59,14 @@ public final class Plane extends Geometry {
         this._normal = normal.normalize();
     }
 
-    /**
-     * Returns the normal vector of the plane.
-     *
-     * @param point a point on the plane
-     * @return the normalized normal vector of the plane
-     */
     @Override
     public Vector getNormal(Point point) {
         return _normal;
     }
 
-    /**
-     * Finds all intersection points between the plane and the given ray.
-     * <p>
-     * Returns {@code null} when the ray is parallel to the plane
-     * ({@code n · v = 0}), when the ray origin lies on the plane, or when the
-     * intersection parameter {@code t} is zero or negative (intersection behind
-     * or at the ray origin).
-     * </p>
-     *
-     * @param ray the ray to intersect with
-     * @return a list containing the single intersection point, or {@code null}
-     * if the ray misses or does not reach the plane in the forward direction
-     */
+    /* Returns null when n·v=0 (parallel), when origin is on the plane, or t<=0. */
     @Override
-    public List<Point> findIntersections(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
         Point p0 = ray.origin();
         Vector v = ray.direction();
 
@@ -92,16 +76,9 @@ public final class Plane extends Geometry {
         if (isZero(nv)) return null;
 
         double t = alignZero(_normal.dotProduct(_point.subtract(p0)) / nv);
-        return t <= 0 ? null : List.of(ray.getPoint(t));
+        return t <= 0 ? null : List.of(new Intersection(this, ray.getPoint(t)));
     }
 
-    /**
-     * Compares this plane with another object.
-     *
-     * @param obj the object to compare with
-     * @return {@code true} if the other object represents the same geometric
-     * plane
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -112,21 +89,11 @@ public final class Plane extends Geometry {
         return isZero(_normal.dotProduct(other._point.subtract(_point)));
     }
 
-    /**
-     * Returns a hash code for this plane.
-     *
-     * @return the hash code of the geometric plane representation
-     */
     @Override
     public int hashCode() {
         return Objects.hash(_normal, _point);
     }
 
-    /**
-     * Returns a string representation of this plane.
-     *
-     * @return the plane point and normal
-     */
     @Override
     public String toString() {
         return "Plane{point=" + _point + ", normal=" + _normal + "}";

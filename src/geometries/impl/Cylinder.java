@@ -1,5 +1,7 @@
 package geometries.impl;
 
+import static geometries.api.Intersectable.Intersection;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -59,17 +61,11 @@ public final class Cylinder extends Tube {
      */
     public Cylinder(double radius, Ray axis, double height) {
         super(radius, axis);
-        this._height = height;
         if (Util.isZero(height) || height < 0)
             throw new IllegalArgumentException("Height must be positive");
+        this._height = height;
     }
 
-    /**
-     * Returns the normal vector of the cylinder at the given point.
-     *
-     * @param point a point on the cylinder
-     * @return the normal vector at the given point
-     */
     @Override
     public Vector getNormal(Point point) {
         Point origin = _axis.origin();
@@ -86,39 +82,14 @@ public final class Cylinder extends Tube {
         return super.getNormal(point);
     }
 
-    /**
-     * Finds all intersection points between the cylinder and the given ray.
-     * <p>
-     * A finite cylinder is a closed solid bounded by three surfaces:
-     * the curved mantle (an infinite tube clipped to the height interval)
-     * and two flat circular caps at the bottom ({@code projection = 0}) and
-     * top ({@code projection = height}).
-     * </p>
-     * <p>
-     * <b>Strategy — candidate gathering then filtering:</b><br>
-     * Rather than handling every geometric configuration with its own branch,
-     * the method works in two clean phases.
-     * </p>
-     * <ol>
-     *   <li><b>Gather candidates.</b> Compute every ray parameter {@code t}
-     *       at which the ray could possibly touch the cylinder boundary:
-     *       the (up to 2) mantle hits from the parent {@link Tube} solver, plus
-     *       the (up to 2) cap-plane hits.</li>
-     *   <li><b>Filter.</b> For each candidate {@code t}, keep it only when two
-     *       conditions hold simultaneously:
-     *       (a) the resulting point actually lies on the finite cylinder boundary
-     *           ({@code isOnCylinderBoundary}), and
-     *       (b) the ray truly crosses the cylinder interior at that point, i.e.
-     *           it is not a tangency or a cap-plane overlap
-     *           ({@code crossesCylinderInterior}).</li>
-     * </ol>
-     *
-     * @param ray the ray to intersect with
-     * @return the intersection points, or {@code null} if there is no
-     * intersection
+    /*
+     * Phase 1 — gather candidates: up to 2 mantle t-values from the Tube solver
+     * plus up to 2 cap-plane t-values (bottom: projection=0, top: projection=height).
+     * Phase 2 — filter: keep only t-values whose point lies on the boundary
+     * AND where the ray genuinely crosses the interior (not tangent/cap-overlap).
      */
     @Override
-    public List<Point> findIntersections(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
         List<Double> candidates = new ArrayList<>();
 
         // ── Phase 1a: mantle candidates ──────────────────────────────────────
@@ -128,9 +99,9 @@ public final class Cylinder extends Tube {
         // We convert each hit point back to its ray parameter t using
         //   t = (point - rayOrigin) · rayDir   (direction is a unit vector).
         // The special case point == rayOrigin guards against a zero-vector subtraction.
-        List<Point> tubeHits = super.findIntersections(ray);
-        if (tubeHits != null) {
-            for (Point p : tubeHits) {
+        List<Intersection> tubeIntersections = super.calcIntersectionsHelper(ray);
+        if (tubeIntersections != null) {
+            for (Point p : tubeIntersections.stream().map(i -> i.point).toList()) {
                 double t = p.equals(ray.origin())
                         ? 0d
                         : alignZero(ray.direction().dotProduct(p.subtract(ray.origin())));
@@ -200,7 +171,7 @@ public final class Cylinder extends Tube {
             if (!dup) result.add(p);
         }
 
-        return result.isEmpty() ? null : result;
+        return result.isEmpty() ? null : result.stream().map(p -> new Intersection(this, p)).toList();
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -343,13 +314,6 @@ public final class Cylinder extends Tube {
     // Object overrides
     // ─────────────────────────────────────────────────────────────────────────
 
-    /**
-     * Compares this cylinder with another object.
-     *
-     * @param obj the object to compare with
-     * @return {@code true} if the other object is a cylinder with equal tube
-     * data and height
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -368,21 +332,11 @@ public final class Cylinder extends Tube {
                 || (isZero(b1.distance(t2)) && isZero(t1.distance(b2)));
     }
 
-    /**
-     * Returns a hash code for this cylinder.
-     *
-     * @return the hash code of the inherited tube data and height
-     */
     @Override
     public int hashCode() {
         return Objects.hash(super.hashCode(), _height);
     }
 
-    /**
-     * Returns a string representation of this cylinder.
-     *
-     * @return the cylinder axis, radius and height
-     */
     @Override
     public String toString() {
         return "Cylinder{axis=" + _axis + ", radius=" + _radius + ", height=" + _height + "}";

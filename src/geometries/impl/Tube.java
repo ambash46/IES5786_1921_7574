@@ -1,5 +1,7 @@
 package geometries.impl;
 
+import static geometries.api.Intersectable.Intersection;
+
 import geometries.api.RadialGeometry;
 import java.util.List;
 import java.util.Objects;
@@ -37,12 +39,6 @@ public class Tube extends RadialGeometry {
         this._axis = axis;
     }
 
-    /**
-     * Returns the normal vector of the tube at the given point.
-     *
-     * @param point a point on the tube
-     * @return the normal vector at the given point
-     */
     @Override
     public Vector getNormal(Point point) {
         Vector direction = _axis.direction();
@@ -58,24 +54,14 @@ public class Tube extends RadialGeometry {
         return point.subtract(_axis.getPoint(projection)).normalize();
     }
 
-    /**
-     * Finds all intersection points between the tube and the given ray.
-     * <p>
-     * The infinite tube is defined by all points whose perpendicular distance
-     * from the axis ray is equal to the tube radius. For the tested ray, the
-     * method removes the components parallel to the tube axis from both the ray
-     * direction and the vector from the axis origin to the ray origin. This
-     * produces a quadratic equation in the ray parameter {@code t}. Positive
-     * roots correspond to forward intersections with the tube surface.
-     * </p>
-     *
-     * @param ray the ray to intersect with
-     * @return the intersection points, or {@code null} if there is no
-     * intersection
+    /*
+     * Strips axis-parallel components from both the ray direction (v) and the
+     * delta vector (ΔP = p0 - pa), then solves the resulting quadratic
+     * a·t²+b·t+c=0 for the tube surface. Only t > 0 roots are kept.
      */
     @SuppressWarnings("SpellCheckingInspection")
     @Override
-    public List<Point> findIntersections(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
         // p0 = ray origin, pa = axis origin, v = ray direction (unit), va = axis direction (unit)
         Point p0 = ray.origin();
         Point pa = _axis.origin();
@@ -101,7 +87,7 @@ public class Tube extends RadialGeometry {
             // surface is hit at the single positive parameter:
             //   r² = (t·v_perp)²  =>  t = r / |v_perp|
             double t = alignZero(_radius / Math.sqrt(aAtAxis));
-            return t <= 0 ? null : List.of(ray.getPoint(t));
+            return t <= 0 ? null : List.of(new Intersection(this, ray.getPoint(t)));
         }
 
         // --- General case ---
@@ -144,24 +130,17 @@ public class Tube extends RadialGeometry {
 
         // Only positive t values represent intersections in front of the ray origin.
         if (t1 > 0 && t2 > 0) {
-            return List.of(ray.getPoint(t1), ray.getPoint(t2));
+            return List.of(new Intersection(this, ray.getPoint(t1)), new Intersection(this, ray.getPoint(t2)));
         }
         if (t1 > 0) {
-            return List.of(ray.getPoint(t1));
+            return List.of(new Intersection(this, ray.getPoint(t1)));
         }
         if (t2 > 0) {
-            return List.of(ray.getPoint(t2));
+            return List.of(new Intersection(this, ray.getPoint(t2)));
         }
         return null;
     }
 
-    /**
-     * Compares this tube with another object.
-     *
-     * @param obj the object to compare with
-     * @return {@code true} if the other object is a tube with equal axis and
-     * radius
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -181,21 +160,11 @@ public class Tube extends RadialGeometry {
         return dir.isParallel(other._axis.origin().subtract(_axis.origin()));
     }
 
-    /**
-     * Returns a hash code for this tube.
-     *
-     * @return the hash code of the axis ray and radius
-     */
     @Override
     public int hashCode() {
         return Objects.hash(_axis, _radius);
     }
 
-    /**
-     * Returns a string representation of this tube.
-     *
-     * @return the tube axis and radius
-     */
     @Override
     public String toString() {
         return "Tube{axis=" + _axis + ", radius=" + _radius + "}";

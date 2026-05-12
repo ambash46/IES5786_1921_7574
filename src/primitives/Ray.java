@@ -1,5 +1,8 @@
 package primitives;
 
+import static geometries.api.Intersectable.Intersection;
+
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -72,12 +75,46 @@ public final class Ray {
     }
 
     /**
-     * Compares this ray with another object.
+     * Finds the intersection in the given list whose point is closest to the
+     * ray's origin.
+     * <p>
+     * Uses squared distances to avoid unnecessary square-root computations.
+     * </p>
      *
-     * @param obj the object to compare with
-     * @return {@code true} if the other object is a ray with equal origin and
-     * direction
+     * @param intersections a list of candidate intersections, or {@code null}
+     * @return the intersection closest to the origin, or {@code null} if the
+     *         list is {@code null} or empty
      */
+    public Intersection findClosestIntersection(List<Intersection> intersections) {
+        if (intersections == null) return null;
+        Intersection closest = null;
+        double minDistSq = Double.POSITIVE_INFINITY;
+        for (Intersection i : intersections) {
+            double distSq = i.point.distanceSquared(_origin);
+            if (distSq < minDistSq) {
+                minDistSq = distSq;
+                closest = i;
+            }
+        }
+        return closest;
+    }
+
+    /**
+     * Finds the point in the given list that is closest to the ray's origin.
+     *
+     * @param points a list of candidate points, or {@code null}
+     * @return the point closest to the origin, or {@code null} if {@code points}
+     *         is {@code null}
+     */
+    public Point findClosestPoint(List<Point> points) {
+        return points == null ? null
+                : findClosestIntersection(
+                        points.stream()
+                                .map(point -> new Intersection(null, point))
+                                .toList()
+                ).point;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -87,21 +124,11 @@ public final class Ray {
                 && Objects.equals(_direction, other._direction);
     }
 
-    /**
-     * Returns a hash code for this ray.
-     *
-     * @return the hash code of the origin and direction
-     */
     @Override
     public int hashCode() {
         return Objects.hash(_origin, _direction);
     }
 
-    /**
-     * Returns a string representation of this ray.
-     *
-     * @return the ray origin and direction
-     */
     @Override
     public String toString() {
         return "Ray{origin=" + _origin + ", direction=" + _direction + "}";
