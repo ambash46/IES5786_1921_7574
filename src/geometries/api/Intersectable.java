@@ -1,6 +1,7 @@
 package geometries.api;
 
 import java.util.List;
+import primitives.Material;
 import primitives.Point;
 import primitives.Ray;
 
@@ -71,14 +72,23 @@ public abstract class Intersectable {
         public final Point point;
 
         /**
+         * The material of the intersected geometry.
+         */
+        public final Material material;
+
+        /**
          * Constructs an Intersection.
+         * The material is taken from the geometry; if geometry is {@code null}
+         * (e.g. when converting a plain Point in findClosestPoint), a default
+         * material is used.
          *
          * @param geometry the intersected geometry
          * @param point    the intersection point
          */
         public Intersection(Geometry geometry, Point point) {
             this.geometry = geometry;
-            this.point = point;
+            this.point    = point;
+            this.material = geometry != null ? geometry.getMaterial() : new Material();
         }
 
         @Override

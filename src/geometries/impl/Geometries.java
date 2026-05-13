@@ -45,6 +45,12 @@ public final class Geometries extends Intersectable {
         Collections.addAll(this.geometries, geometries);
     }
 
+    /**
+     * Collects all intersections from every geometry in the collection.
+     *
+     * @param ray the ray to intersect with
+     * @return a combined list of {@link Intersection}s, or {@code null} if none
+     */
     @Override
     protected List<Intersection> calcIntersectionsHelper(Ray ray) {
         List<Intersection> result = null;
