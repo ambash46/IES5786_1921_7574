@@ -1,9 +1,11 @@
 package geometries.api;
 
 import java.util.List;
+import lighting.LightSource;
 import primitives.Material;
 import primitives.Point;
 import primitives.Ray;
+import primitives.Vector;
 
 /**
  * Represents a geometric object that can be intersected by a ray.
@@ -75,6 +77,19 @@ public abstract class Intersectable {
          * The material of the intersected geometry.
          */
         public final Material material;
+
+        /** The surface normal at the intersection point. */
+        public Vector      n;
+        /** The direction of the incoming ray (toward the surface). */
+        public Vector      v;
+        /** Dot product of {@link #v} and {@link #n} — used to check ray-surface angle. */
+        public double      vn;
+        /** The active light source being evaluated. */
+        public LightSource light;
+        /** Direction from the light source to the intersection point. */
+        public Vector      l;
+        /** Dot product of {@link #l} and {@link #n} — used to check light-surface angle. */
+        public double      ln;
 
         /**
          * Constructs an Intersection.
