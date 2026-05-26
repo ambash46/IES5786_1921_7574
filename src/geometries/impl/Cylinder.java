@@ -46,6 +46,15 @@ public final class Cylinder extends Tube {
     private static final double INTERIOR_EPS = 1e-7;
 
     /**
+     * Tolerance for the radial distance check on the mantle surface.
+     * Floating-point accumulation in the tube quadratic solver leaves
+     * {@code distanceSquared - r²} at roughly 1e-7 for true mantle hits;
+     * 1e-5 sits safely above that noise floor while still rejecting points
+     * that are genuinely off the surface.
+     */
+    private static final double MANTLE_EPS = 1e-5;
+
+    /**
      * The height of the cylinder.
      */
     private final double _height;
@@ -231,8 +240,8 @@ public final class Cylinder extends Tube {
         double radialDelta = alignZero(
                 point.distanceSquared(_axis.getPoint(projection)) - _radiusSquared);
         boolean onCap = isZero(projection) || isZero(projection - _height);
-        return onCap ? radialDelta <= 0   // anywhere inside or on the rim of the disk
-                     : isZero(radialDelta); // exactly on the mantle surface
+        return onCap ? radialDelta <= 0          // anywhere inside or on the rim of the disk
+                     : Math.abs(radialDelta) < MANTLE_EPS; // on the mantle surface
     }
 
     /**
