@@ -165,7 +165,9 @@ public class Camera implements Cloneable {
      * @param yIndex the pixel row index (0-based)
      */
     private void castRay(int xIndex, int yIndex) {
-        _imageWriter.writePixel(xIndex, yIndex, _rayTracer.traceRay(constructRay(xIndex, yIndex)));
+        Ray ray = constructRay(xIndex, yIndex);
+        Color color = _rayTracer.traceRay(ray);
+        _imageWriter.writePixel(xIndex, yIndex, color);
     }
 
     /**

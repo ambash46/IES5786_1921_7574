@@ -21,13 +21,17 @@ public abstract class Intersectable {
     protected Intersectable() { /* no-op */ }
 
     /**
-     * Implementation hook for {@link #calcIntersections(Ray)}.
-     * Subclasses must override this method to provide their intersection logic.
+     * Implementation hook for {@link #calcIntersections(Ray, double)}.
+     * Subclasses must override this method to provide their intersection logic,
+     * returning only intersections at distance ≤ {@code maxDistance} from the
+     * ray origin.
      *
-     * @param ray the ray to intersect with
-     * @return a list of {@link Intersection}s, or {@code null} if there are none
+     * @param ray         the ray to intersect with
+     * @param maxDistance upper bound on intersection distance (exclusive of points
+     *                    beyond this distance)
+     * @return a list of {@link Intersection}s within range, or {@code null} if none
      */
-    protected abstract List<Intersection> calcIntersectionsHelper(Ray ray);
+    protected abstract List<Intersection> calcIntersectionsHelper(Ray ray, double maxDistance);
 
     /**
      * Finds all intersections between this object and the given ray, returning
@@ -37,7 +41,19 @@ public abstract class Intersectable {
      * @return a list of {@link Intersection}s, or {@code null} if there are none
      */
     public final List<Intersection> calcIntersections(Ray ray) {
-        return calcIntersectionsHelper(ray);
+        return calcIntersections(ray, Double.POSITIVE_INFINITY);
+    }
+
+    /**
+     * Finds all intersections between this object and the given ray that are
+     * within {@code maxDistance} from the ray origin.
+     *
+     * @param ray         the ray to intersect with
+     * @param maxDistance upper bound on intersection distance
+     * @return a list of {@link Intersection}s within range, or {@code null} if none
+     */
+    public final List<Intersection> calcIntersections(Ray ray, double maxDistance) {
+        return calcIntersectionsHelper(ray, maxDistance);
     }
 
     /**

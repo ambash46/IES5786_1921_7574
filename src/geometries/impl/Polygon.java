@@ -125,13 +125,12 @@ public class Polygon extends Geometry {
      * inside the polygon, or {@code null} otherwise
      */
     @Override
-    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
-        // Step 1: intersect with the infinite supporting plane.
-        // Flat bodies delegate to findIntersections on the contained plane.
-        List<Point> planeIntersections = _plane.findIntersections(ray);
-        if (planeIntersections == null) return null;
+    protected List<Intersection> calcIntersectionsHelper(Ray ray, double maxDistance) {
+        // Step 1: intersect with the infinite supporting plane (respects maxDistance).
+        var planeHits = _plane.calcIntersections(ray, maxDistance);
+        if (planeHits == null) return null;
 
-        Point intersection = planeIntersections.getFirst();
+        Point intersection = planeHits.getFirst().point;
         Vector normal = _plane.getNormal(intersection);
         boolean positive = false;
 

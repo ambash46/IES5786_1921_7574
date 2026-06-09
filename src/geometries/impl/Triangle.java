@@ -39,7 +39,7 @@ public final class Triangle extends Polygon {
      */
     @SuppressWarnings("SpellCheckingInspection")
     @Override
-    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray, double maxDistance) {
         Point vertex0 = _vertices.get(0);
         Point vertex1 = _vertices.get(1);
         Point vertex2 = _vertices.get(2);
@@ -73,9 +73,9 @@ public final class Triangle extends Polygon {
         if (v <= 0 || alignZero(u + v) >= 1) return null;
 
         // t is the signed distance along the ray direction.
-        // Only positive t values represent intersections in front of the ray.
+        // Only positive t values within maxDistance represent valid intersections.
         double t = alignZero(edge2.dotProduct(qVec) * inverseDeterminant);
-        return t <= 0 ? null : List.of(new Intersection(this, ray.getPoint(t)));
+        return (t <= 0 || alignZero(maxDistance - t) < 0) ? null : List.of(new Intersection(this, ray.getPoint(t)));
     }
 
 }

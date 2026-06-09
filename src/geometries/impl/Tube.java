@@ -61,7 +61,7 @@ public class Tube extends RadialGeometry {
      */
     @SuppressWarnings("SpellCheckingInspection")
     @Override
-    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray, double maxDistance) {
         // p0 = ray origin, pa = axis origin, v = ray direction (unit), va = axis direction (unit)
         Point p0 = ray.origin();
         Point pa = _axis.origin();
@@ -87,7 +87,7 @@ public class Tube extends RadialGeometry {
             // surface is hit at the single positive parameter:
             //   r² = (t·v_perp)²  =>  t = r / |v_perp|
             double t = alignZero(_radius / Math.sqrt(aAtAxis));
-            return t <= 0 ? null : List.of(new Intersection(this, ray.getPoint(t)));
+            return (t <= 0 || alignZero(maxDistance - t) < 0) ? null : List.of(new Intersection(this, ray.getPoint(t)));
         }
 
         // --- General case ---
@@ -128,16 +128,17 @@ public class Tube extends RadialGeometry {
         double t1 = alignZero((-b - sqrtDiscriminant) / denominator);
         double t2 = alignZero((-b + sqrtDiscriminant) / denominator);
 
-        // Only positive t values represent intersections in front of the ray origin.
+        // Keep only intersections strictly in front of the ray and within maxDistance.
         if (t1 > 0 && t2 > 0) {
-            return List.of(new Intersection(this, ray.getPoint(t1)), new Intersection(this, ray.getPoint(t2)));
+            boolean in1 = alignZero(maxDistance - t1) >= 0;
+            boolean in2 = alignZero(maxDistance - t2) >= 0;
+            if (in1 && in2)  return List.of(new Intersection(this, ray.getPoint(t1)), new Intersection(this, ray.getPoint(t2)));
+            if (in1)         return List.of(new Intersection(this, ray.getPoint(t1)));
+            if (in2)         return List.of(new Intersection(this, ray.getPoint(t2)));
+            return null;
         }
-        if (t1 > 0) {
-            return List.of(new Intersection(this, ray.getPoint(t1)));
-        }
-        if (t2 > 0) {
-            return List.of(new Intersection(this, ray.getPoint(t2)));
-        }
+        if (t1 > 0) return alignZero(maxDistance - t1) >= 0 ? List.of(new Intersection(this, ray.getPoint(t1))) : null;
+        if (t2 > 0) return alignZero(maxDistance - t2) >= 0 ? List.of(new Intersection(this, ray.getPoint(t2))) : null;
         return null;
     }
 

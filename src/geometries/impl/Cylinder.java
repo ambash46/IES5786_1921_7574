@@ -98,7 +98,7 @@ public final class Cylinder extends Tube {
      * AND where the ray genuinely crosses the interior (not tangent/cap-overlap).
      */
     @Override
-    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray, double maxDistance) {
         List<Double> candidates = new ArrayList<>();
 
         // ── Phase 1a: mantle candidates ──────────────────────────────────────
@@ -108,7 +108,7 @@ public final class Cylinder extends Tube {
         // We convert each hit point back to its ray parameter t using
         //   t = (point - rayOrigin) · rayDir   (direction is a unit vector).
         // The special case point == rayOrigin guards against a zero-vector subtraction.
-        List<Intersection> tubeIntersections = super.calcIntersectionsHelper(ray);
+        List<Intersection> tubeIntersections = super.calcIntersectionsHelper(ray, maxDistance);
         if (tubeIntersections != null) {
             for (Point p : tubeIntersections.stream().map(i -> i.point).toList()) {
                 double t = p.equals(ray.origin())
@@ -142,12 +142,12 @@ public final class Cylinder extends Tube {
         if (!isZero(dirProj)) {
             // t for the bottom cap (capHeight = 0):
             double tBottom = alignZero(-originProj / dirProj);
-            if (tBottom > 0 && isNewCandidate(candidates, tBottom))
+            if (tBottom > 0 && alignZero(maxDistance - tBottom) >= 0 && isNewCandidate(candidates, tBottom))
                 candidates.add(tBottom);
 
             // t for the top cap (capHeight = _height):
             double tTop = alignZero((_height - originProj) / dirProj);
-            if (tTop > 0 && isNewCandidate(candidates, tTop))
+            if (tTop > 0 && alignZero(maxDistance - tTop) >= 0 && isNewCandidate(candidates, tTop))
                 candidates.add(tTop);
         }
 

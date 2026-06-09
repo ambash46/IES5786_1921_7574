@@ -64,9 +64,9 @@ public final class Plane extends Geometry {
         return _normal;
     }
 
-    /* Returns null when n·v=0 (parallel), when origin is on the plane, or t<=0. */
+    /* Returns null when n·v=0 (parallel), when origin is on the plane, t<=0, or t>maxDistance. */
     @Override
-    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray, double maxDistance) {
         Point p0 = ray.origin();
         Vector v = ray.direction();
 
@@ -76,7 +76,7 @@ public final class Plane extends Geometry {
         if (isZero(nv)) return null;
 
         double t = alignZero(_normal.dotProduct(_point.subtract(p0)) / nv);
-        return t <= 0 ? null : List.of(new Intersection(this, ray.getPoint(t)));
+        return (t <= 0 || alignZero(maxDistance - t) < 0) ? null : List.of(new Intersection(this, ray.getPoint(t)));
     }
 
     @Override

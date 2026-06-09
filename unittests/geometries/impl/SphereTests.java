@@ -1,9 +1,12 @@
 package geometries.impl;
 
+import geometries.api.Intersectable;
 import org.junit.jupiter.api.Test;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -164,6 +167,24 @@ class SphereTests {
     private static final String ERROR_INTERSECTION_INSIDE =
             "Sphere.findIntersections() returned an unexpected result for rays starting inside the sphere";
 
+    // ── maxDistance test data ──────────────────────────────────────────────────
+    // Ray: OFF_CENTER_BEFORE_ORIGIN → AXIS_X, crosses sphere at t1 and t2 where:
+    //   t1 = 3 - sqrt(3) ≈ 1.268  (distance to FIRST_INTERSECTION_POINT)
+    //   t2 = 3 + sqrt(3) ≈ 4.732  (distance to SECOND_INTERSECTION_POINT)
+
+    /** maxDistance before the first intersection → 0 hits. */
+    private static final double MAX_DIST_Q0 = 3 - Math.sqrt(3) - 0.5;
+    /** maxDistance exactly at the first intersection → 1 hit (boundary). */
+    private static final double MAX_DIST_Q1 = 3 - Math.sqrt(3);
+    /** maxDistance strictly between the two intersections → 1 hit. */
+    private static final double MAX_DIST_Q2 = 3;
+    /** maxDistance exactly at the second intersection → 2 hits (boundary). */
+    private static final double MAX_DIST_Q3 = 3 + Math.sqrt(3);
+    /** maxDistance beyond the second intersection → 2 hits. */
+    private static final double MAX_DIST_Q4 = 3 + Math.sqrt(3) + 0.5;
+    /** maxDistance at infinity → 2 hits (same as findIntersections). */
+    private static final double MAX_DIST_Q5 = Double.POSITIVE_INFINITY;
+
     /**
      * Test method for {@link Sphere#Sphere(Point, double)}.
      * Verifies correct and incorrect sphere constructions.
@@ -295,5 +316,50 @@ class SphereTests {
         // TC22: Ray crosses through the center, starts after the sphere
         assertNull(sphere.findIntersections(new Ray(THROUGH_CENTER_AFTER_ORIGIN, Vector.AXIS_X)),
                 ERROR_INTERSECTION_THROUGH_CENTER);
+    }
+
+    /** Extracts the bare {@link Point} list from a {@code calcIntersections} result. */
+    private static List<Point> pts(List<Intersectable.Intersection> list) {
+        return list == null ? null : list.stream().map(i -> i.point).toList();
+    }
+
+    /**
+     * Test method for {@link Sphere#calcIntersections(Ray, double)}.
+     * Uses a ray that crosses the sphere at t1 = 3-√3 and t2 = 3+√3.
+     * Six Q-points are placed along the ray to cover all boundary cases.
+     */
+    @Test
+    void testCalcIntersectionsWithMaxDistance() {
+        Sphere sphere = new Sphere(CENTER, RADIUS);
+        Ray ray = new Ray(OFF_CENTER_BEFORE_ORIGIN, Vector.AXIS_X);
+
+        // TC01: Q0 – maxDistance before first intersection → no hits
+        assertNull(pts(sphere.calcIntersections(ray, MAX_DIST_Q0)),
+                "calcIntersections: expected null when maxDistance is before the first intersection");
+
+        // TC02: Q1 – maxDistance exactly at first intersection → 1 hit (boundary included)
+        assertEquals(List.of(FIRST_INTERSECTION_POINT),
+                pts(sphere.calcIntersections(ray, MAX_DIST_Q1)),
+                "calcIntersections: expected 1 hit when maxDistance equals t1");
+
+        // TC03: Q2 – maxDistance strictly between intersections → 1 hit
+        assertEquals(List.of(FIRST_INTERSECTION_POINT),
+                pts(sphere.calcIntersections(ray, MAX_DIST_Q2)),
+                "calcIntersections: expected 1 hit when maxDistance is between t1 and t2");
+
+        // TC04: Q3 – maxDistance exactly at second intersection → 2 hits (boundary included)
+        assertEquals(List.of(FIRST_INTERSECTION_POINT, SECOND_INTERSECTION_POINT),
+                pts(sphere.calcIntersections(ray, MAX_DIST_Q3)),
+                "calcIntersections: expected 2 hits when maxDistance equals t2");
+
+        // TC05: Q4 – maxDistance beyond second intersection → 2 hits
+        assertEquals(List.of(FIRST_INTERSECTION_POINT, SECOND_INTERSECTION_POINT),
+                pts(sphere.calcIntersections(ray, MAX_DIST_Q4)),
+                "calcIntersections: expected 2 hits when maxDistance is beyond t2");
+
+        // TC06: Q5 – maxDistance at infinity → 2 hits (same as findIntersections)
+        assertEquals(List.of(FIRST_INTERSECTION_POINT, SECOND_INTERSECTION_POINT),
+                pts(sphere.calcIntersections(ray, MAX_DIST_Q5)),
+                "calcIntersections: expected 2 hits when maxDistance is infinity");
     }
 }

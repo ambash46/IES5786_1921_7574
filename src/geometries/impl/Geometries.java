@@ -52,10 +52,10 @@ public final class Geometries extends Intersectable {
      * @return a combined list of {@link Intersection}s, or {@code null} if none
      */
     @Override
-    protected List<Intersection> calcIntersectionsHelper(Ray ray) {
+    protected List<Intersection> calcIntersectionsHelper(Ray ray, double maxDistance) {
         List<Intersection> result = null;
         for (Intersectable g : geometries) {
-            List<Intersection> hits = g.calcIntersections(ray);
+            List<Intersection> hits = g.calcIntersections(ray, maxDistance);
             if (hits != null) {
                 if (result == null)
                     result = new ArrayList<>(hits);
