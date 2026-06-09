@@ -21,6 +21,10 @@ public class Material {
     public Double3 kD         = Double3.ZERO;
     /** Specular attenuation coefficient. */
     public Double3 kS         = Double3.ZERO;
+    /** Transparency attenuation coefficient. */
+    public Double3 kT         = Double3.ZERO;
+    /** Reflection attenuation coefficient. */
+    public Double3 kR         = Double3.ZERO;
     /** Shininess exponent for the specular highlight. */
     public int     nShininess = 0;
 
@@ -90,6 +94,50 @@ public class Material {
      */
     public Material setKS(double kS) {
         this.kS = new Double3(kS);
+        return this;
+    }
+
+    /**
+     * Sets the transparency attenuation coefficient.
+     *
+     * @param kT the transparency coefficient as a {@link Double3}
+     * @return this material, for method chaining
+     */
+    public Material setKT(Double3 kT) {
+        this.kT = kT;
+        return this;
+    }
+
+    /**
+     * Sets the transparency attenuation coefficient uniformly across all components.
+     *
+     * @param kT the transparency coefficient as a scalar
+     * @return this material, for method chaining
+     */
+    public Material setKT(double kT) {
+        this.kT = new Double3(kT);
+        return this;
+    }
+
+    /**
+     * Sets the reflection attenuation coefficient.
+     *
+     * @param kR the reflection coefficient as a {@link Double3}
+     * @return this material, for method chaining
+     */
+    public Material setKR(Double3 kR) {
+        this.kR = kR;
+        return this;
+    }
+
+    /**
+     * Sets the reflection attenuation coefficient uniformly across all components.
+     *
+     * @param kR the reflection coefficient as a scalar
+     * @return this material, for method chaining
+     */
+    public Material setKR(double kR) {
+        this.kR = new Double3(kR);
         return this;
     }
 

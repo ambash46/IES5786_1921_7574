@@ -115,6 +115,17 @@ public record Double3(double _d1, double _d2, double _d3) {
     }
 
     /**
+     * Checks whether at least one component is greater than or equal to a given value.
+     * This is the logical negation of {@link #isLowerThan(double)}:
+     * <pre>isGreaterThan(k) ≡ !isLowerThan(k) ≡ d1≥k ∨ d2≥k ∨ d3≥k</pre>
+     * @param  k the value to compare against
+     * @return   {@code true} if at least one component is ≥ {@code k}
+     */
+    public boolean isGreaterThan(double k) {
+        return _d1 >= k || _d2 >= k || _d3 >= k;
+    }
+
+    /**
      * Checks whether all components of this triad are smaller than the
      * corresponding components of another triad.
      * @param  other the triad to compare with

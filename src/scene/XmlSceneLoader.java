@@ -3,10 +3,13 @@ package scene;
 import geometries.api.Geometry;
 import geometries.impl.Cylinder;
 import geometries.impl.Plane;
+import geometries.impl.Polygon;
 import geometries.impl.Sphere;
 import geometries.impl.Triangle;
 import geometries.impl.Tube;
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import lighting.AmbientLight;
 import lighting.DirectionalLight;
 import lighting.PointLight;
@@ -35,17 +38,23 @@ import javax.xml.parsers.DocumentBuilderFactory;
  *     </lights>
  *     <geometries>
  *         <sphere   center="x y z" radius="r"
- *                   emission="r g b" kd="..." ks="..." shininess="n"/>
+ *                   emission="r g b" kd="..." ks="..." kt="..." kr="..." shininess="n"/>
  *         <triangle p0="x y z" p1="x y z" p2="x y z"
+ *                   emission="r g b" kd="..." ks="..." kt="..." kr="..." shininess="n"/>
+ *         <plane    point="x y z" normal="x y z"
+ *                   emission="r g b" kd="..." ks="..." kr="..." shininess="n"/>
+ *         <polygon  p0="x y z" p1="x y z" p2="x y z" p3="x y z" ...
  *                   emission="r g b" kd="..." ks="..." shininess="n"/>
- *         <plane    point="x y z" normal="x y z"/>
  *         <tube     axis-origin="x y z" axis-dir="x y z" radius="r"/>
  *         <cylinder axis-origin="x y z" axis-dir="x y z" radius="r" height="h"/>
  *     </geometries>
  * </scene>
  * }</pre>
  *
- * <p>kd/ks/ka accept either a single scalar or three space-separated values.
+ * <p>Material attributes ({@code ka}/{@code kd}/{@code ks}/{@code kt}/{@code kr})
+ * accept either a single scalar or three space-separated values.
+ * {@code kt} sets the transparency coefficient (stage 8), {@code kr} sets the
+ * reflection coefficient (stage 8).
  * Files from previous stages without {@code <lights>} or material attributes
  * remain fully compatible.</p>
  *
@@ -177,6 +186,12 @@ public class XmlSceneLoader {
                         SceneParserUtils.parseRay(e.getAttribute("axis-origin"),
                                 e.getAttribute("axis-dir")),
                         Double.parseDouble(e.getAttribute("height")));
+                case "polygon" -> {
+                    List<primitives.Point> pts = new ArrayList<>();
+                    for (int idx = 0; e.hasAttribute("p" + idx); idx++)
+                        pts.add(SceneParserUtils.parsePoint(e.getAttribute("p" + idx)));
+                    yield new Polygon(pts.toArray(new primitives.Point[0]));
+                }
                 default -> throw new IllegalArgumentException(
                         "Unknown geometry element: <" + e.getTagName() + ">");
             };
@@ -189,26 +204,27 @@ public class XmlSceneLoader {
     }
 
     /**
-     * Parses material attributes ({@code ka}, {@code kd}, {@code ks},
-     * {@code shininess}) from a geometry element.
-     * Returns {@code null} if none are present (backward compatible).
+     * Parses material attributes from a geometry element.
+     * Supports {@code ka}, {@code kd}, {@code ks}, {@code kt} (transparency,
+     * stage 8), {@code kr} (reflection, stage 8), and {@code shininess}.
+     * Returns {@code null} if none are present (backward compatible with
+     * pre-stage-8 XML files).
      *
      * @param e the geometry element
      * @return a new {@link Material} if any attribute is present, otherwise null
      */
     private static Material parseMaterial(Element e) {
         boolean any = e.hasAttribute("ka") || e.hasAttribute("kd")
-                   || e.hasAttribute("ks") || e.hasAttribute("shininess");
+                   || e.hasAttribute("ks") || e.hasAttribute("kt")
+                   || e.hasAttribute("kr") || e.hasAttribute("shininess");
         if (!any) return null;
         Material mat = new Material();
-        if (e.hasAttribute("ka"))
-            mat.kA = SceneParserUtils.parseDouble3(e.getAttribute("ka"));
-        if (e.hasAttribute("kd"))
-            mat.kD = SceneParserUtils.parseDouble3(e.getAttribute("kd"));
-        if (e.hasAttribute("ks"))
-            mat.kS = SceneParserUtils.parseDouble3(e.getAttribute("ks"));
-        if (e.hasAttribute("shininess"))
-            mat.nShininess = Integer.parseInt(e.getAttribute("shininess"));
+        if (e.hasAttribute("ka"))       mat.kA = SceneParserUtils.parseDouble3(e.getAttribute("ka"));
+        if (e.hasAttribute("kd"))       mat.kD = SceneParserUtils.parseDouble3(e.getAttribute("kd"));
+        if (e.hasAttribute("ks"))       mat.kS = SceneParserUtils.parseDouble3(e.getAttribute("ks"));
+        if (e.hasAttribute("kt"))       mat.kT = SceneParserUtils.parseDouble3(e.getAttribute("kt"));
+        if (e.hasAttribute("kr"))       mat.kR = SceneParserUtils.parseDouble3(e.getAttribute("kr"));
+        if (e.hasAttribute("shininess")) mat.nShininess = Integer.parseInt(e.getAttribute("shininess"));
         return mat;
     }
 }

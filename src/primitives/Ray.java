@@ -15,6 +15,10 @@ import java.util.Objects;
  * @author Ambash and Elyasaf
  */
 public final class Ray {
+
+    /** Small offset used to push secondary-ray origins off the surface. */
+    private static final double DELTA = 0.1;
+
     /**
      * The starting point of the ray.
      */
@@ -32,6 +36,24 @@ public final class Ray {
      */
     public Ray(Point origin, Vector direction) {
         _origin = origin;
+        _direction = direction.normalize();
+    }
+
+    /**
+     * Constructs a ray with its origin offset along {@code normal} to avoid
+     * self-intersection (shadow/reflection/transparency acne).
+     * <p>
+     * The origin is moved by {@link #DELTA} in the direction of {@code normal}
+     * when {@code direction · normal > 0}, and in the opposite direction otherwise.
+     * </p>
+     *
+     * @param origin    the surface point
+     * @param direction the desired ray direction
+     * @param normal    the surface normal at {@code origin}
+     */
+    public Ray(Point origin, Vector direction, Vector normal) {
+        double dn = direction.dotProduct(normal);
+        _origin    = origin.add(normal.scale(dn > 0 ? DELTA : -DELTA));
         _direction = direction.normalize();
     }
 

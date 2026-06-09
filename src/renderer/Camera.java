@@ -241,6 +241,12 @@ public class Camera implements Cloneable {
         private Vector _vUp = Vector.AXIS_Y;
 
         /**
+         * Accumulated roll angle in degrees (rotation around the forward vTo axis).
+         * Positive values rotate counter-clockwise when looking along vTo.
+         */
+        private double _rotationAngle = 0;
+
+        /**
          * Configures the camera to render the given scene using the specified ray
          * tracing strategy.
          *
@@ -337,6 +343,23 @@ public class Camera implements Cloneable {
         }
 
         /**
+         * Rotates the camera around its forward ({@code vTo}) axis by the given angle.
+         * <p>
+         * This is a "roll" transformation: the viewing direction is unchanged, but
+         * the up and right vectors are rotated in the view plane.
+         * Positive angles rotate counter-clockwise when looking along {@code vTo}.
+         * Calls may be chained; angles accumulate.
+         * </p>
+         *
+         * @param angleDegrees the roll angle in degrees
+         * @return this Builder
+         */
+        public Builder rotate(double angleDegrees) {
+            _rotationAngle += angleDegrees;
+            return this;
+        }
+
+        /**
          * Sets the pixel resolution of the rendered image.
          *
          * @param nX the number of pixel columns (must be positive)
@@ -397,6 +420,17 @@ public class Camera implements Cloneable {
             // true vUp = vRight × vTo: guarantees full orthogonality of the basis,
             // because the caller's vUp is not necessarily perpendicular to vTo
             _camera._vUp = _camera._vRight.crossProduct(_camera._vTo);
+
+            // Apply roll rotation around the vTo axis (Rodrigues' formula, k·v=0 case)
+            if (!Util.isZero(_rotationAngle)) {
+                double rad  = Math.toRadians(_rotationAngle);
+                double cos  = Math.cos(rad);
+                double sin  = Math.sin(rad);
+                // vUp_new = vUp*cos + vRight*sin
+                Vector rotatedUp     = _camera._vUp.scale(cos).add(_camera._vRight.scale(sin));
+                _camera._vRight      = _camera._vTo.crossProduct(rotatedUp).normalize();
+                _camera._vUp         = _camera._vRight.crossProduct(_camera._vTo);
+            }
         }
 
         /**
