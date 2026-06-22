@@ -29,8 +29,15 @@ class RenderStage8Tests {
     /** Default constructor to satisfy JavaDoc generator. */
     RenderStage8Tests() { /* no-op */ }
 
+    /** Pixel resolution used for all test renders (width = height). */
     private static final int RESOLUTION = 500;
 
+    /**
+     * Loads a scene from the named XML file via {@link XmlSceneLoader}.
+     *
+     * @param name base name of the XML file (no extension, no path prefix)
+     * @return the loaded {@link Scene}
+     */
     private Scene load(String name) {
         return new XmlSceneLoader().load(name);
     }

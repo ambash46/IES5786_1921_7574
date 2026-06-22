@@ -27,7 +27,6 @@ import scene.Scene;
  *       inverse-distance-weighted smooth normals: the silhouette looks round
  *       rather than faceted.</li>
  * </ol>
- * </p>
  *
  * @author Ambash and Elyasaf
  */
@@ -727,7 +726,7 @@ class TriangleMeshRenderTests {
         Material lipMat = new Material().setKD(0.70).setKS(0.30).setShininess(30);
 
         // ── Eyes: oriented sclera mesh + iris disc + pupil disc ───────────────
-        double eyeTheta = Math.PI * 0.47, eyePhi = 0.38, eyeR = 0.16;
+        double eyeTheta = Math.PI * 0.51, eyePhi = 0.38, eyeR = 0.19;
         for (int side = -1; side <= 1; side += 2) {
             double phi = Math.PI / 2 + side * eyePhi;
             Point socket = headSurfacePoint(eyeTheta, phi);
@@ -763,26 +762,27 @@ class TriangleMeshRenderTests {
             scene.geometries.add(pupil);
         }
 
-        // ── Eyebrows: thin curved surface-patch ribbons ───────────────────────
+        // ── Eyebrows: thin, arched surface-patch ribbons ──────────────────────
         Color browColor = new Color(35, 22, 13);
-        double browCenterTheta = Math.PI * 0.44;
-        double browPhiHalf = 0.19;
+        double browCenterTheta = Math.PI * 0.475;
+        double browPhiHalf = 0.18;
         double browPhiCenter = 0.38;
-        double browThetaHalf = 0.030;
+        double browThetaHalf = 0.018;
+        double browArch = 0.035;
         for (int side = -1; side <= 1; side += 2) {
             double phiCenter = Math.PI / 2 + side * browPhiCenter;
             TriangleMesh brow = buildSurfacePatch(
                     browCenterTheta - browThetaHalf,
                     browCenterTheta + browThetaHalf,
                     phiCenter, browPhiHalf,
-                    6, 14, 0.018);
+                    6, 14, 0.012, browArch);
             brow.setEmission(browColor);
             brow.setMaterial(browMat);
             scene.geometries.add(brow);
         }
 
         // ── Nostrils: near-black sphere seated in the geometric dimple ────────
-        double nostrilTheta = Math.PI * 0.61, nostrilPhi = 0.11, nostrilR = 0.05;
+        double nostrilTheta = Math.PI * 0.685, nostrilPhi = 0.09, nostrilR = 0.05;
         Color nostrilColor = new Color(10, 6, 4);
         for (int side = -1; side <= 1; side += 2) {
             double phi = Math.PI / 2 + side * nostrilPhi;
@@ -794,16 +794,18 @@ class TriangleMeshRenderTests {
         }
 
         // ── Lips: two surface-patch bands with rosy emission ─────────────────
+        // Upper lip widened and given more lift than the lower lip for fuller
+        // volume, with ranges sized close to the lower lip for symmetry.
         TriangleMesh upperLip = buildSurfacePatch(
-                Math.PI * 0.638, Math.PI * 0.662,
-                Math.PI / 2, 0.20, 4, 12, 0.018);
+                Math.PI * 0.678, Math.PI * 0.707,
+                Math.PI / 2, 0.20, 4, 12, 0.024);
         upperLip.setEmission(new Color(150, 64, 70));
         upperLip.setMaterial(lipMat);
         scene.geometries.add(upperLip);
 
         TriangleMesh lowerLip = buildSurfacePatch(
-                Math.PI * 0.665, Math.PI * 0.700,
-                Math.PI / 2, 0.20, 4, 12, 0.018);
+                Math.PI * 0.710, Math.PI * 0.743,
+                Math.PI / 2, 0.20, 4, 12, 0.020);
         lowerLip.setEmission(new Color(180, 80, 86));
         lowerLip.setMaterial(lipMat);
         scene.geometries.add(lowerLip);
@@ -922,13 +924,30 @@ class TriangleMeshRenderTests {
             double thetaMin, double thetaMax,
             double phiCenter, double phiHalf,
             int rows, int cols, double liftOff) {
+        return buildSurfacePatch(thetaMin, thetaMax, phiCenter, phiHalf, rows, cols, liftOff, 0);
+    }
+
+    /**
+     * Same as {@link #buildSurfacePatch(double, double, double, double, int, int, double)}
+     * but with an additional upward arch toward the centre of the patch —
+     * used to give eyebrow ribbons their natural curved shape.
+     *
+     * @param arch peak latitude offset (subtracted from theta) at the patch's
+     *             horizontal centre, fading to 0 at its left/right edges
+     */
+    private static TriangleMesh buildSurfacePatch(
+            double thetaMin, double thetaMax,
+            double phiCenter, double phiHalf,
+            int rows, int cols, double liftOff, double arch) {
         int W = cols + 1;
         List<Point> verts = new ArrayList<>((rows + 1) * W);
         List<int[]> faces = new ArrayList<>(2 * rows * cols);
 
         for (int r = 0; r <= rows; r++) {
-            double theta = thetaMin + (double) r / rows * (thetaMax - thetaMin);
+            double thetaBase = thetaMin + (double) r / rows * (thetaMax - thetaMin);
             for (int c = 0; c <= cols; c++) {
+                double archShift = arch * Math.sin(Math.PI * c / cols);
+                double theta = thetaBase - archShift;
                 double phi = phiCenter - phiHalf + (double) c / cols * 2 * phiHalf;
                 Point p = headSurfacePoint(theta, phi);
                 Vector n = headSurfaceNormal(theta, phi);
@@ -961,7 +980,7 @@ class TriangleMeshRenderTests {
      * @param stacks latitude  divisions
      */
     private static TriangleMesh buildHead(int slices, int stacks) {
-        double rx = 1.80, ry = 2.35, rz = 1.90;
+        double rx = 1.72, ry = 2.40, rz = 1.85;
 
         List<Point> verts = new ArrayList<>(2 + (stacks - 1) * slices);
         List<int[]> faces = new ArrayList<>(2 * slices * stacks);
@@ -1032,7 +1051,7 @@ class TriangleMeshRenderTests {
      * @param phi   longitude (0 … 2π)
      */
     private static Point headSurfacePoint(double theta, double phi) {
-        double rx = 1.80, ry = 2.35, rz = 1.90;
+        double rx = 1.72, ry = 2.40, rz = 1.85;
         double sinT = Math.sin(theta), cosT = Math.cos(theta);
         double effRx = rx * skullRx(theta);
         double effRz = rz * skullRz(theta);
@@ -1055,7 +1074,7 @@ class TriangleMeshRenderTests {
      * @param phi   longitude (0 … 2π)
      */
     private static Vector headSurfaceNormal(double theta, double phi) {
-        double rx = 1.80, ry = 2.35, rz = 1.90;
+        double rx = 1.72, ry = 2.40, rz = 1.85;
         double sinT = Math.sin(theta), cosT = Math.cos(theta);
         double effRx = rx * skullRx(theta);
         double effRz = rz * skullRz(theta);
@@ -1079,16 +1098,16 @@ class TriangleMeshRenderTests {
      *   phi   = π/2         → front of head (+z toward camera)
      *   fp    = phi − π/2   → signed angle from front (0 = directly facing)
      * </pre>
-     * Loomis-grid proportions + low-poly facial planes:
+     * Proportions calibrated against a reference female head scan (latitude
+     * fractions t = theta/π measured from the crown):
      * <pre>
-     *   UPPER  THIRD  0.47 supraorbital brow arches   0.48 glabella dip
-     *   EYES          0.50 eye sockets (Loomis midpoint, 5-eye-rule cp=±0.40)
-     *                 0.54 infra-orbital rim + zygomatic arch
-     *   MIDDLE THIRD  0.51–0.62 nasal root→bridge→tip→alar wings
-     *                 0.64 buccal hollow
-     *   LOWER  THIRD  0.66 philtrum  0.69 lips  0.74 mentolabial  0.80 chin
+     *   UPPER  THIRD  0.36 forehead dome   0.46 brow ridge (near-flat)
+     *   EYES          0.51 eye sockets (cp=±0.38)
+     *   MIDDLE THIRD  0.575 cheekbones (cp=±0.56, widest point)
+     *                 0.58–0.665 nasal root→bridge→tip   0.66 buccal hollow
+     *                 0.685 nostrils
+     *   LOWER  THIRD  0.70 lips   0.82 chin
      * </pre>
-     * </p>
      *
      * @param theta latitude  (0 … π)
      * @param phi   longitude (0 … 2π)
@@ -1112,39 +1131,39 @@ class TriangleMeshRenderTests {
         // All features shifted -0.03 in t so that eyes land at the true
         // midpoint of the visible head (crown→chin), not just the ellipse equator.
 
-        // ── Forehead shelf ────────────────────────────────────────────────────
-        d += 0.12 * g2(theta, fp, Math.PI * 0.39, 0.00, 0.10, 0.50);
+        // ── Forehead shelf — taller, smooth dome ──────────────────────────────
+        d += 0.13 * g2(theta, fp, Math.PI * 0.36, 0.00, 0.11, 0.50);
 
-        // ── Brow ridges (supraorbital arches) ─────────────────────────────────
-        d += 0.28 * (g2(theta, fp, Math.PI * 0.44, -0.38, 0.10, 0.18)
-                + g2(theta, fp, Math.PI * 0.44, 0.38, 0.10, 0.18));
+        // ── Brow ridges — softened almost flat, no bone bumps over the eyes ───
+        d += 0.06 * (g2(theta, fp, Math.PI * 0.46, -0.38, 0.10, 0.18)
+                + g2(theta, fp, Math.PI * 0.46, 0.38, 0.10, 0.18));
 
-        // ── Eye sockets — true Loomis midpoint t=0.47 ─────────────────────────
-        d -= 0.42 * (g2(theta, fp, Math.PI * 0.47, -0.38, 0.11, 0.22)
-                + g2(theta, fp, Math.PI * 0.47, 0.38, 0.11, 0.22));
+        // ── Eye sockets — widened to seat larger eyes; t=0.51 matches reference ─
+        d -= 0.42 * (g2(theta, fp, Math.PI * 0.51, -0.38, 0.12, 0.25)
+                + g2(theta, fp, Math.PI * 0.51, 0.38, 0.12, 0.25));
 
-        // ── Nasal bridge ──────────────────────────────────────────────────────
-        d += 0.45 * g2(theta, fp, Math.PI * 0.53, 0.00, 0.10, 0.11);
-        // Nose tip (most protruding point)
-        d += 0.75 * g2(theta, fp, Math.PI * 0.59, 0.00, 0.10, 0.17);
+        // ── Nasal bridge — thinner and lower-profile ──────────────────────────
+        d += 0.30 * g2(theta, fp, Math.PI * 0.58, 0.00, 0.10, 0.08);
+        // Nose tip (most protruding point) — peak at t≈0.665, matches reference apex
+        d += 0.60 * g2(theta, fp, Math.PI * 0.665, 0.00, 0.10, 0.14);
         // Nostril dimples — shallow inward recesses flanking the nose base;
         // addFaceFeatures() seats a dark sphere at the floor of each one so
         // the opening reads as an actual hollow rather than a surface dot.
-        d -= 0.11 * (g2(theta, fp, Math.PI * 0.61, -0.11, 0.10, 0.14)
-                + g2(theta, fp, Math.PI * 0.61, 0.11, 0.10, 0.14));
+        d -= 0.11 * (g2(theta, fp, Math.PI * 0.685, -0.09, 0.10, 0.12)
+                + g2(theta, fp, Math.PI * 0.685, 0.09, 0.10, 0.12));
 
-        // ── Cheekbones (zygomatic arch) ───────────────────────────────────────
-        d += 0.30 * (g2(theta, fp, Math.PI * 0.52, -0.50, 0.11, 0.15)
-                + g2(theta, fp, Math.PI * 0.52, 0.50, 0.11, 0.15));
+        // ── Cheekbones (zygomatic arch) — peak at t≈0.575, matches reference ──
+        d += 0.38 * (g2(theta, fp, Math.PI * 0.575, -0.56, 0.11, 0.15)
+                + g2(theta, fp, Math.PI * 0.575, 0.56, 0.11, 0.15));
         // Buccal hollow (below cheekbones)
-        d -= 0.18 * (g2(theta, fp, Math.PI * 0.62, -0.44, 0.10, 0.13)
-                + g2(theta, fp, Math.PI * 0.62, 0.44, 0.10, 0.13));
+        d -= 0.18 * (g2(theta, fp, Math.PI * 0.66, -0.50, 0.10, 0.13)
+                + g2(theta, fp, Math.PI * 0.66, 0.50, 0.10, 0.13));
 
         // ── Lips ──────────────────────────────────────────────────────────────
-        d += 0.48 * g2(theta, fp, Math.PI * 0.66, 0.00, 0.09, 0.22);
+        d += 0.52 * g2(theta, fp, Math.PI * 0.70, 0.00, 0.095, 0.22);
 
-        // ── Chin (mental eminence) ────────────────────────────────────────────
-        d += 0.32 * g2(theta, fp, Math.PI * 0.77, 0.00, 0.10, 0.20);
+        // ── Chin (mental eminence) — smaller and more rounded ─────────────────
+        d += 0.18 * g2(theta, fp, Math.PI * 0.82, 0.00, 0.09, 0.16);
 
         return d * fade;
     }
@@ -1168,11 +1187,10 @@ class TriangleMeshRenderTests {
      * <ul>
      *   <li>Parietal  (t≈0.22): very subtle cranial width</li>
      *   <li>Temporal  (t≈0.35): gentle flattening at temples</li>
-     *   <li>Zygomatic (t≈0.50): cheekbone zone — widest face point</li>
-     *   <li>Mandible  (t≈0.67): subtle jaw corner</li>
-     *   <li>Chin      (t≈0.82): oval taper</li>
+     *   <li>Zygomatic (t≈0.575): cheekbone zone — widest face point</li>
+     *   <li>Mandible  (t≈0.70): jaw taper</li>
+     *   <li>Chin      (t≈0.87): oval taper</li>
      * </ul>
-     * </p>
      *
      * @param theta latitude in [0, π]
      * @return multiplicative scale factor for the X radius
@@ -1188,8 +1206,8 @@ class TriangleMeshRenderTests {
         // At t=0.50: sin=1.000 → 0% boost  → effective width = 100% (baseline)
         return 1.0
                 + 0.33 * g1(t, 0.25, 0.10)   // parietal: compensates ellipse narrowing
-                - 0.10 * g1(t, 0.70, 0.12)   // jaw: gentle taper
-                - 0.18 * g1(t, 0.86, 0.07);  // chin: oval taper
+                - 0.16 * g1(t, 0.70, 0.12)   // jaw: narrower taper
+                - 0.27 * g1(t, 0.87, 0.08);  // chin: rounder, narrower taper
     }
 
     /**
@@ -1203,7 +1221,7 @@ class TriangleMeshRenderTests {
         double t = theta / Math.PI;
         return 1.0
                 + 0.08 * g1(t, 0.22, 0.12)   // occipital: back-of-skull depth
-                - 0.08 * g1(t, 0.78, 0.10);  // jaw/chin: shallower front-to-back
+                - 0.08 * g1(t, 0.82, 0.10);  // jaw/chin: shallower front-to-back
     }
 
     /**

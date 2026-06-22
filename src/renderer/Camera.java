@@ -1,5 +1,6 @@
 package renderer;
 
+import java.util.List;
 import java.util.MissingResourceException;
 import primitives.Color;
 import primitives.Point;
@@ -93,6 +94,12 @@ public class Camera implements Cloneable {
     private RayTracerBase _rayTracer;
 
     /**
+     * Blackboard for beam generation. Default numSamples=1 produces a single
+     * center-pixel ray, which is equivalent to no anti-aliasing.
+     */
+    private Blackboard _aaBlackboard = new Blackboard();
+
+    /**
      * Private constructor — use {@link #getBuilder()} instead.
      */
     private Camera() {
@@ -127,6 +134,22 @@ public class Camera implements Cloneable {
     }
 
     /**
+     * Returns the 3D center point of pixel (xIndex, yIndex) on the view plane.
+     *
+     * @param xIndex the column index of the pixel (0-based)
+     * @param yIndex the row index of the pixel (0-based)
+     * @return the center point of the pixel on the view plane
+     */
+    private Point getPixelCenter(int xIndex, int yIndex) {
+        double xOffset = (xIndex - (_nX - 1) / 2.0) * _pixelWidth;
+        double yOffset = ((_nY - 1) / 2.0 - yIndex) * _pixelHeight;
+        Point center = _vpCenter;
+        if (!Util.isZero(xOffset)) center = center.add(_vRight.scale(xOffset));
+        if (!Util.isZero(yOffset)) center = center.add(_vUp.scale(yOffset));
+        return center;
+    }
+
+    /**
      * Constructs the ray that passes through the center of pixel (xIndex, yIndex)
      * on the view plane.
      *
@@ -135,13 +158,7 @@ public class Camera implements Cloneable {
      * @return the ray through the given pixel
      */
     public Ray constructRay(int xIndex, int yIndex) {
-        // offset from center pixel: index 0 is left/top, (nX-1)/2 is the center
-        double xOffset = (xIndex - (_nX - 1) / 2.0) * _pixelWidth;
-        // Y-axis is inverted: pixel index grows downward, vUp points up — hence the subtraction
-        double yOffset = ((_nY - 1) / 2.0 - yIndex) * _pixelHeight;
-        Point pixelCenter = _vpCenter;
-        if (!Util.isZero(xOffset)) pixelCenter = pixelCenter.add(_vRight.scale(xOffset));
-        if (!Util.isZero(yOffset)) pixelCenter = pixelCenter.add(_vUp.scale(yOffset));
+        Point pixelCenter = getPixelCenter(xIndex, yIndex);
         return new Ray(_p0, pixelCenter.subtract(_p0));
     }
 
@@ -151,23 +168,46 @@ public class Camera implements Cloneable {
      * @return this Camera, for method chaining
      */
     public Camera renderImage() {
-        for (int i = 0; i < _nY; i++)
+        for (int i = 0; i < _nY; i++) {
+            System.out.println((double) _nX * i / (_nX * _nY) * 100 + "%");
+            if (i % (_nY / 4) == 0)
+                _imageWriter.writeToImage("being_rendered");
             for (int j = 0; j < _nX; j++)
                 castRay(j, i);
+
+        }
         return this;
     }
 
     /**
      * Constructs a ray through pixel (xIndex, yIndex), traces it, and writes
      * the resulting color to the image writer.
+     * When anti-aliasing is enabled a beam of rays is cast and their colors averaged.
      *
      * @param xIndex the pixel column index (0-based)
      * @param yIndex the pixel row index (0-based)
      */
     private void castRay(int xIndex, int yIndex) {
-        Ray ray = constructRay(xIndex, yIndex);
-        Color color = _rayTracer.traceRay(ray);
-        _imageWriter.writePixel(xIndex, yIndex, color);
+        _imageWriter.writePixel(xIndex, yIndex, castAaBeam(xIndex, yIndex));
+    }
+
+    /**
+     * Casts a beam of rays through the pixel area and returns the averaged color.
+     * Sample points are distributed across the pixel by {@link #_aaBlackboard};
+     * axes are {@code _vRight} (X) and {@code _vUp} (Y), size is one pixel.
+     *
+     * @param xIndex the pixel column index (0-based)
+     * @param yIndex the pixel row index (0-based)
+     * @return the averaged color of all beam rays
+     */
+    private Color castAaBeam(int xIndex, int yIndex) {
+        Point pixelCenter = getPixelCenter(xIndex, yIndex);
+        java.util.List<Point> samples = _aaBlackboard.generateTargetPoints(
+                pixelCenter, _vRight, _vUp, _pixelWidth, _pixelHeight);
+        Color total = Color.BLACK;
+        for (Point sample : samples)
+            total = total.add(_rayTracer.traceRay(new Ray(_p0, sample.subtract(_p0))));
+        return total.reduce(samples.size());
     }
 
     /**
@@ -261,6 +301,55 @@ public class Camera implements Cloneable {
                 case SIMPLE -> new SimpleRayTracer(scene);
                 default -> throw new IllegalArgumentException("Unsupported ray tracer type: " + type);
             };
+            return this;
+        }
+
+        /**
+         * Enables anti-aliasing with the given number of samples using the
+         * default {@link SamplingPatterns#GRID} pattern.
+         *
+         * @param numSamples number of rays per pixel (1 = disabled)
+         * @return this Builder
+         */
+        public Builder setAntiAliasing(int numSamples) {
+            _camera._aaBlackboard = new Blackboard().setNumSamples(numSamples);
+            return this;
+        }
+
+        /**
+         * Enables soft shadows by distributing shadow rays across the light-source disk.
+         * Requires the scene's PointLights to have a non-zero radius set via
+         * {@link lighting.PointLight#setRadius(double)}.
+         *
+         * @param numSamples shadow rays per pixel per light (1 = hard shadows)
+         * @param pattern    sampling pattern for the light disk
+         * @return this Builder
+         */
+        public Builder setSoftShadows(int numSamples, SamplingPattern pattern) {
+            if (_camera._rayTracer instanceof SimpleRayTracer srt)
+                srt.setShadowSamples(numSamples, pattern);
+            return this;
+        }
+
+        /**
+         * Enables soft shadows using the default {@link SamplingPatterns#GRID} pattern.
+         *
+         * @param numSamples shadow rays per pixel per light
+         * @return this Builder
+         */
+        public Builder setSoftShadows(int numSamples) {
+            return setSoftShadows(numSamples, SamplingPatterns.GRID);
+        }
+
+        /**
+         * Enables anti-aliasing with the given number of samples and pattern.
+         *
+         * @param numSamples number of rays per pixel (1 = disabled)
+         * @param pattern    the sampling pattern to use
+         * @return this Builder
+         */
+        public Builder setAntiAliasing(int numSamples, SamplingPattern pattern) {
+            _camera._aaBlackboard = new Blackboard().setNumSamples(numSamples).setStrategy(pattern);
             return this;
         }
 
@@ -423,13 +512,13 @@ public class Camera implements Cloneable {
 
             // Apply roll rotation around the vTo axis (Rodrigues' formula, k·v=0 case)
             if (!Util.isZero(_rotationAngle)) {
-                double rad  = Math.toRadians(_rotationAngle);
-                double cos  = Math.cos(rad);
-                double sin  = Math.sin(rad);
+                double rad = Math.toRadians(_rotationAngle);
+                double cos = Math.cos(rad);
+                double sin = Math.sin(rad);
                 // vUp_new = vUp*cos + vRight*sin
-                Vector rotatedUp     = _camera._vUp.scale(cos).add(_camera._vRight.scale(sin));
-                _camera._vRight      = _camera._vTo.crossProduct(rotatedUp).normalize();
-                _camera._vUp         = _camera._vRight.crossProduct(_camera._vTo);
+                Vector rotatedUp = _camera._vUp.scale(cos).add(_camera._vRight.scale(sin));
+                _camera._vRight = _camera._vTo.crossProduct(rotatedUp).normalize();
+                _camera._vUp = _camera._vRight.crossProduct(_camera._vTo);
             }
         }
 

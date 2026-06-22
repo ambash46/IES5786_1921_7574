@@ -47,6 +47,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
  *                   emission="r g b" kd="..." ks="..." shininess="n"/>
  *         <tube     axis-origin="x y z" axis-dir="x y z" radius="r"/>
  *         <cylinder axis-origin="x y z" axis-dir="x y z" radius="r" height="h"/>
+ *         <mesh     src="model.obj" scale="s" translate="x y z" decimate="n"
+ *                   emission="r g b" kd="..." ks="..." kt="..." kr="..." shininess="n"/>
  *     </geometries>
  * </scene>
  * }</pre>
@@ -57,6 +59,15 @@ import javax.xml.parsers.DocumentBuilderFactory;
  * reflection coefficient (stage 8).
  * Files from previous stages without {@code <lights>} or material attributes
  * remain fully compatible.</p>
+ *
+ * <p>The {@code <mesh>} element loads a Wavefront OBJ file from
+ * {@code scenes/models/<src>} via {@link ObjLoader}. Its vertices are
+ * remapped from the model's Z-up axes to this project's Y-up convention,
+ * centered on their bounding box, then scaled by {@code scale} (default 1)
+ * and shifted by {@code translate} (default {@code "0 0 0"}). Since
+ * {@code SimpleRayTracer} has no acceleration structure, large
+ * meshes are very slow to render; {@code decimate="n"} (default 1) keeps
+ * only one out of every {@code n} faces to trade detail for speed.</p>
  *
  * @author Ambash and Elyasaf
  */
@@ -191,6 +202,17 @@ public class XmlSceneLoader {
                     for (int idx = 0; e.hasAttribute("p" + idx); idx++)
                         pts.add(SceneParserUtils.parsePoint(e.getAttribute("p" + idx)));
                     yield new Polygon(pts.toArray(new primitives.Point[0]));
+                }
+                case "mesh" -> {
+                    double scale = e.hasAttribute("scale")
+                            ? Double.parseDouble(e.getAttribute("scale")) : 1;
+                    double[] t = e.hasAttribute("translate")
+                            ? SceneParserUtils.parseDoubles(e.getAttribute("translate"))
+                            : new double[] {0, 0, 0};
+                    int decimate = e.hasAttribute("decimate")
+                            ? Integer.parseInt(e.getAttribute("decimate")) : 1;
+                    yield ObjLoader.load(new File(SCENES_FOLDER + "models/" + e.getAttribute("src")),
+                            scale, t[0], t[1], t[2], decimate);
                 }
                 default -> throw new IllegalArgumentException(
                         "Unknown geometry element: <" + e.getTagName() + ">");

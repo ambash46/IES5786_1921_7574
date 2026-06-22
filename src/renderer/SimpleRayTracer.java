@@ -3,6 +3,8 @@ package renderer;
 import static geometries.api.Intersectable.Intersection;
 import static primitives.Util.alignZero;
 
+import java.util.List;
+import lighting.PointLight;
 import lighting.LightSource;
 import primitives.Color;
 import primitives.Double3;
@@ -19,9 +21,15 @@ import scene.Scene;
  */
 class SimpleRayTracer extends RayTracerBase {
 
+    /** Maximum recursion depth for reflection/transparency color calculation. */
     private static final int     MAX_CALC_COLOR_LEVEL = 10;
+    /** Minimum accumulated attenuation factor; rays below this are discarded. */
     private static final double  MIN_CALC_COLOR_K     = 0.001;
+    /** Initial attenuation factor for the primary ray (full intensity). */
     private static final Double3 INITIAL_K            = Double3.ONE;
+
+    /** Blackboard used for distributing shadow rays across the light-source disk. */
+    private Blackboard _shadowBlackboard = new Blackboard();
 
     /**
      * Constructs a simple ray tracer for the given scene.
@@ -30,6 +38,19 @@ class SimpleRayTracer extends RayTracerBase {
      */
     SimpleRayTracer(Scene scene) {
         super(scene);
+    }
+
+    /**
+     * Configures the number of shadow-ray samples used for soft shadows.
+     * Call before rendering; has no effect on lights with {@code radius == 0}.
+     *
+     * @param numSamples rays per light sample (1 = hard shadows)
+     * @param pattern    the sampling pattern for the light disk
+     * @return this tracer, for method chaining
+     */
+    SimpleRayTracer setShadowSamples(int numSamples, SamplingPattern pattern) {
+        _shadowBlackboard = new Blackboard().setNumSamples(numSamples).setStrategy(pattern);
+        return this;
     }
 
     /**
@@ -104,6 +125,9 @@ class SimpleRayTracer extends RayTracerBase {
      *         {@link Double3#ONE} if nothing blocks the light
      */
     private Double3 transparency(Intersection intersection) {
+        if (intersection.light instanceof PointLight pl && pl.getRadius() > 0)
+            return softTransparency(intersection, pl);
+
         Ray shadowRay = new Ray(intersection.point, intersection.l.scale(-1), intersection.n);
         double lightDistance = intersection.light.getDistance(intersection.point);
         var blockers = _scene.geometries.calcIntersections(shadowRay, lightDistance);
@@ -114,6 +138,43 @@ class SimpleRayTracer extends RayTracerBase {
             if (ktr.isLowerThan(MIN_CALC_COLOR_K)) return Double3.ZERO;
         }
         return ktr;
+    }
+
+    /**
+     * Computes a soft-shadow transparency factor by sampling N points on the
+     * light-source disk and averaging the transparency of each shadow ray.
+     * Points on the disk are distributed using {@link #_shadowBlackboard}.
+     *
+     * @param intersection the preprocessed intersection
+     * @param light        the area point light (must have radius &gt; 0)
+     * @return averaged transparency coefficient across all light-disk samples
+     */
+    private Double3 softTransparency(Intersection intersection, PointLight light) {
+        // Build two axes that span the plane perpendicular to the shadow direction
+        Vector toLight = intersection.l.scale(-1);
+        Vector vX = Math.abs(toLight.dotProduct(Vector.AXIS_Y)) < 0.9
+                ? toLight.crossProduct(Vector.AXIS_Y).normalize()
+                : toLight.crossProduct(Vector.AXIS_X).normalize();
+        Vector vY = toLight.crossProduct(vX).normalize();
+
+        List<Point> samples = _shadowBlackboard.generateTargetPoints(
+                light.getPosition(), vX, vY, light.getRadius() * 2);
+
+        Double3 total = Double3.ZERO;
+        for (Point sample : samples) {
+            Vector dir   = sample.subtract(intersection.point);
+            double dist  = dir.length();
+            Ray shadowRay = new Ray(intersection.point, dir.normalize(), intersection.n);
+            var blockers  = _scene.geometries.calcIntersections(shadowRay, dist);
+            Double3 ktr   = Double3.ONE;
+            if (blockers != null)
+                for (var blocker : blockers) {
+                    ktr = ktr.product(blocker.material.kT);
+                    if (ktr.isLowerThan(MIN_CALC_COLOR_K)) { ktr = Double3.ZERO; break; }
+                }
+            total = total.add(ktr);
+        }
+        return total.scale(1.0 / samples.size());
     }
 
     /**

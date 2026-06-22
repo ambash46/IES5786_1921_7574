@@ -45,11 +45,9 @@ final class ImageWriter {
     */
    void writeToImage(String fileName) {
       try {
-         File folder = new File(FOLDER_PATH);
-         if (!folder.exists() && !folder.mkdirs()) {
-            throw new IllegalStateException("Could not create output directory: " + FOLDER_PATH);
-         }
-         File file = new File(folder, fileName + ".png");
+         File file = new File(FOLDER_PATH, fileName + ".png");
+         if (!file.getParentFile().exists() && !file.getParentFile().mkdirs())
+            throw new IllegalStateException("Could not create output directory: " + file.getParentFile());
          ImageIO.write(_image, "png", file);
       } catch (IOException e) {
          throw new IllegalStateException("I/O error while writing image to " + FOLDER_PATH, e);

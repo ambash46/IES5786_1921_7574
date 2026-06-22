@@ -21,6 +21,8 @@ public class PointLight extends Light implements LightSource {
     private double _kL = 0;
     /** Quadratic attenuation coefficient. */
     private double _kQ = 0;
+    /** Radius of the light source disk (0 = point light / hard shadows). */
+    private double _radius = 0;
 
     /**
      * Constructs a point light with the given intensity and position.
@@ -65,6 +67,24 @@ public class PointLight extends Light implements LightSource {
         _kQ = kQ;
         return this;
     }
+
+    /**
+     * Sets the radius of the light source disk for soft-shadow sampling.
+     * A radius of 0 (the default) produces hard shadows.
+     *
+     * @param radius the disk radius in world units (must be ≥ 0)
+     * @return this PointLight, for method chaining
+     */
+    public PointLight setRadius(double radius) {
+        _radius = radius;
+        return this;
+    }
+
+    /** Returns the light source disk radius (0 = hard shadows). */
+    public double getRadius() { return _radius; }
+
+    /** Returns the position of this light source. */
+    public Point getPosition() { return _position; }
 
     @Override
     public Vector getL(Point p) {

@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.*;
  * </ul>
  * Tests follow the methodology of Equivalence Partitions (EP) and
  * Boundary Values (BVA).
- * </p>
  *
  * @author Ambash and Elyasaf
  */
@@ -186,7 +185,6 @@ class TriangleMeshTests {
      *   <li>Ray parallel to the mesh plane (always misses)</li>
      *   <li>Two-face hit (tunnel mesh)</li>
      * </ol>
-     * </p>
      */
     @Test
     void testFindIntersections() {

@@ -39,6 +39,10 @@ import scene.Scene;
 @SuppressWarnings("java:S109")
 class Stage8Tests {
 
+    /** Default constructor to satisfy JavaDoc generator. */
+    Stage8Tests() { /* no-op */ }
+
+    /** Pixel resolution used for all test renders (width = height). */
     private static final int RESOLUTION = 500;
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -48,6 +52,8 @@ class Stage8Tests {
     /**
      * Builds the full "Crystal Gallery" scene used by all bonus tests.
      * Contains 13 distinct geometry instances spanning all 6 implemented types.
+     *
+     * @return the fully configured {@link Scene}
      */
     private static Scene buildGalleryScene() {
         Scene scene = new Scene("Crystal Gallery")
