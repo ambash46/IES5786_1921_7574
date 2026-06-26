@@ -32,9 +32,9 @@ import javax.xml.parsers.DocumentBuilderFactory;
  *     <ambient-light color="r g b"/>
  *     <lights>
  *         <directional color="r g b" direction="x y z"/>
- *         <point       color="r g b" position="x y z" kl="0.001" kq="0.0002"/>
+ *         <point       color="r g b" position="x y z" kl="0.001" kq="0.0002" radius="60"/>
  *         <spotlight   color="r g b" position="x y z" direction="x y z"
- *                      kl="0.001" kq="0.0001" narrow-beam="1"/>
+ *                      kl="0.001" kq="0.0001" narrow-beam="1" radius="60"/>
  *     </lights>
  *     <geometries>
  *         <sphere   center="x y z" radius="r"
@@ -141,9 +141,10 @@ public class XmlSceneLoader {
                     PointLight pl = new PointLight(
                             SceneParserUtils.parseColor(e.getAttribute("color")),
                             SceneParserUtils.parsePoint(e.getAttribute("position")));
-                    if (e.hasAttribute("kl")) pl.setKl(Double.parseDouble(e.getAttribute("kl")));
-                    if (e.hasAttribute("kq")) pl.setKq(Double.parseDouble(e.getAttribute("kq")));
-                    if (e.hasAttribute("kc")) pl.setKC(Double.parseDouble(e.getAttribute("kc")));
+                    if (e.hasAttribute("kl"))     pl.setKl(Double.parseDouble(e.getAttribute("kl")));
+                    if (e.hasAttribute("kq"))     pl.setKq(Double.parseDouble(e.getAttribute("kq")));
+                    if (e.hasAttribute("kc"))     pl.setKC(Double.parseDouble(e.getAttribute("kc")));
+                    if (e.hasAttribute("radius")) pl.setRadius(Double.parseDouble(e.getAttribute("radius")));
                     scene.lights.add(pl);
                 }
                 case "spotlight" -> {
@@ -151,9 +152,10 @@ public class XmlSceneLoader {
                             SceneParserUtils.parseColor(e.getAttribute("color")),
                             SceneParserUtils.parsePoint(e.getAttribute("position")),
                             SceneParserUtils.parseVector(e.getAttribute("direction")));
-                    if (e.hasAttribute("kl")) sl.setKl(Double.parseDouble(e.getAttribute("kl")));
-                    if (e.hasAttribute("kq")) sl.setKq(Double.parseDouble(e.getAttribute("kq")));
-                    if (e.hasAttribute("kc")) sl.setKC(Double.parseDouble(e.getAttribute("kc")));
+                    if (e.hasAttribute("kl"))     sl.setKl(Double.parseDouble(e.getAttribute("kl")));
+                    if (e.hasAttribute("kq"))     sl.setKq(Double.parseDouble(e.getAttribute("kq")));
+                    if (e.hasAttribute("kc"))     sl.setKC(Double.parseDouble(e.getAttribute("kc")));
+                    if (e.hasAttribute("radius")) sl.setRadius(Double.parseDouble(e.getAttribute("radius")));
                     if (e.hasAttribute("narrow-beam"))
                         sl.setNarrowBeam(Integer.parseInt(e.getAttribute("narrow-beam")));
                     scene.lights.add(sl);

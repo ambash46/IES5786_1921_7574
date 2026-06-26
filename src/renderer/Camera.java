@@ -1,7 +1,8 @@
 package renderer;
 
-import java.util.List;
+import java.util.LinkedList;
 import java.util.MissingResourceException;
+import java.util.stream.IntStream;
 import primitives.Color;
 import primitives.Point;
 import primitives.Ray;
@@ -100,6 +101,21 @@ public class Camera implements Cloneable {
     private Blackboard _aaBlackboard = new Blackboard();
 
     /**
+     * 0 = parallel stream, 1+ = raw thread count (default 1 = single thread)
+     */
+    private int _threadsCount = 1;
+
+    /**
+     * Cores reserved for the JVM, JUnit, and GC during multi-threaded rendering.
+     */
+    private static final int SPARE_THREADS = 2;
+
+    /**
+     * Manages pixel distribution and progress reporting across threads.
+     */
+    private PixelManager _pixelManager;
+
+    /**
      * Private constructor — use {@link #getBuilder()} instead.
      */
     private Camera() {
@@ -163,18 +179,43 @@ public class Camera implements Cloneable {
     }
 
     /**
-     * Renders the scene by casting a ray through every pixel.
+     * Renders the scene. Creates a {@link PixelManager} and dispatches to the
+     * appropriate rendering strategy based on {@code _threadsCount}.
      *
      * @return this Camera, for method chaining
      */
     public Camera renderImage() {
-        for (int i = 0; i < _nY; i++) {
-            System.out.println((double) _nX * i / (_nX * _nY) * 100 + "%");
-            if (i % (_nY / 4) == 0)
-                _imageWriter.writeToImage("being_rendered");
-            for (int j = 0; j < _nX; j++)
-                castRay(j, i);
+        _pixelManager = new PixelManager(_nY, _nX);
+        return _threadsCount == 0 ? renderImageStream() : renderImageRawThreads();
+    }
 
+    /**
+     * Renders using Java parallel streams; the JVM manages the thread pool.
+     */
+    private Camera renderImageStream() {
+        IntStream.range(0, _nY).parallel()
+                .forEach(i -> IntStream.range(0, _nX).parallel()
+                        .forEach(j -> castRay(j, i)));
+        return this;
+    }
+
+    /**
+     * Renders using a fixed pool of raw threads. Each thread requests the next
+     * pixel from {@link #_pixelManager} until none remain.
+     */
+    private Camera renderImageRawThreads() {
+        var threads = new LinkedList<Thread>();
+        int count = _threadsCount;
+        while (count-- > 0)
+            threads.add(new Thread(() -> {
+                PixelManager.Pixel pixel;
+                while ((pixel = _pixelManager.nextPixel()) != null)
+                    castRay(pixel.col(), pixel.row());
+            }));
+        for (var thread : threads) thread.start();
+        try {
+            for (var thread : threads) thread.join();
+        } catch (InterruptedException ignored) {
         }
         return this;
     }
@@ -189,6 +230,7 @@ public class Camera implements Cloneable {
      */
     private void castRay(int xIndex, int yIndex) {
         _imageWriter.writePixel(xIndex, yIndex, castAaBeam(xIndex, yIndex));
+        _pixelManager.pixelDone();
     }
 
     /**
@@ -340,6 +382,42 @@ public class Camera implements Cloneable {
         public Builder setSoftShadows(int numSamples) {
             return setSoftShadows(numSamples, SamplingPatterns.GRID);
         }
+
+        /**
+         * Activates raw-thread rendering with the given number of threads (must be ≥ 1).
+         *
+         * @param numThreads number of raw threads
+         * @return this Builder
+         * @throws IllegalArgumentException if {@code numThreads} is not positive
+         */
+        public Builder setMultithreading(int numThreads) {
+            if (numThreads < 1)
+                throw new IllegalArgumentException("numThreads must be >= 1");
+            _camera._threadsCount = numThreads;
+            return this;
+        }
+
+        /**
+         * Sets thread count automatically: logical cores − {@value Camera#SPARE_THREADS}.
+         *
+         * @return this Builder
+         */
+        public Builder setMultithreadingAuto() {
+            int cores = Runtime.getRuntime().availableProcessors() - SPARE_THREADS;
+            _camera._threadsCount = Math.max(1, cores);
+            return this;
+        }
+
+        /**
+         * Activates parallel-stream rendering; the JVM manages the thread pool.
+         *
+         * @return this Builder
+         */
+        public Builder setParallelStreaming() {
+            _camera._threadsCount = 0;
+            return this;
+        }
+
 
         /**
          * Enables anti-aliasing with the given number of samples and pattern.

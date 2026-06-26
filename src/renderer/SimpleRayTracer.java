@@ -129,8 +129,20 @@ class SimpleRayTracer extends RayTracerBase {
             return softTransparency(intersection, pl);
 
         Ray shadowRay = new Ray(intersection.point, intersection.l.scale(-1), intersection.n);
-        double lightDistance = intersection.light.getDistance(intersection.point);
-        var blockers = _scene.geometries.calcIntersections(shadowRay, lightDistance);
+        return singleRayTransparency(shadowRay, intersection.light.getDistance(intersection.point));
+    }
+
+    /**
+     * Computes the transparency factor along one shadow ray up to {@code maxDist}.
+     * Multiplies the {@code kT} of every occluder; early-exits with ZERO when
+     * the product drops below {@link #MIN_CALC_COLOR_K}.
+     *
+     * @param shadowRay the shadow ray
+     * @param maxDist   maximum distance to consider (stops at the light)
+     * @return accumulated transparency in [0,1]³
+     */
+    private Double3 singleRayTransparency(Ray shadowRay, double maxDist) {
+        var blockers = _scene.geometries.calcIntersections(shadowRay, maxDist);
         if (blockers == null) return Double3.ONE;
         Double3 ktr = Double3.ONE;
         for (var blocker : blockers) {
@@ -150,7 +162,6 @@ class SimpleRayTracer extends RayTracerBase {
      * @return averaged transparency coefficient across all light-disk samples
      */
     private Double3 softTransparency(Intersection intersection, PointLight light) {
-        // Build two axes that span the plane perpendicular to the shadow direction
         Vector toLight = intersection.l.scale(-1);
         Vector vX = Math.abs(toLight.dotProduct(Vector.AXIS_Y)) < 0.9
                 ? toLight.crossProduct(Vector.AXIS_Y).normalize()
@@ -162,17 +173,10 @@ class SimpleRayTracer extends RayTracerBase {
 
         Double3 total = Double3.ZERO;
         for (Point sample : samples) {
-            Vector dir   = sample.subtract(intersection.point);
-            double dist  = dir.length();
+            Vector dir    = sample.subtract(intersection.point);
+            double dist   = dir.length();
             Ray shadowRay = new Ray(intersection.point, dir.normalize(), intersection.n);
-            var blockers  = _scene.geometries.calcIntersections(shadowRay, dist);
-            Double3 ktr   = Double3.ONE;
-            if (blockers != null)
-                for (var blocker : blockers) {
-                    ktr = ktr.product(blocker.material.kT);
-                    if (ktr.isLowerThan(MIN_CALC_COLOR_K)) { ktr = Double3.ZERO; break; }
-                }
-            total = total.add(ktr);
+            total = total.add(singleRayTransparency(shadowRay, dist));
         }
         return total.scale(1.0 / samples.size());
     }
