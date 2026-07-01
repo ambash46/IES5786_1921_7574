@@ -54,6 +54,9 @@ public class Tube extends RadialGeometry {
         return point.subtract(_axis.getPoint(projection)).normalize();
     }
 
+    @Override
+    protected geometries.api.AABB calcBoundingBox() { return null; }
+
     /*
      * Strips axis-parallel components from both the ray direction (v) and the
      * delta vector (ΔP = p0 - pa), then solves the resulting quadratic

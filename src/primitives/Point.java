@@ -49,6 +49,9 @@ public class Point {
      * @return the vector from {@code other} to this point
      * @throws IllegalArgumentException if the result is the zero vector
      */
+    /** Returns the coordinates of this point as a {@link Double3}. */
+    public Double3 getCoordinates() { return _xyz; }
+
     public final Vector subtract(Point other) {
         return new Vector(this._xyz.subtract(other._xyz));
     }

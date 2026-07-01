@@ -141,6 +141,20 @@ public final class Vector extends Point {
         return new Vector(this._xyz.divide(this.length()));
     }
 
+    /**
+     * Builds two unit vectors that are perpendicular to this vector and to each
+     * other, forming an orthonormal basis with it.
+     *
+     * @return array {@code [vX, vY]} — two vectors orthogonal to this vector
+     *         and to each other
+     */
+    public Vector[] buildOrthogonalBasis() {
+        Vector vX = Math.abs(dotProduct(AXIS_Y)) < 0.9
+                ? crossProduct(AXIS_Y).normalize()
+                : crossProduct(AXIS_X).normalize();
+        return new Vector[]{ vX, crossProduct(vX).normalize() };
+    }
+
     @Override
     public String toString() {
         return "->" + super.toString();

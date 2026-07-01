@@ -18,6 +18,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import primitives.Color;
 import primitives.Material;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -179,6 +180,31 @@ public class XmlSceneLoader {
             Node node = children.item(i);
             if (node.getNodeType() != Node.ELEMENT_NODE) continue;
             Element  e = (Element) node;
+
+            if (e.getTagName().equals("mesh")) {
+                double scale = e.hasAttribute("scale")
+                        ? Double.parseDouble(e.getAttribute("scale")) : 1;
+                double[] t = e.hasAttribute("translate")
+                        ? SceneParserUtils.parseDoubles(e.getAttribute("translate"))
+                        : new double[] {0, 0, 0};
+                int decimate = e.hasAttribute("decimate")
+                        ? Integer.parseInt(e.getAttribute("decimate")) : 1;
+                geometries.impl.Geometries mesh = ObjLoader.load(
+                        new File(SCENES_FOLDER + "models/" + e.getAttribute("src")),
+                        scale, t[0], t[1], t[2], decimate);
+
+                Color emission = e.hasAttribute("emission")
+                        ? SceneParserUtils.parseColor(e.getAttribute("emission")) : null;
+                Material mat = parseMaterial(e);
+                for (var triangle : mesh.getChildren()) {
+                    Geometry tg = (Geometry) triangle;
+                    if (emission != null) tg.setEmission(emission);
+                    if (mat != null)      tg.setMaterial(mat);
+                }
+                scene.geometries.add(mesh);
+                continue;
+            }
+
             Geometry g = switch (e.getTagName()) {
                 case "sphere"   -> new Sphere(
                         SceneParserUtils.parsePoint(e.getAttribute("center")),
@@ -205,17 +231,6 @@ public class XmlSceneLoader {
                         pts.add(SceneParserUtils.parsePoint(e.getAttribute("p" + idx)));
                     yield new Polygon(pts.toArray(new primitives.Point[0]));
                 }
-                case "mesh" -> {
-                    double scale = e.hasAttribute("scale")
-                            ? Double.parseDouble(e.getAttribute("scale")) : 1;
-                    double[] t = e.hasAttribute("translate")
-                            ? SceneParserUtils.parseDoubles(e.getAttribute("translate"))
-                            : new double[] {0, 0, 0};
-                    int decimate = e.hasAttribute("decimate")
-                            ? Integer.parseInt(e.getAttribute("decimate")) : 1;
-                    yield ObjLoader.load(new File(SCENES_FOLDER + "models/" + e.getAttribute("src")),
-                            scale, t[0], t[1], t[2], decimate);
-                }
                 default -> throw new IllegalArgumentException(
                         "Unknown geometry element: <" + e.getTagName() + ">");
             };
@@ -229,8 +244,8 @@ public class XmlSceneLoader {
 
     /**
      * Parses material attributes from a geometry element.
-     * Supports {@code ka}, {@code kd}, {@code ks}, {@code kt} (transparency,
-     * stage 8), {@code kr} (reflection, stage 8), and {@code shininess}.
+     * Supports {@code ka}, {@code kd}, {@code ks}, {@code kt}, {@code kr},
+     * {@code shininess}, {@code kglossy} and {@code kdiffuse}.
      * Returns {@code null} if none are present (backward compatible with
      * pre-stage-8 XML files).
      *
@@ -240,15 +255,18 @@ public class XmlSceneLoader {
     private static Material parseMaterial(Element e) {
         boolean any = e.hasAttribute("ka") || e.hasAttribute("kd")
                    || e.hasAttribute("ks") || e.hasAttribute("kt")
-                   || e.hasAttribute("kr") || e.hasAttribute("shininess");
+                   || e.hasAttribute("kr") || e.hasAttribute("shininess")
+                   || e.hasAttribute("kglossy") || e.hasAttribute("kdiffuse");
         if (!any) return null;
         Material mat = new Material();
-        if (e.hasAttribute("ka"))       mat.kA = SceneParserUtils.parseDouble3(e.getAttribute("ka"));
-        if (e.hasAttribute("kd"))       mat.kD = SceneParserUtils.parseDouble3(e.getAttribute("kd"));
-        if (e.hasAttribute("ks"))       mat.kS = SceneParserUtils.parseDouble3(e.getAttribute("ks"));
-        if (e.hasAttribute("kt"))       mat.kT = SceneParserUtils.parseDouble3(e.getAttribute("kt"));
-        if (e.hasAttribute("kr"))       mat.kR = SceneParserUtils.parseDouble3(e.getAttribute("kr"));
+        if (e.hasAttribute("ka"))        mat.kA = SceneParserUtils.parseDouble3(e.getAttribute("ka"));
+        if (e.hasAttribute("kd"))        mat.kD = SceneParserUtils.parseDouble3(e.getAttribute("kd"));
+        if (e.hasAttribute("ks"))        mat.kS = SceneParserUtils.parseDouble3(e.getAttribute("ks"));
+        if (e.hasAttribute("kt"))        mat.kT = SceneParserUtils.parseDouble3(e.getAttribute("kt"));
+        if (e.hasAttribute("kr"))        mat.kR = SceneParserUtils.parseDouble3(e.getAttribute("kr"));
         if (e.hasAttribute("shininess")) mat.nShininess = Integer.parseInt(e.getAttribute("shininess"));
+        if (e.hasAttribute("kglossy"))   mat.setKGlossy(Double.parseDouble(e.getAttribute("kglossy")));
+        if (e.hasAttribute("kdiffuse"))  mat.setKDiffuseGlass(Double.parseDouble(e.getAttribute("kdiffuse")));
         return mat;
     }
 }

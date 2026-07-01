@@ -26,7 +26,11 @@ public class Material {
     /** Reflection attenuation coefficient. */
     public Double3 kR         = Double3.ZERO;
     /** Shininess exponent for the specular highlight. */
-    public int     nShininess = 0;
+    public int    nShininess    = 0;
+    /** Glossy reflection blur: 0 = perfect mirror, 1 = fully diffuse reflection. */
+    public double kGlossy       = 0.0;
+    /** Diffuse glass blur: 0 = perfectly clear, 1 = fully milky transparency. */
+    public double kDiffuseGlass = 0.0;
 
     /**
      * Sets the ambient attenuation coefficient.
@@ -149,6 +153,32 @@ public class Material {
      */
     public Material setShininess(int nShininess) {
         this.nShininess = nShininess;
+        return this;
+    }
+
+    /**
+     * Sets the glossy reflection blur factor (0 = perfect mirror, 1 = fully diffuse).
+     *
+     * @param kGlossy blur factor in [0,1]
+     * @return this material, for method chaining
+     */
+    public Material setKGlossy(double kGlossy) {
+        if (kGlossy < 0 || kGlossy > 1)
+            throw new IllegalArgumentException("kGlossy must be in [0,1]");
+        this.kGlossy = kGlossy;
+        return this;
+    }
+
+    /**
+     * Sets the diffuse glass blur factor (0 = perfectly clear, 1 = fully milky).
+     *
+     * @param kDiffuseGlass blur factor in [0,1]
+     * @return this material, for method chaining
+     */
+    public Material setKDiffuseGlass(double kDiffuseGlass) {
+        if (kDiffuseGlass < 0 || kDiffuseGlass > 1)
+            throw new IllegalArgumentException("kDiffuseGlass must be in [0,1]");
+        this.kDiffuseGlass = kDiffuseGlass;
         return this;
     }
 }

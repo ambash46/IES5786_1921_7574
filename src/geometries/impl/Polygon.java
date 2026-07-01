@@ -107,6 +107,11 @@ public class Polygon extends Geometry {
         return _plane.getNormal(point);
     }
 
+    @Override
+    protected geometries.api.AABB calcBoundingBox() {
+        return geometries.api.AABB.fromPoints(_vertices.toArray(new Point[0]));
+    }
+
     /**
      * Finds all intersection points between the polygon and the given ray.
      * <p>

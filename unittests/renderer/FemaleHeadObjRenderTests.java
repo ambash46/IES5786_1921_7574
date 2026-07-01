@@ -35,6 +35,9 @@ class FemaleHeadObjRenderTests {
                 .setDirection(Point.ZERO, Vector.AXIS_Y)
                 .setVpSize(320, 320).setVpDistance(160)
                 .setResolution(2000, 2000)
+                .setAntiAliasing(9)
+                .setMultithreading(4)
+                .setCBR(2)
                 .build()
                 .renderImage()
                 .writeToImage("xml_femaleHeadObj");

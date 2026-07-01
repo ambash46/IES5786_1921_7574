@@ -1,17 +1,18 @@
 package renderer;
 
-import static geometries.api.Intersectable.Intersection;
-import static primitives.Util.alignZero;
-
 import java.util.List;
-import lighting.PointLight;
 import lighting.LightSource;
+import lighting.PointLight;
 import primitives.Color;
 import primitives.Double3;
 import primitives.Point;
 import primitives.Ray;
+import primitives.Util;
 import primitives.Vector;
 import scene.Scene;
+
+import static geometries.api.Intersectable.Intersection;
+import static primitives.Util.alignZero;
 
 /**
  * A ray tracer implementing the Phong reflection model with multiple
@@ -21,15 +22,31 @@ import scene.Scene;
  */
 class SimpleRayTracer extends RayTracerBase {
 
-    /** Maximum recursion depth for reflection/transparency color calculation. */
-    private static final int     MAX_CALC_COLOR_LEVEL = 10;
-    /** Minimum accumulated attenuation factor; rays below this are discarded. */
-    private static final double  MIN_CALC_COLOR_K     = 0.001;
-    /** Initial attenuation factor for the primary ray (full intensity). */
-    private static final Double3 INITIAL_K            = Double3.ONE;
+    /**
+     * Maximum recursion depth for reflection/transparency color calculation.
+     */
+    private static final int MAX_CALC_COLOR_LEVEL = 10;
+    /**
+     * Minimum accumulated attenuation factor; rays below this are discarded.
+     */
+    private static final double MIN_CALC_COLOR_K = 0.001;
+    /**
+     * Initial attenuation factor for the primary ray (full intensity).
+     */
+    private static final Double3 INITIAL_K = Double3.ONE;
 
-    /** Blackboard used for distributing shadow rays across the light-source disk. */
+    /**
+     * Blackboard used for distributing shadow rays across the light-source disk.
+     */
     private Blackboard _shadowBlackboard = new Blackboard();
+    /**
+     * Blackboard used for distributing glossy reflection rays around the mirror direction.
+     */
+    private Blackboard _glossyBlackboard = new Blackboard();
+    /**
+     * Blackboard used for distributing diffuse glass rays around the refraction direction.
+     */
+    private Blackboard _diffuseBlackboard = new Blackboard();
 
     /**
      * Constructs a simple ray tracer for the given scene.
@@ -53,6 +70,16 @@ class SimpleRayTracer extends RayTracerBase {
         return this;
     }
 
+    SimpleRayTracer setGlossySamples(int numSamples, SamplingPattern pattern) {
+        _glossyBlackboard = new Blackboard().setNumSamples(numSamples).setStrategy(pattern);
+        return this;
+    }
+
+    SimpleRayTracer setDiffuseSamples(int numSamples, SamplingPattern pattern) {
+        _diffuseBlackboard = new Blackboard().setNumSamples(numSamples).setStrategy(pattern);
+        return this;
+    }
+
     /**
      * Entry-point color calculation: prepares the intersection and delegates to
      * the recursive overload with the initial level and attenuation factor.
@@ -64,7 +91,7 @@ class SimpleRayTracer extends RayTracerBase {
     private Color calcColor(Intersection intersection, Vector v) {
         return !preprocessIntersection(intersection, v) ? Color.BLACK
                 : _scene.ambientLight.getIntensity().scale(intersection.material.kA)
-                        .add(calcColor(intersection, MAX_CALC_COLOR_LEVEL, INITIAL_K));
+                .add(calcColor(intersection, MAX_CALC_COLOR_LEVEL, INITIAL_K));
     }
 
     /**
@@ -122,10 +149,11 @@ class SimpleRayTracer extends RayTracerBase {
      * @param intersection the preprocessed intersection (uses {@code point}, {@code n},
      *                     {@code l}, {@code light})
      * @return accumulated transparency coefficient in [0,1]³,
-     *         {@link Double3#ONE} if nothing blocks the light
+     * {@link Double3#ONE} if nothing blocks the light
      */
     private Double3 transparency(Intersection intersection) {
-        if (intersection.light instanceof PointLight pl && pl.getRadius() > 0)
+        if (intersection.light instanceof PointLight pl && pl.getRadius() > 0
+                && _shadowBlackboard.isMultiSample())
             return softTransparency(intersection, pl);
 
         Ray shadowRay = new Ray(intersection.point, intersection.l.scale(-1), intersection.n);
@@ -163,18 +191,16 @@ class SimpleRayTracer extends RayTracerBase {
      */
     private Double3 softTransparency(Intersection intersection, PointLight light) {
         Vector toLight = intersection.l.scale(-1);
-        Vector vX = Math.abs(toLight.dotProduct(Vector.AXIS_Y)) < 0.9
-                ? toLight.crossProduct(Vector.AXIS_Y).normalize()
-                : toLight.crossProduct(Vector.AXIS_X).normalize();
-        Vector vY = toLight.crossProduct(vX).normalize();
+        Vector[] basis = toLight.buildOrthogonalBasis();
+        Vector vX = basis[0], vY = basis[1];
 
         List<Point> samples = _shadowBlackboard.generateTargetPoints(
                 light.getPosition(), vX, vY, light.getRadius() * 2);
 
         Double3 total = Double3.ZERO;
         for (Point sample : samples) {
-            Vector dir    = sample.subtract(intersection.point);
-            double dist   = dir.length();
+            Vector dir = sample.subtract(intersection.point);
+            double dist = dir.length();
             Ray shadowRay = new Ray(intersection.point, dir.normalize(), intersection.n);
             total = total.add(singleRayTransparency(shadowRay, dist));
         }
@@ -266,8 +292,50 @@ class SimpleRayTracer extends RayTracerBase {
      * @return sum of reflection and transparency color contributions
      */
     private Color calcGlobalEffects(Intersection intersection, int level, Double3 k) {
-        return calcGlobalEffect(constructReflectionRay(intersection),  level, k, intersection.material.kR)
-              .add(calcGlobalEffect(constructTransparencyRay(intersection), level, k, intersection.material.kT));
+        return calcReflection(intersection, level, k)
+                .add(calcTransparency(intersection, level, k));
+    }
+
+    /**
+     * Computes the glossy reflection contribution. Reads {@code kR} and
+     * {@code kGlossy} directly from the intersection's material.
+     * When {@code kGlossy == 0} (default) a single mirror ray is used.
+     */
+    private Color calcReflection(Intersection intersection, int level, Double3 k) {
+        double blur = level == MAX_CALC_COLOR_LEVEL ? intersection.material.kGlossy : 0;
+        return sampleBlurredRay(constructReflectionRay(intersection),
+                blur, _glossyBlackboard, level, k, intersection.material.kR);
+    }
+
+    private Color calcTransparency(Intersection intersection, int level, Double3 k) {
+        double blur = level == MAX_CALC_COLOR_LEVEL ? intersection.material.kDiffuseGlass : 0;
+        return sampleBlurredRay(constructTransparencyRay(intersection),
+                blur, _diffuseBlackboard, level, k, intersection.material.kT);
+    }
+
+    /**
+     * Sends a beam of rays around {@code centralRay} and averages their colors.
+     * The beam disk is perpendicular to the ray direction; its radius equals
+     * {@code blur}. When {@code blur == 0} only the central ray is traced.
+     */
+    private Color sampleBlurredRay(Ray centralRay, double blur, Blackboard blackboard,
+                                   int level, Double3 k, Double3 kx) {
+        if (Util.isZero(blur) || !blackboard.isMultiSample()) return calcGlobalEffect(centralRay, level, k, kx);
+
+        Vector dir = centralRay.direction();
+        Vector[] basis = dir.buildOrthogonalBasis();
+        Vector vX = basis[0], vY = basis[1];
+
+        Point origin = centralRay.origin();
+        List<Point> samples = blackboard.generateTargetPoints(origin, vX, vY, blur);
+
+        Color total = Color.BLACK;
+        for (Point sample : samples) {
+            Vector offset = sample.subtract(origin); // perpendicular offset: dx·vX + dy·vY
+            Vector newDir = dir.add(offset).normalize();
+            total = total.add(calcGlobalEffect(new Ray(origin, newDir), level, k, kx));
+        }
+        return total.reduce(samples.size());
     }
 
     /**
@@ -293,8 +361,8 @@ class SimpleRayTracer extends RayTracerBase {
      * @return the specular factor as a {@link Double3}
      */
     private Double3 calcSpecular(Intersection intersection) {
-        Vector r        = intersection.l.subtract(intersection.n.scale(2 * intersection.ln));
-        double minusVR  = alignZero(-intersection.v.dotProduct(r));
+        Vector r = intersection.l.subtract(intersection.n.scale(2 * intersection.ln));
+        double minusVR = alignZero(-intersection.v.dotProduct(r));
         return minusVR <= 0 ? Double3.ZERO
                 : intersection.material.kS.scale(Math.pow(minusVR, intersection.material.nShininess));
     }

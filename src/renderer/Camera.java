@@ -328,6 +328,9 @@ public class Camera implements Cloneable {
          */
         private double _rotationAngle = 0;
 
+        /** The scene passed to {@link #setRayTracer(Scene, RayTracerType)}, kept for {@link #setBVH()}. */
+        private Scene _scene = null;
+
         /**
          * Configures the camera to render the given scene using the specified ray
          * tracing strategy.
@@ -339,6 +342,7 @@ public class Camera implements Cloneable {
          * @throws IllegalArgumentException if the requested type is not yet supported
          */
         public Builder setRayTracer(Scene scene, RayTracerType type) {
+            _scene = scene;
             _camera._rayTracer = switch (type) {
                 case SIMPLE -> new SimpleRayTracer(scene);
                 default -> throw new IllegalArgumentException("Unsupported ray tracer type: " + type);
@@ -384,6 +388,34 @@ public class Camera implements Cloneable {
         }
 
         /**
+         * Enables glossy reflections by distributing reflection rays around
+         * the mirror direction. Requires {@code kGlossy > 0} on the material.
+         *
+         * @param numSamples rays per reflection (1 = disabled)
+         * @param pattern    sampling pattern
+         * @return this Builder
+         */
+        public Builder setGlossyReflection(int numSamples, SamplingPattern pattern) {
+            if (_camera._rayTracer instanceof SimpleRayTracer srt)
+                srt.setGlossySamples(numSamples, pattern);
+            return this;
+        }
+
+        /**
+         * Enables diffuse glass by distributing transparency rays around
+         * the refraction direction. Requires {@code kDiffuseGlass > 0} on the material.
+         *
+         * @param numSamples rays per refraction (1 = disabled)
+         * @param pattern    sampling pattern
+         * @return this Builder
+         */
+        public Builder setDiffuseGlass(int numSamples, SamplingPattern pattern) {
+            if (_camera._rayTracer instanceof SimpleRayTracer srt)
+                srt.setDiffuseSamples(numSamples, pattern);
+            return this;
+        }
+
+        /**
          * Activates raw-thread rendering with the given number of threads (must be ≥ 1).
          *
          * @param numThreads number of raw threads
@@ -405,6 +437,63 @@ public class Camera implements Cloneable {
         public Builder setMultithreadingAuto() {
             int cores = Runtime.getRuntime().availableProcessors() - SPARE_THREADS;
             _camera._threadsCount = Math.max(1, cores);
+            return this;
+        }
+
+        /**
+         * Enables CBR with the default maximum of 2 primitives per leaf.
+         *
+         * @return this Builder
+         */
+        public Builder setCBR() {
+            geometries.api.Intersectable.setCBR();
+            return this;
+        }
+
+        /**
+         * Enables CBR with the given maximum primitives per leaf (must be ≥ 2).
+         *
+         * @param maxLeafSize maximum primitives per BVH leaf
+         * @return this Builder
+         */
+        public Builder setCBR(int maxLeafSize) {
+            geometries.api.Intersectable.setCBR(maxLeafSize);
+            return this;
+        }
+
+        /**
+         * Disables CBR acceleration (the default state).
+         *
+         * @return this Builder
+         */
+        public Builder disableCBR() {
+            geometries.api.Intersectable.disableCBR();
+            return this;
+        }
+
+        /**
+         * Reorganises the scene's geometries into an automatic BVH hierarchy
+         * (median split, default leaf size 2). Must be called after
+         * {@link #setRayTracer(Scene, RayTracerType)}.
+         *
+         * @return this Builder
+         */
+        public Builder setBVH() {
+            return setBVH(2);
+        }
+
+        /**
+         * Reorganises the scene's geometries into an automatic BVH hierarchy
+         * with the given leaf size. Must be called after
+         * {@link #setRayTracer(Scene, RayTracerType)}.
+         *
+         * @param maxLeafSize maximum primitives per BVH leaf
+         * @return this Builder
+         */
+        public Builder setBVH(int maxLeafSize) {
+            if (_scene == null)
+                throw new IllegalStateException("setBVH must be called after setRayTracer");
+            _scene.setGeometries(_scene.geometries.buildBVH(maxLeafSize));
             return this;
         }
 

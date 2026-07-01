@@ -43,6 +43,14 @@ public final class Sphere extends RadialGeometry {
         return point.subtract(_center).normalize();
     }
 
+    @Override
+    protected geometries.api.AABB calcBoundingBox() {
+        primitives.Double3 c = _center.getCoordinates();
+        return new geometries.api.AABB(
+                new primitives.Point(c._d1() - _radius, c._d2() - _radius, c._d3() - _radius),
+                new primitives.Point(c._d1() + _radius, c._d2() + _radius, c._d3() + _radius));
+    }
+
     /*
      * Projects the ray-to-center vector onto the ray direction (tm), then
      * computes d², the squared distance from the center to the ray.

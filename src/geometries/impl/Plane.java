@@ -64,6 +64,9 @@ public final class Plane extends Geometry {
         return _normal;
     }
 
+    @Override
+    protected geometries.api.AABB calcBoundingBox() { return null; }
+
     /* Returns null when n·v=0 (parallel), when origin is on the plane, t<=0, or t>maxDistance. */
     @Override
     protected List<Intersection> calcIntersectionsHelper(Ray ray, double maxDistance) {

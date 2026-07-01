@@ -51,6 +51,8 @@ class Blackboard {
         return this;
     }
 
+    boolean isMultiSample() { return _numSamples > 1; }
+
     Blackboard setCircleShape(boolean circle) {
         _circle = circle;
         _cache = null;

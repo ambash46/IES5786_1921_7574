@@ -1,6 +1,6 @@
 package scene;
 
-import geometries.impl.TriangleMesh;
+import geometries.impl.Geometries;
 import primitives.Point;
 
 import java.io.BufferedReader;
@@ -16,7 +16,7 @@ import java.util.List;
  * <p>
  * Reads {@code v} (vertex) and {@code f} (face) lines only; texture
  * coordinates ({@code vt}) and normals ({@code vn}) are ignored, since
- * {@link TriangleMesh} computes its own smooth normals. Faces with more than
+ * Each face is loaded as a {@link geometries.impl.Triangle}. Faces with more than
  * three vertices (quads / n-gons) are split into triangles by fan
  * triangulation around their first vertex.
  * <p>
@@ -28,7 +28,7 @@ import java.util.List;
  *
  * @author Ambash and Elyasaf
  */
-final class ObjLoader {
+public final class ObjLoader {
 
     /** Utility class — no instances. */
     private ObjLoader() { }
@@ -47,7 +47,7 @@ final class ObjLoader {
      * @return the constructed {@link TriangleMesh}
      * @throws IllegalStateException if the file cannot be read
      */
-    static TriangleMesh load(File file, double scale, double tx, double ty, double tz, int decimate) {
+    public static Geometries load(File file, double scale, double tx, double ty, double tz, int decimate) {
         List<double[]> rawVerts = new ArrayList<>();
         List<int[]> rawFaces = new ArrayList<>();
 
@@ -95,6 +95,6 @@ final class ObjLoader {
             vertices.add(new Point(x, y, z));
         }
 
-        return new TriangleMesh(vertices, rawFaces.toArray(new int[0][]));
+        return Geometries.fromMesh(vertices, rawFaces.toArray(new int[0][]));
     }
 }

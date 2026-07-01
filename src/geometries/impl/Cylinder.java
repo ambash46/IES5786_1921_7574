@@ -91,6 +91,20 @@ public final class Cylinder extends Tube {
         return super.getNormal(point);
     }
 
+    @Override
+    protected geometries.api.AABB calcBoundingBox() {
+        Point  p0  = _axis.origin();
+        Point  p1  = _axis.getPoint(_height);
+        primitives.Double3 a = p0.getCoordinates(), b = p1.getCoordinates();
+        return new geometries.api.AABB(
+                new primitives.Point(Math.min(a._d1(), b._d1()) - _radius,
+                                     Math.min(a._d2(), b._d2()) - _radius,
+                                     Math.min(a._d3(), b._d3()) - _radius),
+                new primitives.Point(Math.max(a._d1(), b._d1()) + _radius,
+                                     Math.max(a._d2(), b._d2()) + _radius,
+                                     Math.max(a._d3(), b._d3()) + _radius));
+    }
+
     /*
      * Phase 1 — gather candidates: up to 2 mantle t-values from the Tube solver
      * plus up to 2 cap-plane t-values (bottom: projection=0, top: projection=height).
