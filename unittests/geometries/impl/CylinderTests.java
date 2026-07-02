@@ -1,15 +1,20 @@
 package geometries.impl;
 
+import geometries.api.AABB;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import primitives.Color;
+import primitives.Material;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -19,6 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <li>{@link Cylinder#Cylinder(double, Ray, double)}</li>
  * <li>{@link Cylinder#getNormal(Point)}</li>
  * <li>{@link Cylinder#findIntersections(Ray)}</li>
+ * <li>{@link Cylinder#equals(Object)}</li>
+ * <li>{@link geometries.api.Geometry#setEmission(Color)}</li>
+ * <li>{@link geometries.api.Geometry#setMaterial(Material)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -960,5 +968,81 @@ class CylinderTests {
 
         // TC03: The ray would intersect the infinite tube through the axis, but both intersections lie outside the finite cylinder (0 points)
         assertNull(INTERSECTION_CYLINDER.findIntersections(new Ray((AXIS_MID.add(CAP_PERPENDICULAR.scale(2)).add(INTERSECTION_AXIS_DIRECTION.scale(-8))), new Vector(1, -1, 0.5))), ERROR_INTERSECTION_GENERAL_MISS);
+    }
+
+    /**
+     * Test method for {@link Cylinder#equals(Object)} and {@link Cylinder#hashCode()}.
+     */
+    @Test
+    void testEqualsAndHashCode() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Equal cylinders constructed independently
+        Cylinder c1 = new Cylinder(1d, AXIS, 2d);
+        Cylinder c2 = new Cylinder(1d, new Ray(Point.ZERO, Vector.AXIS_Z), 2d);
+        assertEquals(c1, c2, "Equal cylinders should compare equal");
+        assertEquals(c1.hashCode(), c2.hashCode(), "Equal cylinders should have equal hashCode");
+        // TC02: Different radius
+        assertNotEquals(c1, new Cylinder(2d, AXIS, 2d), "Cylinders with different radii should not be equal");
+        // TC03: Different height (different cap points)
+        assertNotEquals(c1, new Cylinder(1d, AXIS, 5d), "Cylinders with different heights should not be equal");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: Swapped bottom/top caps (reversed axis direction) — the exact case that used to
+        // break the equals/hashCode contract
+        Cylinder swapped = new Cylinder(1d, new Ray(new Point(0, 0, 2), Vector.AXIS_Z.scale(-1)), 2d);
+        assertEquals(c1, swapped, "Cylinders with swapped bottom/top caps should be equal");
+        assertEquals(c1.hashCode(), swapped.hashCode(),
+                "Cylinders with swapped bottom/top caps should have equal hashCode");
+        // TC12: A cylinder equals itself
+        assertEquals(c1, c1, "A cylinder should equal itself");
+        // TC13: Not equal to null / a different type
+        assertNotEquals(c1, null, "A cylinder should not equal null");
+        assertNotEquals(c1, "not a Cylinder", "A cylinder should not equal an object of a different type");
+    }
+
+    /**
+     * Test method for the inherited {@link geometries.api.Geometry#setEmission(Color)},
+     * {@link geometries.api.Geometry#getEmission()}, {@link geometries.api.Geometry#setMaterial(Material)}
+     * and {@link geometries.api.Geometry#getMaterial()}.
+     */
+    @Test
+    void testEmissionAndMaterial() {
+        // ============ Equivalence Partitions Tests ==============
+        Cylinder cylinder = new Cylinder(1d, AXIS, 2d);
+        Color emission = new Color(10, 20, 30);
+        Material material = new Material().setKD(0.5);
+
+        // TC01: setEmission returns the same instance (chaining) and stores the value
+        assertSame(cylinder, cylinder.setEmission(emission), "setEmission() should return the same instance for chaining");
+        assertEquals(emission, cylinder.getEmission(), "getEmission() did not return the emission color that was set");
+
+        // TC02: setMaterial returns the same instance (chaining) and stores the value
+        assertSame(cylinder, cylinder.setMaterial(material), "setMaterial() should return the same instance for chaining");
+        assertSame(material, cylinder.getMaterial(), "getMaterial() did not return the material that was set");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A freshly constructed geometry defaults to black emission and a default material
+        Cylinder fresh = new Cylinder(1d, AXIS, 2d);
+        assertEquals(Color.BLACK, fresh.getEmission(), "A new geometry should default to black emission");
+        assertNotNull(fresh.getMaterial(), "A new geometry should default to a non-null material");
+    }
+
+    /**
+     * Test method for {@link Cylinder#getBoundingBox()}.
+     */
+    @Test
+    void testGetBoundingBox() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: The box spans from the bottom cap to the top cap, padded by the radius on
+        // every axis (the implementation pads the axial extent by the radius too, not just
+        // the two radial axes, giving a conservative but valid box)
+        AABB box = CYLINDER.getBoundingBox();
+        assertNotNull(box, "A cylinder is finite and should have a non-null bounding box");
+        assertEquals(2d, box.size(0), DELTA, "Bounding box X size should be 2*radius");
+        assertEquals(2d, box.size(1), DELTA, "Bounding box Y size should be 2*radius");
+        assertEquals(4d, box.size(2), DELTA, "Bounding box Z size should be height + 2*radius");
+        assertEquals(0d, box.midpoint(0), DELTA, "Bounding box should be centered on the axis (X)");
+        assertEquals(0d, box.midpoint(1), DELTA, "Bounding box should be centered on the axis (Y)");
+        assertEquals(1d, box.midpoint(2), DELTA, "Bounding box should be centered between the two caps (Z)");
     }
 }

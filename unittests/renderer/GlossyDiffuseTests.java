@@ -31,11 +31,16 @@ class GlossyDiffuseTests {
     private static final int S25 = 25;
     private static final int S81 = 81;
 
-    // ── shared camera builder ─────────────────────────────────────────────────
+    // ── shared helpers ────────────────────────────────────────────────────────
 
-    private Camera.Builder builder(int res) {
+    private SimpleRayTracer baseTracer() {
+        return new SimpleRayTracer(SCENE)
+                .setShadowSamples(25, SamplingPatterns.GRID);
+    }
+
+    private Camera.Builder builder(int res, SimpleRayTracer tracer) {
         return Camera.getBuilder()
-                .setRayTracer(SCENE, RayTracerType.SIMPLE)
+                .setRayTracer(tracer)
                 .setLocation(new Point(750, 150, 300))
                 .setDirection(new Point(0, -100, -280), Vector.AXIS_Y)
                 .rotate(20)
@@ -43,9 +48,7 @@ class GlossyDiffuseTests {
                 .setVpDistance(1000)
                 .setResolution(res, res)
                 .setMultithreading(4)
-                .setAntiAliasing(25)
-                .setSoftShadows(25);
-
+                .setAntiAliasing(25);
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -54,7 +57,7 @@ class GlossyDiffuseTests {
 
     @Test
     void reference() {
-        builder(HIGH).build().renderImage().writeToImage("glossyDiffuse/reference");
+        builder(HIGH, baseTracer()).build().renderImage().writeToImage("glossyDiffuse/reference");
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -63,22 +66,22 @@ class GlossyDiffuseTests {
 
     @Test
     void glossy_s9_low() {
-        builder(LOW).setGlossyReflection(S9, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/glossy_s9_250");
+        builder(LOW, baseTracer().setGlossySamples(S9, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/glossy_s9_250");
     }
 
     @Test
     void glossy_s9_mid() {
-        builder(MID).setGlossyReflection(S9, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/glossy_s9_400");
+        builder(MID, baseTracer().setGlossySamples(S9, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/glossy_s9_400");
     }
 
     @Test
     void glossy_s25_mid() {
-        builder(MID).setGlossyReflection(S25, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/glossy_s25_400");
+        builder(MID, baseTracer().setGlossySamples(S25, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/glossy_s25_400");
     }
 
     @Test
     void glossy_s81_high() {
-        builder(HIGH).setGlossyReflection(S81, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/glossy_s81_500");
+        builder(HIGH, baseTracer().setGlossySamples(S81, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/glossy_s81_500");
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -87,22 +90,22 @@ class GlossyDiffuseTests {
 
     @Test
     void diffuse_s9_low() {
-        builder(LOW).setDiffuseGlass(S9, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/diffuse_s9_250");
+        builder(LOW, baseTracer().setDiffuseSamples(S9, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/diffuse_s9_250");
     }
 
     @Test
     void diffuse_s9_mid() {
-        builder(MID).setDiffuseGlass(S9, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/diffuse_s9_400");
+        builder(MID, baseTracer().setDiffuseSamples(S9, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/diffuse_s9_400");
     }
 
     @Test
     void diffuse_s25_mid() {
-        builder(MID).setDiffuseGlass(S25, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/diffuse_s25_400");
+        builder(MID, baseTracer().setDiffuseSamples(S25, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/diffuse_s25_400");
     }
 
     @Test
     void diffuse_s81_high() {
-        builder(HIGH).setDiffuseGlass(S81, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/diffuse_s81_500");
+        builder(HIGH, baseTracer().setDiffuseSamples(S81, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/diffuse_s81_500");
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -111,17 +114,17 @@ class GlossyDiffuseTests {
 
     @Test
     void both_s9_low() {
-        builder(LOW).setGlossyReflection(S9, SamplingPatterns.JITTERED).setDiffuseGlass(S9, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/both_s9_250");
+        builder(LOW, baseTracer().setGlossySamples(S9, SamplingPatterns.JITTERED).setDiffuseSamples(S9, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/both_s9_250");
     }
 
     @Test
     void both_s25_mid() {
-        builder(MID).setGlossyReflection(S25, SamplingPatterns.JITTERED).setDiffuseGlass(S25, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/both_s25_400");
+        builder(MID, baseTracer().setGlossySamples(S25, SamplingPatterns.JITTERED).setDiffuseSamples(S25, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/both_s25_400");
     }
 
     @Test
     void both_s81_high() {
-        builder(HIGH).setGlossyReflection(S81, SamplingPatterns.JITTERED).setDiffuseGlass(S81, SamplingPatterns.JITTERED).build().renderImage().writeToImage("glossyDiffuse/both_s81_500");
+        builder(HIGH, baseTracer().setGlossySamples(S81, SamplingPatterns.JITTERED).setDiffuseSamples(S81, SamplingPatterns.JITTERED)).build().renderImage().writeToImage("glossyDiffuse/both_s81_500");
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -130,8 +133,13 @@ class GlossyDiffuseTests {
 
     @Test
     void premium() {
+        SimpleRayTracer tracer = new SimpleRayTracer(SCENE)
+                .setShadowSamples(S81, SamplingPatterns.GRID)
+                .setGlossySamples(S81, SamplingPatterns.GRID)
+                .setDiffuseSamples(S81, SamplingPatterns.GRID);
+
         Camera.getBuilder()
-                .setRayTracer(SCENE, RayTracerType.SIMPLE)
+                .setRayTracer(tracer)
                 .setLocation(new Point(750, 150, 300))
                 .setDirection(new Point(0, -100, -280), Vector.AXIS_Y)
                 .rotate(20)
@@ -140,9 +148,6 @@ class GlossyDiffuseTests {
                 .setResolution(800, 800)
                 .setMultithreading(4)
                 .setAntiAliasing(S81, SamplingPatterns.GRID)
-                .setSoftShadows(S81, SamplingPatterns.GRID)
-                .setGlossyReflection(S81, SamplingPatterns.GRID)
-                .setDiffuseGlass(S81, SamplingPatterns.GRID)
                 .build().renderImage().writeToImage("glossyDiffuse/premium");
     }
 }

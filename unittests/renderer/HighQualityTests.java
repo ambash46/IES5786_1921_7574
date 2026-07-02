@@ -35,9 +35,11 @@ class HighQualityTests {
             if (light instanceof PointLight pl)
                 pl.setRadius(radii[Math.min(i++, radii.length - 1)]);
 
+        SimpleRayTracer tracer = new SimpleRayTracer(scene)
+                .setShadowSamples(289, SamplingPatterns.JITTERED);
+
         Camera.getBuilder()
-                .setRayTracer(scene, RayTracerType.SIMPLE)
-                .setSoftShadows(289, SamplingPatterns.JITTERED)
+                .setRayTracer(tracer)
                 .setAntiAliasing(289, SamplingPatterns.JITTERED)
                 .setLocation(new Point(750, 150, 300))
                 .setDirection(new Point(0, -100, -280), Vector.AXIS_Y)

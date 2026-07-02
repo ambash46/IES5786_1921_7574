@@ -2,14 +2,18 @@ package geometries.impl;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import primitives.Color;
+import primitives.Material;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -19,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <li>{@link Tube#Tube(double, Ray)}</li>
  * <li>{@link Tube#getNormal(Point)}</li>
  * <li>{@link Tube#findIntersections(Ray)}</li>
+ * <li>{@link Tube#equals(Object)}</li>
+ * <li>{@link geometries.api.Geometry#setEmission(Color)}</li>
+ * <li>{@link geometries.api.Geometry#setMaterial(Material)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -683,5 +690,74 @@ class TubeTests {
 
         // TC11: Ray misses the tube, ray head not on the reference plane (0 points)
         assertNull(INTERSECTION_TUBE.findIntersections(new Ray(missOffPlane, direction)), ERROR_INTERSECTION_MISS);
+    }
+
+    /**
+     * Test method for {@link Tube#equals(Object)} and {@link Tube#hashCode()}.
+     */
+    @Test
+    void testEqualsAndHashCode() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Equal tubes constructed independently
+        Tube t1 = new Tube(1d, AXIS);
+        Tube t2 = new Tube(1d, new Ray(Point.ZERO, Vector.AXIS_Z));
+        assertEquals(t1, t2, "Equal tubes should compare equal");
+        assertEquals(t1.hashCode(), t2.hashCode(), "Equal tubes should have equal hashCode");
+        // TC02: Different radius
+        assertNotEquals(t1, new Tube(2d, AXIS), "Tubes with different radii should not be equal");
+        // TC03: Different axis line
+        assertNotEquals(t1, new Tube(1d, new Ray(new Point(5, 0, 0), Vector.AXIS_Z)),
+                "Tubes on different axis lines should not be equal");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: Same axis line, reversed direction and a different origin point on that line —
+        // the exact case that used to break the equals/hashCode contract
+        Tube reversed = new Tube(1d, new Ray(new Point(0, 0, 10), Vector.AXIS_Z.scale(-1)));
+        assertEquals(t1, reversed, "Tubes on the same axis line with reversed direction should be equal");
+        assertEquals(t1.hashCode(), reversed.hashCode(),
+                "Tubes on the same axis line with reversed direction should have equal hashCode");
+        // TC12: A tube equals itself
+        assertEquals(t1, t1, "A tube should equal itself");
+        // TC13: Not equal to null / a different type
+        assertNotEquals(t1, null, "A tube should not equal null");
+        assertNotEquals(t1, "not a Tube", "A tube should not equal an object of a different type");
+    }
+
+    /**
+     * Test method for the inherited {@link geometries.api.Geometry#setEmission(Color)},
+     * {@link geometries.api.Geometry#getEmission()}, {@link geometries.api.Geometry#setMaterial(Material)}
+     * and {@link geometries.api.Geometry#getMaterial()}.
+     */
+    @Test
+    void testEmissionAndMaterial() {
+        // ============ Equivalence Partitions Tests ==============
+        Tube tube = new Tube(1d, AXIS);
+        Color emission = new Color(10, 20, 30);
+        Material material = new Material().setKD(0.5);
+
+        // TC01: setEmission returns the same instance (chaining) and stores the value
+        assertSame(tube, tube.setEmission(emission), "setEmission() should return the same instance for chaining");
+        assertEquals(emission, tube.getEmission(), "getEmission() did not return the emission color that was set");
+
+        // TC02: setMaterial returns the same instance (chaining) and stores the value
+        assertSame(tube, tube.setMaterial(material), "setMaterial() should return the same instance for chaining");
+        assertSame(material, tube.getMaterial(), "getMaterial() did not return the material that was set");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A freshly constructed geometry defaults to black emission and a default material
+        Tube fresh = new Tube(1d, AXIS);
+        assertEquals(Color.BLACK, fresh.getEmission(), "A new geometry should default to black emission");
+        assertNotNull(fresh.getMaterial(), "A new geometry should default to a non-null material");
+    }
+
+    /**
+     * Test method for {@link Tube#getBoundingBox()}.
+     * A tube is infinite, so it must have no bounding box.
+     */
+    @Test
+    void testGetBoundingBox() {
+        // =============== Boundary Values Tests ==================
+        // TC11: An infinite geometry has a null bounding box
+        assertNull(new Tube(1d, AXIS).getBoundingBox(), "A tube is infinite and should have a null bounding box");
     }
 }

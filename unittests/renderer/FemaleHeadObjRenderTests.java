@@ -11,9 +11,9 @@ import scene.XmlSceneLoader;
  * {@code <mesh>} element of {@link XmlSceneLoader} (see
  * {@code scenes/femaleHeadObj.xml}).
  *
- * <p>{@link SimpleRayTracer} has no acceleration structure, and the scene
- * uses the full ~99.9K-triangle mesh ({@code decimate="1"}) so that the
- * surface has no holes; the resolution is kept very low to compensate.
+ * <p>The mesh is not organized into a BVH, and the scene uses the full
+ * ~99.9K-triangle mesh ({@code decimate="1"}) so that the surface has no
+ * holes; the resolution is kept very low to compensate.
  *
  * @author Ambash and Elyasaf
  */
@@ -29,15 +29,15 @@ class FemaleHeadObjRenderTests {
      */
     @Test
     void testFemaleHeadObj() {
+        SimpleRayTracer tracer = new SimpleRayTracer(new XmlSceneLoader().load("femaleHeadObj"));
         Camera.getBuilder()
-                .setRayTracer(new XmlSceneLoader().load("femaleHeadObj"), RayTracerType.SIMPLE)
+                .setRayTracer(tracer)
                 .setLocation(new Point(100, 70, 100))
                 .setDirection(Point.ZERO, Vector.AXIS_Y)
                 .setVpSize(320, 320).setVpDistance(160)
                 .setResolution(2000, 2000)
                 .setAntiAliasing(9)
                 .setMultithreading(4)
-                .setCBR(2)
                 .build()
                 .renderImage()
                 .writeToImage("xml_femaleHeadObj");

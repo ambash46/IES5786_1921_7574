@@ -44,10 +44,10 @@ class PixelManager {
         synchronized (mutexNext) {
             if (cRow == maxRows) return null;
             ++cCol;
-            if (cCol < maxCols) return new Pixel(cRow, cCol);
+            if (cCol < maxCols) return new Pixel(cCol, cRow);
             cCol = 0;
             ++cRow;
-            if (cRow < maxRows) return new Pixel(cRow, cCol);
+            if (cRow < maxRows) return new Pixel(cCol, cRow);
         }
         return null;
     }

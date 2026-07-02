@@ -9,6 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
@@ -17,8 +18,10 @@ import static org.junit.jupiter.api.Assertions.assertSame;
  * The tests verify:
  * <ul>
  * <li>{@link Ray#Ray(Point, Vector)}</li>
+ * <li>{@link Ray#Ray(Point, Vector, Vector)}</li>
  * <li>{@link Ray#getPoint(double)}</li>
  * <li>{@link Ray#findClosestPoint(List)}</li>
+ * <li>{@link Ray#equals(Object)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -66,6 +69,17 @@ class RayTests {
      */
     private static final String CLOSEST_INTERSECTION_ERROR =
             "Ray.findClosestIntersection() returned the wrong intersection";
+
+    /**
+     * Error message for a wrong offset-origin ray.
+     */
+    private static final String OFFSET_ORIGIN_ERROR =
+            "Ray(Point, Vector, Vector) constructor produced an unexpected origin offset";
+
+    /**
+     * Error message for wrong equals() result.
+     */
+    private static final String EQUALS_ERROR = "Ray.equals() returned an unexpected result";
 
     /**
      * Origin point for ray constructor tests.
@@ -205,5 +219,53 @@ class RayTests {
         assertSame(SPHERE_CLOSE,
                 RAY_CLOSEST.findClosestIntersection(List.of(I_MEDIUM, I_FAR, I_CLOSE)).geometry,
                 CLOSEST_INTERSECTION_ERROR);
+    }
+
+    /**
+     * Test method for {@link Ray#Ray(Point, Vector, Vector)}.
+     * Verifies that the origin is offset by DELTA along the normal, in the
+     * direction indicated by the sign of {@code direction·normal}.
+     * <p>
+     * Asserts directly against {@code Ray.DELTA} (package-private, readable
+     * here since this test lives in the same {@code primitives} package)
+     * instead of duplicating its value, so the test can't silently drift out
+     * of sync if the constant changes.
+     */
+    @Test
+    void testConstructorWithNormal() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: direction·normal > 0 -> origin offset forward along the normal
+        Ray outward = assertDoesNotThrow(() -> new Ray(Point.ZERO, Vector.AXIS_Z, Vector.AXIS_Z), OFFSET_ORIGIN_ERROR);
+        assertEquals(new Point(0, 0, Ray.DELTA), outward.origin(), OFFSET_ORIGIN_ERROR);
+        assertEquals(Vector.AXIS_Z, outward.direction(), DIRECTION_VALUE_ERROR);
+
+        // TC02: direction·normal < 0 -> origin offset backward along the normal
+        Ray inward = assertDoesNotThrow(() -> new Ray(Point.ZERO, new Vector(0, 0, -1), Vector.AXIS_Z), OFFSET_ORIGIN_ERROR);
+        assertEquals(new Point(0, 0, -Ray.DELTA), inward.origin(), OFFSET_ORIGIN_ERROR);
+
+        // =============== Boundary Values Tests ==================
+        // TC11: direction is perpendicular to normal (dot == 0) -> treated as the
+        // non-positive case, offset backward along the normal
+        Ray grazing = assertDoesNotThrow(() -> new Ray(Point.ZERO, Vector.AXIS_X, Vector.AXIS_Z), OFFSET_ORIGIN_ERROR);
+        assertEquals(new Point(0, 0, -Ray.DELTA), grazing.origin(), OFFSET_ORIGIN_ERROR);
+    }
+
+    /**
+     * Test method for {@link Ray#equals(Object)}.
+     */
+    @Test
+    void testEquals() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Equal rays constructed independently
+        assertEquals(new Ray(ORIGIN, DIAGONAL_DIRECTION), RAY, EQUALS_ERROR);
+        // TC02: Rays with different origins are not equal
+        assertNotEquals(RAY, new Ray(Point.ZERO, DIAGONAL_DIRECTION), EQUALS_ERROR);
+        // TC03: Rays with different directions are not equal
+        assertNotEquals(RAY, new Ray(ORIGIN, Vector.AXIS_X), EQUALS_ERROR);
+
+        // =============== Boundary Values Tests ==================
+        // TC11: Not equal to null / a different type
+        assertNotEquals(RAY, null, EQUALS_ERROR);
+        assertNotEquals(RAY, "not a Ray", EQUALS_ERROR);
     }
 }

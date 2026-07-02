@@ -18,20 +18,17 @@ import java.util.List;
 /**
  * BVH acceleration benchmark.
  *
- * <p>All 12 tests render the same 500+ geometry scene at the same resolution
+ * <p>All 6 tests render the same 500+ geometry scene at the same resolution
  * and quality. Only the geometry organisation (flat / manual / auto) and the
- * CBR / multi-threading flags differ.
+ * multi-threading flag differ; the bounding-box pre-check is always active.
  *
  * <p>Measurement table:
  * <pre>
- *   Configuration             | without MT | with MT
- *   --------------------------+------------+--------
- *   flat,   no CBR            |     1      |   2
- *   manual, no CBR            |     3      |   4
- *   auto,   no CBR            |     5      |   6
- *   flat,   CBR               |     7      |   8
- *   manual, CBR  (manual BVH) |     9      |  10
- *   auto,   CBR  (auto   BVH) |    11      |  12
+ *   Configuration              | without MT | with MT
+ *   ---------------------------+------------+--------
+ *   flat                       |     1      |   2
+ *   manual (manual BVH)        |     3      |   4
+ *   auto   (auto   BVH)        |     5      |   6
  * </pre>
  *
  * <p>Images saved to {@code images/bvh/}.
@@ -159,11 +156,12 @@ class BVHTests {
         return scene;
     }
 
-    private void render(Geometries geos, boolean cbr, boolean mt, String name) {
-        if (cbr) Intersectable.setCBR(2); else Intersectable.disableCBR();
+    private void render(Geometries geos, boolean mt, String name) {
+        SimpleRayTracer tracer = new SimpleRayTracer(buildScene(geos))
+                .setShadowSamples(SHADOW_S, SamplingPatterns.GRID);
+
         var builder = Camera.getBuilder()
-                .setRayTracer(buildScene(geos), RayTracerType.SIMPLE)
-                .setSoftShadows(SHADOW_S, SamplingPatterns.GRID)
+                .setRayTracer(tracer)
                 .setLocation(new Point(0, 15, 15))
                 .setDirection(new Point(0, 0, -50), Vector.AXIS_Y)
                 .setVpSize(100, 100)
@@ -177,26 +175,20 @@ class BVHTests {
     //  GROUP 1 — Flat scene
     // ══════════════════════════════════════════════════════════════════════════
 
-    @Test void flat_noCBR_noMT()   { render(FLAT, false, false, "flat_noCBR_noMT");   }
-    @Test void flat_noCBR_withMT() { render(FLAT, false, true,  "flat_noCBR_withMT"); }
-    @Test void flat_CBR_noMT()     { render(FLAT, true,  false, "flat_CBR_noMT");     }
-    @Test void flat_CBR_withMT()   { render(FLAT, true,  true,  "flat_CBR_withMT");   }
+    @Test void flat_noMT()   { render(FLAT, false, "flat_noMT");   }
+    @Test void flat_withMT() { render(FLAT, true,  "flat_withMT"); }
 
     // ══════════════════════════════════════════════════════════════════════════
     //  GROUP 2 — Manual hierarchy (5 Z-strips)
     // ══════════════════════════════════════════════════════════════════════════
 
-    @Test void manual_noCBR_noMT()   { render(MANUAL, false, false, "manual_noCBR_noMT");   }
-    @Test void manual_noCBR_withMT() { render(MANUAL, false, true,  "manual_noCBR_withMT"); }
-    @Test void manual_CBR_noMT()     { render(MANUAL, true,  false, "manual_CBR_noMT");     }
-    @Test void manual_CBR_withMT()   { render(MANUAL, true,  true,  "manual_CBR_withMT");   }
+    @Test void manual_noMT()   { render(MANUAL, false, "manual_noMT");   }
+    @Test void manual_withMT() { render(MANUAL, true,  "manual_withMT"); }
 
     // ══════════════════════════════════════════════════════════════════════════
     //  GROUP 3 — Automatic BVH (median split)
     // ══════════════════════════════════════════════════════════════════════════
 
-    @Test void auto_noCBR_noMT()   { render(FLAT.buildBVH(), false, false, "auto_noCBR_noMT");   }
-    @Test void auto_noCBR_withMT() { render(FLAT.buildBVH(), false, true,  "auto_noCBR_withMT"); }
-    @Test void auto_CBR_noMT()     { render(FLAT.buildBVH(), true,  false, "auto_CBR_noMT");     }
-    @Test void auto_CBR_withMT()   { render(FLAT.buildBVH(), true,  true,  "auto_CBR_withMT");   }
+    @Test void auto_noMT()   { render(FLAT.buildBVH(), false, "auto_noMT");   }
+    @Test void auto_withMT() { render(FLAT.buildBVH(), true,  "auto_withMT"); }
 }

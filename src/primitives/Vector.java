@@ -83,6 +83,20 @@ public final class Vector extends Point {
     }
 
     /**
+     * Computes the raw cross-product components of this vector with another,
+     * without validating whether the result is the zero vector.
+     *
+     * @param other the other vector
+     * @return the cross-product components as a {@link Double3}
+     */
+    private Double3 crossComponents(Vector other) {
+        double x = this._xyz._d2() * other._xyz._d3() - this._xyz._d3() * other._xyz._d2();
+        double y = this._xyz._d3() * other._xyz._d1() - this._xyz._d1() * other._xyz._d3();
+        double z = this._xyz._d1() * other._xyz._d2() - this._xyz._d2() * other._xyz._d1();
+        return new Double3(x, y, z);
+    }
+
+    /**
      * Calculates the cross product of this vector with another vector.
      *
      * @param other the other vector
@@ -90,13 +104,10 @@ public final class Vector extends Point {
      * @throws IllegalArgumentException if the result is the zero vector
      */
     public Vector crossProduct(Vector other) {
-        if (isParallel(other)) {
+        Double3 cross = crossComponents(other);
+        if (Util.isZero(cross._d1()) && Util.isZero(cross._d2()) && Util.isZero(cross._d3()))
             throw new IllegalArgumentException("Cross product is undefined for parallel vectors");
-        }
-        double x = this._xyz._d2() * other._xyz._d3() - this._xyz._d3() * other._xyz._d2();
-        double y = this._xyz._d3() * other._xyz._d1() - this._xyz._d1() * other._xyz._d3();
-        double z = this._xyz._d1() * other._xyz._d2() - this._xyz._d2() * other._xyz._d1();
-        return new Vector(x, y, z);
+        return new Vector(cross);
     }
 
     /**
@@ -107,10 +118,8 @@ public final class Vector extends Point {
      * @return {@code true} if the vectors are parallel, {@code false} otherwise
      */
     public boolean isParallel(Vector other) {
-        double x = this._xyz._d2() * other._xyz._d3() - this._xyz._d3() * other._xyz._d2();
-        double y = this._xyz._d3() * other._xyz._d1() - this._xyz._d1() * other._xyz._d3();
-        double z = this._xyz._d1() * other._xyz._d2() - this._xyz._d2() * other._xyz._d1();
-        return Util.isZero(x) && Util.isZero(y) && Util.isZero(z);
+        Double3 cross = crossComponents(other);
+        return Util.isZero(cross._d1()) && Util.isZero(cross._d2()) && Util.isZero(cross._d3());
     }
 
     /**

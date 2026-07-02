@@ -1,7 +1,10 @@
 package geometries.impl;
 
+import geometries.api.AABB;
 import geometries.api.Intersectable;
 import org.junit.jupiter.api.Test;
+import primitives.Color;
+import primitives.Material;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
@@ -10,7 +13,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -20,6 +26,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <li>{@link Sphere#Sphere(Point, double)}</li>
  * <li>{@link Sphere#getNormal(Point)}</li>
  * <li>{@link Sphere#findIntersections(primitives.Ray)}</li>
+ * <li>{@link Sphere#equals(Object)}</li>
+ * <li>{@link geometries.api.Geometry#setEmission(Color)}</li>
+ * <li>{@link geometries.api.Geometry#setMaterial(Material)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -361,5 +370,74 @@ class SphereTests {
         assertEquals(List.of(FIRST_INTERSECTION_POINT, SECOND_INTERSECTION_POINT),
                 pts(sphere.calcIntersections(ray, MAX_DIST_Q5)),
                 "calcIntersections: expected 2 hits when maxDistance is infinity");
+    }
+
+    /**
+     * Test method for {@link Sphere#equals(Object)} and {@link Sphere#hashCode()}.
+     */
+    @Test
+    void testEqualsAndHashCode() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Equal spheres constructed independently
+        Sphere s1 = new Sphere(CENTER, RADIUS);
+        Sphere s2 = new Sphere(new Point(2, 1, -1), 2d);
+        assertEquals(s1, s2, "Equal spheres should compare equal");
+        assertEquals(s1.hashCode(), s2.hashCode(), "Equal spheres should have equal hashCode");
+        // TC02: Different radius
+        assertNotEquals(s1, new Sphere(CENTER, RADIUS + 1), "Spheres with different radii should not be equal");
+        // TC03: Different center
+        assertNotEquals(s1, new Sphere(new Point(0, 0, 0), RADIUS), "Spheres with different centers should not be equal");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A sphere equals itself
+        assertEquals(s1, s1, "A sphere should equal itself");
+        // TC12: Not equal to null / a different type
+        assertNotEquals(s1, null, "A sphere should not equal null");
+        assertNotEquals(s1, "not a Sphere", "A sphere should not equal an object of a different type");
+    }
+
+    /**
+     * Test method for the inherited {@link geometries.api.Geometry#setEmission(Color)},
+     * {@link geometries.api.Geometry#getEmission()}, {@link geometries.api.Geometry#setMaterial(Material)}
+     * and {@link geometries.api.Geometry#getMaterial()}.
+     */
+    @Test
+    void testEmissionAndMaterial() {
+        // ============ Equivalence Partitions Tests ==============
+        Sphere sphere = new Sphere(CENTER, RADIUS);
+        Color emission = new Color(10, 20, 30);
+        Material material = new Material().setKD(0.5);
+
+        // TC01: setEmission returns the same instance (chaining) and stores the value
+        assertSame(sphere, sphere.setEmission(emission), "setEmission() should return the same instance for chaining");
+        assertEquals(emission, sphere.getEmission(), "getEmission() did not return the emission color that was set");
+
+        // TC02: setMaterial returns the same instance (chaining) and stores the value
+        assertSame(sphere, sphere.setMaterial(material), "setMaterial() should return the same instance for chaining");
+        assertSame(material, sphere.getMaterial(), "getMaterial() did not return the material that was set");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A freshly constructed geometry defaults to black emission and a default material
+        Sphere fresh = new Sphere(CENTER, RADIUS);
+        assertEquals(Color.BLACK, fresh.getEmission(), "A new geometry should default to black emission");
+        assertNotNull(fresh.getMaterial(), "A new geometry should default to a non-null material");
+    }
+
+    /**
+     * Test method for {@link Sphere#getBoundingBox()}.
+     */
+    @Test
+    void testGetBoundingBox() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: The box is centered on the sphere's center, extended by the radius on every axis
+        Sphere sphere = new Sphere(CENTER, RADIUS);
+        AABB box = sphere.getBoundingBox();
+        assertNotNull(box, "A sphere is finite and should have a non-null bounding box");
+        assertEquals(2 * RADIUS, box.size(0), DELTA, "Bounding box X size should be 2*radius");
+        assertEquals(2 * RADIUS, box.size(1), DELTA, "Bounding box Y size should be 2*radius");
+        assertEquals(2 * RADIUS, box.size(2), DELTA, "Bounding box Z size should be 2*radius");
+        assertEquals(CENTER.getCoordinates()._d1(), box.midpoint(0), DELTA, "Bounding box should be centered on the sphere center (X)");
+        assertEquals(CENTER.getCoordinates()._d2(), box.midpoint(1), DELTA, "Bounding box should be centered on the sphere center (Y)");
+        assertEquals(CENTER.getCoordinates()._d3(), box.midpoint(2), DELTA, "Bounding box should be centered on the sphere center (Z)");
     }
 }

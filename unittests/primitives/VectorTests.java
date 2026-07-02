@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -23,6 +24,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <li>{@link Vector#lengthSquared()}</li>
  * <li>{@link Vector#length()}</li>
  * <li>{@link Vector#normalize()}</li>
+ * <li>{@link Vector#buildOrthogonalBasis()}</li>
+ * <li>{@link Vector#equals(Object)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -84,6 +87,14 @@ class VectorTests {
      * Error message for wrong normalization result.
      */
     private static final String NORMALIZE_ERROR = "Vector.normalize() returned an unexpected vector";
+    /**
+     * Error message for a wrong orthogonal basis.
+     */
+    private static final String ORTHOGONAL_BASIS_ERROR = "Vector.buildOrthogonalBasis() returned an unexpected basis";
+    /**
+     * Error message for wrong equals() result.
+     */
+    private static final String EQUALS_ERROR = "Vector.equals() returned an unexpected result";
 
     /**
      * Base vector for most vector tests
@@ -295,5 +306,52 @@ class VectorTests {
         // =============== Boundary Values Tests ==================
         // TC11: Normalizing a unit vector
         assertEquals(Vector.AXIS_X, Vector.AXIS_X.normalize(), NORMALIZE_ERROR);
+    }
+
+    /**
+     * Test method for {@link Vector#buildOrthogonalBasis()}.
+     * Verifies that the returned pair forms an orthonormal basis together
+     * with the original vector's direction.
+     */
+    @Test
+    void testBuildOrthogonalBasis() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: A regular vector, not aligned with any axis
+        Vector[] basis = assertDoesNotThrow(V1::buildOrthogonalBasis, ORTHOGONAL_BASIS_ERROR);
+        Vector vX = basis[0];
+        Vector vY = basis[1];
+        assertEquals(1d, vX.length(), DELTA, ORTHOGONAL_BASIS_ERROR);
+        assertEquals(1d, vY.length(), DELTA, ORTHOGONAL_BASIS_ERROR);
+        assertEquals(0d, vX.dotProduct(V1.normalize()), DELTA, ORTHOGONAL_BASIS_ERROR);
+        assertEquals(0d, vY.dotProduct(V1.normalize()), DELTA, ORTHOGONAL_BASIS_ERROR);
+        assertEquals(0d, vX.dotProduct(vY), DELTA, ORTHOGONAL_BASIS_ERROR);
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A vector nearly aligned with the Y axis (exercises the AXIS_X fallback branch)
+        Vector[] basisNearY = assertDoesNotThrow(Vector.AXIS_Y::buildOrthogonalBasis, ORTHOGONAL_BASIS_ERROR);
+        Vector vXNearY = basisNearY[0];
+        Vector vYNearY = basisNearY[1];
+        assertEquals(1d, vXNearY.length(), DELTA, ORTHOGONAL_BASIS_ERROR);
+        assertEquals(1d, vYNearY.length(), DELTA, ORTHOGONAL_BASIS_ERROR);
+        assertEquals(0d, vXNearY.dotProduct(Vector.AXIS_Y), DELTA, ORTHOGONAL_BASIS_ERROR);
+        assertEquals(0d, vYNearY.dotProduct(Vector.AXIS_Y), DELTA, ORTHOGONAL_BASIS_ERROR);
+        assertEquals(0d, vXNearY.dotProduct(vYNearY), DELTA, ORTHOGONAL_BASIS_ERROR);
+    }
+
+    /**
+     * Test method for {@link Vector#equals(Object)}.
+     */
+    @Test
+    void testEquals() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Equal vectors constructed independently
+        assertEquals(new Vector(1, 2, 3), V1, EQUALS_ERROR);
+        // TC02: Different vectors are not equal
+        assertNotEquals(V1, V3, EQUALS_ERROR);
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A Vector never equals a Point with the same coordinates, even though
+        // both wrap an equal Double3 (equals() checks getClass()).
+        assertNotEquals(V1, new Point(1, 2, 3), EQUALS_ERROR);
     }
 }

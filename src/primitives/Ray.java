@@ -1,6 +1,7 @@
 package primitives;
 
 import static geometries.api.Intersectable.Intersection;
+import static primitives.Util.isZero;
 
 import java.util.List;
 import java.util.Objects;
@@ -16,8 +17,23 @@ import java.util.Objects;
  */
 public final class Ray {
 
-    /** Small offset used to push secondary-ray origins off the surface. */
-    private static final double DELTA = 0.1;
+    /**
+     * Small offset used to push secondary-ray origins off the surface, to
+     * avoid self-intersection (shadow/reflection/transparency acne).
+     * <p>
+     * Lowered from the original {@code 0.1} after an empirical sweep (sphere
+     * + triangle + floor scene, high-sample soft shadows, pixel-diffed
+     * against the {@code 0.1} baseline): the diff count plateaued at a
+     * constant value confined to the shadow-penumbra edge for every DELTA
+     * from {@code 1e-4} down to {@code 1e-8}, with no growth (i.e. no
+     * accumulating acne) and no visible artifacts. If acne reappears in some
+     * scene this wasn't tested against, raise this value back up.
+     * <p>
+     * Package-private (not {@code private}) so {@code RayTests} can assert
+     * against it directly instead of duplicating the value — a class outside
+     * {@code primitives} still can't see it.
+     */
+    static final double DELTA = 0.00000001;
 
     /**
      * The starting point of the ray.
@@ -79,9 +95,12 @@ public final class Ray {
      * Returns the point on the ray at parameter {@code t}.
      * <p>
      * The point is computed as {@code origin + t * direction}.
-     * When {@code t} is zero (or so close to zero that scaling the direction
-     * would produce a zero vector), the origin itself is returned.
-     * This method accepts any value of {@code t} (positive, negative, or zero).
+     * When {@code t} is zero, the origin itself is returned — checked
+     * explicitly up front rather than inferred from a zero-vector exception.
+     * The surrounding {@code try/catch} is a defensive fallback, not the
+     * detection mechanism: it only guards against an unanticipated edge case
+     * still producing a zero-length scaled direction, so this method never
+     * throws for any value of {@code t} (positive, negative, or zero).
      * </p>
      *
      * @param t the scalar parameter along the ray direction
@@ -89,6 +108,7 @@ public final class Ray {
      * {@code t} is effectively zero
      */
     public Point getPoint(double t) {
+        if (isZero(t)) return _origin;
         try {
             return _origin.add(_direction.scale(t));
         } catch (IllegalArgumentException e) {

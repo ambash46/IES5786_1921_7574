@@ -1,13 +1,18 @@
 package geometries.impl;
 
 import org.junit.jupiter.api.Test;
+import primitives.Color;
+import primitives.Material;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -17,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <li>{@link Plane#Plane(Point, Vector)}</li>
  * <li>{@link Plane#Plane(Point, Point, Point)}</li>
  * <li>{@link Plane#getNormal(Point)}</li>
+ * <li>{@link Plane#equals(Object)}</li>
+ * <li>{@link geometries.api.Geometry#setEmission(Color)}</li>
+ * <li>{@link geometries.api.Geometry#setMaterial(Material)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -440,5 +448,76 @@ class PlaneTests {
         // TC30: Negative normal component, starts on the plane away from the reference point (0 points)
         assertNull(INTERSECTION_PLANE.findIntersections(new Ray(PLANE_POINT, GENERAL_NEGATIVE_DIRECTION)),
                 ERROR_PLANE_INTERSECTION);
+    }
+
+    /**
+     * Test method for {@link Plane#equals(Object)} and {@link Plane#hashCode()}.
+     */
+    @Test
+    void testEqualsAndHashCode() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Equal planes constructed independently
+        Plane p1 = new Plane(POINT1, POINT2, POINT3);
+        Plane p2 = new Plane(POINT1, POINT2, POINT3);
+        assertEquals(p1, p2, "Equal planes should compare equal");
+        assertEquals(p1.hashCode(), p2.hashCode(), "Equal planes should have equal hashCode");
+        // TC02: A different point on the same plane
+        Plane p3 = new Plane(POINT4, p1.getNormal(POINT4));
+        assertEquals(p1, p3, "Planes sharing the same surface should be equal regardless of the defining point");
+        assertEquals(p1.hashCode(), p3.hashCode(), "Planes sharing the same surface should have equal hashCode");
+        // TC03: A genuinely different plane
+        assertNotEquals(p1, INTERSECTION_PLANE, "Different planes should not be equal");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: Same plane, opposite normal direction — the exact case that used to break the
+        // equals/hashCode contract (equals() accepts it, hashCode() must match)
+        Plane opposite = new Plane(PLANE_POINT, INTERSECTION_PLANE.getNormal(PLANE_POINT).scale(-1));
+        assertEquals(INTERSECTION_PLANE, opposite, "Planes with opposite normals on the same surface should be equal");
+        assertEquals(INTERSECTION_PLANE.hashCode(), opposite.hashCode(),
+                "Planes with opposite normals on the same surface should have equal hashCode");
+        // TC12: A plane equals itself
+        assertEquals(p1, p1, "A plane should equal itself");
+        // TC13: Not equal to null / a different type
+        assertNotEquals(p1, null, "A plane should not equal null");
+        assertNotEquals(p1, "not a Plane", "A plane should not equal an object of a different type");
+    }
+
+    /**
+     * Test method for the inherited {@link geometries.api.Geometry#setEmission(Color)},
+     * {@link geometries.api.Geometry#getEmission()}, {@link geometries.api.Geometry#setMaterial(Material)}
+     * and {@link geometries.api.Geometry#getMaterial()}.
+     */
+    @Test
+    void testEmissionAndMaterial() {
+        // ============ Equivalence Partitions Tests ==============
+        Plane plane = new Plane(POINT1, POINT2, POINT3);
+        Color emission = new Color(10, 20, 30);
+        Material material = new Material().setKD(0.5);
+
+        // TC01: setEmission returns the same instance (chaining) and stores the value
+        assertSame(plane, plane.setEmission(emission), "setEmission() should return the same instance for chaining");
+        assertEquals(emission, plane.getEmission(), "getEmission() did not return the emission color that was set");
+
+        // TC02: setMaterial returns the same instance (chaining) and stores the value
+        assertSame(plane, plane.setMaterial(material), "setMaterial() should return the same instance for chaining");
+        assertSame(material, plane.getMaterial(), "getMaterial() did not return the material that was set");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A freshly constructed geometry defaults to black emission and a default material
+        Plane fresh = new Plane(POINT1, POINT2, POINT3);
+        assertEquals(Color.BLACK, fresh.getEmission(), "A new geometry should default to black emission");
+        assertNotNull(fresh.getMaterial(), "A new geometry should default to a non-null material");
+    }
+
+    /**
+     * Test method for {@link Plane#getBoundingBox()}.
+     * A plane is infinite, so it must have no bounding box.
+     */
+    @Test
+    void testGetBoundingBox() {
+        // =============== Boundary Values Tests ==================
+        // TC11: An infinite geometry has a null bounding box
+        assertNull(new Plane(POINT1, POINT2, POINT3).getBoundingBox(),
+                "A plane is infinite and should have a null bounding box");
     }
 }

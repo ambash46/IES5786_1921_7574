@@ -50,6 +50,22 @@ public class AABB {
     }
 
     /**
+     * Returns the length of this box along the given axis (max − min).
+     *
+     * @param axis 0=X, 1=Y, 2=Z
+     * @return size along that axis
+     */
+    public double size(int axis) {
+        Double3 min = _min.getCoordinates();
+        Double3 max = _max.getCoordinates();
+        return switch (axis) {
+            case 0 -> max._d1() - min._d1();
+            case 1 -> max._d2() - min._d2();
+            default -> max._d3() - min._d3();
+        };
+    }
+
+    /**
      * Returns the midpoint coordinate of this box along the given axis.
      * Used as the centroid estimate when building a BVH.
      *
@@ -69,10 +85,16 @@ public class AABB {
     /**
      * Builds the tightest AABB that encloses all the given points.
      *
-     * @param points one or more points to enclose
-     * @return the bounding box
+     * @param  points one or more points to enclose
+     * @return        the bounding box
+     * @throws IllegalArgumentException if no points are given (there would be
+     *                                  no valid box to compute — without this
+     *                                  check, {@code min} and {@code max}
+     *                                  would silently come out inverted)
      */
     public static AABB fromPoints(Point... points) {
+        if (points.length == 0)
+            throw new IllegalArgumentException("Cannot build an AABB from zero points");
         double minX = Double.POSITIVE_INFINITY,  minY = Double.POSITIVE_INFINITY,  minZ = Double.POSITIVE_INFINITY;
         double maxX = Double.NEGATIVE_INFINITY,  maxY = Double.NEGATIVE_INFINITY,  maxZ = Double.NEGATIVE_INFINITY;
         for (Point p : points) {

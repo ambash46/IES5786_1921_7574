@@ -51,12 +51,6 @@ public final class Geometries extends Intersectable {
     }
 
     /**
-     * Collects all intersections from every geometry in the collection.
-     *
-     * @param ray the ray to intersect with
-     * @return a combined list of {@link Intersection}s, or {@code null} if none
-     */
-    /**
      * Returns a new flat {@link Geometries} containing every leaf geometry
      * reachable from this node. Nested {@link Geometries} groups are dissolved;
      * only primitive geometries appear in the result.
@@ -69,12 +63,6 @@ public final class Geometries extends Intersectable {
         return flat;
     }
 
-    /**
-     * Builds an automatic BVH hierarchy using median split with the default
-     * maximum of 2 geometries per leaf node.
-     *
-     * @return a new {@link Geometries} organised as a hierarchy
-     */
     /**
      * Creates a flat {@link Geometries} of {@link Triangle}s from a vertex list
      * and a face-index table.  Each {@code int[3]} face entry holds the indices
@@ -91,6 +79,12 @@ public final class Geometries extends Intersectable {
         return g;
     }
 
+    /**
+     * Builds an automatic BVH hierarchy using median split with the default
+     * maximum of 2 geometries per leaf node.
+     *
+     * @return a new {@link Geometries} organised as a hierarchy
+     */
     public Geometries buildBVH() {
         return buildBVH(2);
     }
@@ -165,7 +159,7 @@ public final class Geometries extends Intersectable {
         geometries.api.AABB box = null;
         for (Intersectable child : geometries) {
             geometries.api.AABB childBox = child.getBoundingBox();
-            if (childBox == null) continue;
+            if (childBox == null) return null; // infinite child → whole group is infinite
             box = box == null ? childBox : box.union(childBox);
         }
         return box;

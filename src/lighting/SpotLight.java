@@ -53,10 +53,12 @@ public final class SpotLight extends PointLight {
     /**
      * Sets the beam-narrowing exponent.
      *
-     * @param narrowBeam the exponent applied to the beam factor (must be ≥ 1)
-     * @return this SpotLight, for method chaining
+     * @param  narrowBeam               the exponent applied to the beam factor (must be ≥ 1)
+     * @return                          this SpotLight, for method chaining
+     * @throws IllegalArgumentException if {@code narrowBeam} is less than 1
      */
     public SpotLight setNarrowBeam(int narrowBeam) {
+        if (narrowBeam < 1) throw new IllegalArgumentException("narrowBeam must be >= 1");
         _narrowBeam = narrowBeam;
         return this;
     }

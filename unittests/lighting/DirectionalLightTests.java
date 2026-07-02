@@ -1,6 +1,5 @@
-package renderer;
+package lighting;
 
-import lighting.DirectionalLight;
 import org.junit.jupiter.api.Test;
 import primitives.Color;
 import primitives.Point;
@@ -15,13 +14,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * <ul>
  * <li>{@link DirectionalLight#getL(Point)}</li>
  * <li>{@link DirectionalLight#getIntensity(Point)}</li>
+ * <li>{@link DirectionalLight#getDistance(Point)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
  * <p>
- * Since both the direction and intensity of a directional light are constant
- * and independent of the target point, one EP case is sufficient for each
- * method (no relevant boundary values exist).
+ * Since the direction, intensity, and distance of a directional light are all
+ * constant and independent of the target point, one EP case is sufficient for
+ * each method (no relevant boundary values exist).
  *
  * @author Ambash and Elyasaf
  */
@@ -65,5 +65,19 @@ class DirectionalLightTests {
         // TC01: intensity does not change with distance — returns full source intensity
         assertEquals(INTENSITY, LIGHT.getIntensity(new Point(100, 200, 300)),
                 "DirectionalLight.getIntensity() should return constant intensity for any point");
+    }
+
+    /**
+     * Test method for {@link DirectionalLight#getDistance(Point)}.
+     * A directional light is infinitely far away, regardless of the target point.
+     */
+    @Test
+    void testGetDistance() {
+
+        // ============ Equivalence Partitions Tests ==============
+
+        // TC01: distance is always positive infinity, for any point
+        assertEquals(Double.POSITIVE_INFINITY, LIGHT.getDistance(new Point(1, 2, 3)),
+                "DirectionalLight.getDistance() should always return positive infinity");
     }
 }

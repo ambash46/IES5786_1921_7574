@@ -66,19 +66,20 @@ class SoftShadowsTests {
 
     private void render(double lightRadius, int numSamples, SamplingPattern pattern,
                         int res, String name) {
-        var builder = Camera.getBuilder()
-                .setRayTracer(loadScene(lightRadius), RayTracerType.SIMPLE)
+        Scene scene = loadScene(lightRadius);
+        SimpleRayTracer tracer = new SimpleRayTracer(scene);
+        if (lightRadius > 0)
+            tracer.setShadowSamples(numSamples, pattern);
+
+        Camera.getBuilder()
+                .setRayTracer(tracer)
                 .setLocation(new Point(750, 150, 300))
                 .setDirection(new Point(0, -100, -280), Vector.AXIS_Y)
                 .rotate(20)
                 .setVpSize(620, 620)
                 .setVpDistance(1000)
-                .setResolution(res, res);
-
-        if (lightRadius > 0)
-            builder.setSoftShadows(numSamples, pattern);
-
-        builder.build().renderImage().writeToImage("softShadows/" + name);
+                .setResolution(res, res)
+                .build().renderImage().writeToImage("softShadows/" + name);
     }
 
     // ══════════════════════════════════════════════════════════════════════════

@@ -5,6 +5,7 @@ import static geometries.api.Intersectable.Intersection;
 import geometries.api.Geometry;
 import java.util.List;
 import java.util.Objects;
+import primitives.Double3;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
@@ -92,9 +93,46 @@ public final class Plane extends Geometry {
         return isZero(_normal.dotProduct(other._point.subtract(_point)));
     }
 
+    /**
+     * Returns this plane's normal oriented to a canonical sign so that two
+     * planes whose normals point in opposite directions — both accepted as
+     * equal by {@link #equals(Object)} via {@link Vector#isParallel(Vector)}
+     * — produce the same canonical form for hashing.
+     *
+     * @return the normal, negated if needed so its first non-zero component is positive
+     */
+    private Vector canonicalNormal() {
+        Double3 c = _normal.getCoordinates();
+        boolean negate = !isZero(c._d1()) ? c._d1() < 0
+                : !isZero(c._d2()) ? c._d2() < 0
+                : c._d3() < 0;
+        return negate ? _normal.scale(-1) : _normal;
+    }
+
+    /**
+     * Signed offset of {@code point} along {@code normal} from the coordinate
+     * origin, computed via raw {@link Double3} arithmetic (not
+     * {@code Point.subtract}) so it stays well-defined even when
+     * {@code point} coincides with the origin.
+     *
+     * @param  normal the (unit) normal to project onto
+     * @param  point  the point to project
+     * @return        {@code normal · point}
+     */
+    private static double planeOffset(Vector normal, Point point) {
+        Double3 n = normal.getCoordinates();
+        Double3 p = point.getCoordinates();
+        return n._d1() * p._d1() + n._d2() * p._d2() + n._d3() * p._d3();
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(_normal, _point);
+        Vector normal = canonicalNormal();
+        Double3 n = normal.getCoordinates();
+        double offset = planeOffset(normal, _point);
+        return Objects.hash(
+                Double3.quantize(n._d1()), Double3.quantize(n._d2()), Double3.quantize(n._d3()),
+                Double3.quantize(offset));
     }
 
     @Override

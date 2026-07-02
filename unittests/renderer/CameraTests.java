@@ -271,4 +271,86 @@ class CameraTests {
       Ray rayBV06 = camera3x3.constructRay(0, 0);
       assertEquals(new Ray(LOCATION, new Vector(-2, 2, -10)), rayBV06, ERROR_CONSTRUCT_RAY);
    }
+
+   /**
+    * Test method for {@link Camera.Builder#rotate(double)}.
+    * Verifies the roll rotation via its effect on {@link Camera#constructRay(int, int)}.
+    */
+   @Test
+   void testRotate() {
+      // ============ Equivalence Partitions Tests ==============
+
+      // EP01: A 90-degree roll swaps vRight/vUp (with a sign flip); the corner pixel
+      // that was at (-3,3,-10) unrotated should move to (3,3,-10)
+      Camera rotated90 = baseBuilder()
+         .setDirection(V_TO, V_UP)
+         .setVpSize(8, 8)
+         .setResolution(4, 4)
+         .rotate(90)
+         .build();
+      Ray rayRotated = rotated90.constructRay(0, 0);
+      assertEquals(new Ray(LOCATION, new Vector(3, 3, -10)), rayRotated,
+         "A 90-degree roll did not rotate the view plane as expected");
+
+      // =============== Boundary Values Tests ==================
+
+      // BV01: A 360-degree roll is equivalent to no rotation at all
+      Camera rotated360 = baseBuilder()
+         .setDirection(V_TO, V_UP)
+         .setVpSize(8, 8)
+         .setResolution(4, 4)
+         .rotate(360)
+         .build();
+      assertEquals(new Ray(LOCATION, new Vector(-3, 3, -10)), rotated360.constructRay(0, 0),
+         "A 360-degree roll should be equivalent to no rotation");
+
+      // BV02: Chained rotate() calls accumulate (30+60=90 degrees)
+      Camera rotatedChained = baseBuilder()
+         .setDirection(V_TO, V_UP)
+         .setVpSize(8, 8)
+         .setResolution(4, 4)
+         .rotate(30)
+         .rotate(60)
+         .build();
+      assertEquals(new Ray(LOCATION, new Vector(3, 3, -10)), rotatedChained.constructRay(0, 0),
+         "Chained rotate() calls should accumulate the angle");
+   }
+
+   /**
+    * Test method for {@link Camera.Builder#build()}.
+    * Verifies rejection of a direction vector parallel to the up vector, and
+    * of a target point coinciding with the camera location.
+    */
+   @Test
+   void testBuildDirectionEdgeCases() {
+      // =============== Boundary Values Tests ==================
+
+      // BV01: direction and up vectors are parallel — no unique "right" vector exists
+      Builder parallelBuilder = baseBuilder()
+         .setDirection(new Vector(0, 0, -5), new Vector(0, 0, 3))
+         .setVpSize(8, 8);
+      assertThrows(IllegalArgumentException.class, parallelBuilder::build,
+         "Build should fail when direction and up vectors are parallel");
+
+      // BV02: the target point coincides with the camera location (zero direction vector)
+      Builder sameLocationBuilder = baseBuilder()
+         .setDirection(LOCATION)
+         .setVpSize(8, 8);
+      assertThrows(IllegalArgumentException.class, sameLocationBuilder::build,
+         "Build should fail when the target point equals the camera location");
+   }
+
+   /**
+    * Test method for {@link Camera.Builder#setRayTracer(scene.Scene, RayTracerType)}.
+    * {@link RayTracerType#GRID} is not yet implemented and should be rejected.
+    */
+   @Test
+   void testSetRayTracerUnsupportedType() {
+      // =============== Boundary Values Tests ==================
+
+      // BV01: GRID is declared but not implemented
+      assertThrows(IllegalArgumentException.class,
+         () -> Camera.getBuilder().setRayTracer(new scene.Scene("s"), RayTracerType.GRID),
+         "setRayTracer() should reject the unimplemented GRID type");
+   }
 }

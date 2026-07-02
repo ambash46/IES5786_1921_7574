@@ -38,10 +38,12 @@ public class PointLight extends Light implements LightSource {
     /**
      * Sets the constant attenuation coefficient.
      *
-     * @param kC constant attenuation factor (must be ≥ 1 to keep denominator &gt; 1)
-     * @return this PointLight, for method chaining
+     * @param  kC                       constant attenuation factor (must be ≥ 1 to keep denominator &gt; 1)
+     * @return                          this PointLight, for method chaining
+     * @throws IllegalArgumentException if {@code kC} is less than 1
      */
     public PointLight setKC(double kC) {
+        if (kC < 1) throw new IllegalArgumentException("kC must be >= 1");
         _kC = kC;
         return this;
     }
@@ -49,10 +51,12 @@ public class PointLight extends Light implements LightSource {
     /**
      * Sets the linear attenuation coefficient.
      *
-     * @param kL linear attenuation factor
-     * @return this PointLight, for method chaining
+     * @param  kL                       linear attenuation factor (must be non-negative)
+     * @return                          this PointLight, for method chaining
+     * @throws IllegalArgumentException if {@code kL} is negative
      */
     public PointLight setKl(double kL) {
+        if (kL < 0) throw new IllegalArgumentException("kL must be non-negative");
         _kL = kL;
         return this;
     }
@@ -60,10 +64,12 @@ public class PointLight extends Light implements LightSource {
     /**
      * Sets the quadratic attenuation coefficient.
      *
-     * @param kQ quadratic attenuation factor
-     * @return this PointLight, for method chaining
+     * @param  kQ                       quadratic attenuation factor (must be non-negative)
+     * @return                          this PointLight, for method chaining
+     * @throws IllegalArgumentException if {@code kQ} is negative
      */
     public PointLight setKq(double kQ) {
+        if (kQ < 0) throw new IllegalArgumentException("kQ must be non-negative");
         _kQ = kQ;
         return this;
     }
@@ -72,10 +78,12 @@ public class PointLight extends Light implements LightSource {
      * Sets the radius of the light source disk for soft-shadow sampling.
      * A radius of 0 (the default) produces hard shadows.
      *
-     * @param radius the disk radius in world units (must be ≥ 0)
-     * @return this PointLight, for method chaining
+     * @param  radius                   the disk radius in world units (must be ≥ 0)
+     * @return                          this PointLight, for method chaining
+     * @throws IllegalArgumentException if {@code radius} is negative
      */
     public PointLight setRadius(double radius) {
+        if (radius < 0) throw new IllegalArgumentException("radius must be non-negative");
         _radius = radius;
         return this;
     }

@@ -35,8 +35,6 @@ class Blackboard {
 
     Blackboard setNumSamples(int n) {
         if (n < 1) throw new IllegalArgumentException("numSamples must be >= 1, got: " + n);
-        if (n == 1 && _strategy != SamplingPatterns.GRID)
-            throw new IllegalArgumentException("numSamples=1 supports only GRID (non-deterministic patterns require >1 samples)");
         _numSamples = n;
         _cache = null;
         return this;
@@ -44,8 +42,6 @@ class Blackboard {
 
     Blackboard setStrategy(SamplingPattern strategy) {
         if (strategy == null) throw new IllegalArgumentException("SamplingPattern must not be null");
-        if (_numSamples == 1 && strategy != SamplingPatterns.GRID)
-            throw new IllegalArgumentException("numSamples=1 supports only GRID (non-deterministic patterns require >1 samples)");
         _strategy = strategy;
         _cache = null;
         return this;
@@ -98,6 +94,14 @@ class Blackboard {
     // ── internal offset pipeline ───────────────────────────────────────────
 
     private double[][] getOffsets() {
+        // Validated here (against the final combined state) rather than in the
+        // individual setters, so the outcome doesn't depend on call order:
+        // setStrategy(RANDOM).setNumSamples(9) and setNumSamples(9).setStrategy(RANDOM)
+        // must behave identically.
+        if (_numSamples == 1 && _strategy != SamplingPatterns.GRID)
+            throw new IllegalArgumentException(
+                    "numSamples=1 supports only GRID (non-deterministic patterns require >1 samples)");
+
         // Over-generate for circle: only π/4 ≈ 78.5% of square points
         // fall inside the inscribed circle, so request ×(4/π) to compensate.
         int requestCount = _circle

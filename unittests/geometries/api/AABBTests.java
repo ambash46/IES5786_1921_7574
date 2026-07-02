@@ -1,6 +1,5 @@
-package renderer;
+package geometries.api;
 
-import geometries.api.AABB;
 import org.junit.jupiter.api.Test;
 import primitives.Point;
 import primitives.Ray;
@@ -9,7 +8,7 @@ import primitives.Vector;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Unit tests for {@link AABB} — construction, union, fromPoints, midpoint,
+ * Unit tests for {@link AABB} — construction, union, fromPoints, size, midpoint,
  * and the slab-method ray intersection test.
  *
  * @author Ambash and Elyasaf
@@ -40,6 +39,14 @@ class AABBTests {
                 "ray far to the side should miss");
     }
 
+    @Test
+    void fromPoints_noPoints_throws() {
+        // BVA: zero points has no valid box to compute — must reject rather
+        // than silently producing an inverted min/max box.
+        assertThrows(IllegalArgumentException.class, AABB::fromPoints,
+                "fromPoints() with no points should be rejected");
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     //  union
     // ══════════════════════════════════════════════════════════════════════════
@@ -58,6 +65,18 @@ class AABBTests {
         // ray between the two boxes but outside union → miss
         assertFalse(u.intersects(new Ray(new Point(5, 5, 5), new Vector(1, 0, 0))),
                 "ray outside union should miss");
+    }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  size
+    // ══════════════════════════════════════════════════════════════════════════
+
+    @Test
+    void size_axes() {
+        AABB box = new AABB(new Point(0, 2, 4), new Point(4, 8, 16));
+        assertEquals(4.0, box.size(0), 1e-9, "size X");
+        assertEquals(6.0, box.size(1), 1e-9, "size Y");
+        assertEquals(12.0, box.size(2), 1e-9, "size Z");
     }
 
     // ══════════════════════════════════════════════════════════════════════════

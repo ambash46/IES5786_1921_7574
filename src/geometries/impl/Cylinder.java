@@ -5,6 +5,7 @@ import static geometries.api.Intersectable.Intersection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import primitives.Double3;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Util;
@@ -355,9 +356,35 @@ public final class Cylinder extends Tube {
                 || (isZero(b1.distance(t2)) && isZero(t1.distance(b2)));
     }
 
+    /**
+     * Lexicographically compares two quantized triads, used to pick a
+     * deterministic order for the two cap-center points below.
+     *
+     * @param  a first triad
+     * @param  b second triad
+     * @return   negative, zero, or positive per the usual comparator contract
+     */
+    private static int compareQuantized(Double3 a, Double3 b) {
+        int c = Long.compare(Double3.quantize(a._d1()), Double3.quantize(b._d1()));
+        if (c != 0) return c;
+        c = Long.compare(Double3.quantize(a._d2()), Double3.quantize(b._d2()));
+        if (c != 0) return c;
+        return Long.compare(Double3.quantize(a._d3()), Double3.quantize(b._d3()));
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), _height);
+        // Mirrors equals(): the two cap centers are an *unordered* pair (a
+        // reversed axis direction swaps bottom/top but is still the same
+        // cylinder), so canonicalize their order before hashing.
+        Double3 b = _axis.origin().getCoordinates();
+        Double3 t = _axis.getPoint(_height).getCoordinates();
+        Double3 first  = compareQuantized(b, t) <= 0 ? b : t;
+        Double3 second = compareQuantized(b, t) <= 0 ? t : b;
+        return Objects.hash(
+                Double3.quantize(first._d1()), Double3.quantize(first._d2()), Double3.quantize(first._d3()),
+                Double3.quantize(second._d1()), Double3.quantize(second._d2()), Double3.quantize(second._d3()),
+                Double3.quantize(_radius));
     }
 
     @Override

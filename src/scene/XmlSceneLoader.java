@@ -65,10 +65,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
  * {@code scenes/models/<src>} via {@link ObjLoader}. Its vertices are
  * remapped from the model's Z-up axes to this project's Y-up convention,
  * centered on their bounding box, then scaled by {@code scale} (default 1)
- * and shifted by {@code translate} (default {@code "0 0 0"}). Since
- * {@code SimpleRayTracer} has no acceleration structure, large
- * meshes are very slow to render; {@code decimate="n"} (default 1) keeps
- * only one out of every {@code n} faces to trade detail for speed.</p>
+ * and shifted by {@code translate} (default {@code "0 0 0"}). The loaded
+ * mesh is not organized into a BVH by this loader, so large meshes can still
+ * be slow to render even with the always-on bounding-box pre-check;
+ * {@code decimate="n"} (default 1) keeps only one out of every {@code n}
+ * faces to trade detail for speed.</p>
  *
  * @author Ambash and Elyasaf
  */
@@ -259,12 +260,12 @@ public class XmlSceneLoader {
                    || e.hasAttribute("kglossy") || e.hasAttribute("kdiffuse");
         if (!any) return null;
         Material mat = new Material();
-        if (e.hasAttribute("ka"))        mat.kA = SceneParserUtils.parseDouble3(e.getAttribute("ka"));
-        if (e.hasAttribute("kd"))        mat.kD = SceneParserUtils.parseDouble3(e.getAttribute("kd"));
-        if (e.hasAttribute("ks"))        mat.kS = SceneParserUtils.parseDouble3(e.getAttribute("ks"));
-        if (e.hasAttribute("kt"))        mat.kT = SceneParserUtils.parseDouble3(e.getAttribute("kt"));
-        if (e.hasAttribute("kr"))        mat.kR = SceneParserUtils.parseDouble3(e.getAttribute("kr"));
-        if (e.hasAttribute("shininess")) mat.nShininess = Integer.parseInt(e.getAttribute("shininess"));
+        if (e.hasAttribute("ka"))        mat.setKA(SceneParserUtils.parseDouble3(e.getAttribute("ka")));
+        if (e.hasAttribute("kd"))        mat.setKD(SceneParserUtils.parseDouble3(e.getAttribute("kd")));
+        if (e.hasAttribute("ks"))        mat.setKS(SceneParserUtils.parseDouble3(e.getAttribute("ks")));
+        if (e.hasAttribute("kt"))        mat.setKT(SceneParserUtils.parseDouble3(e.getAttribute("kt")));
+        if (e.hasAttribute("kr"))        mat.setKR(SceneParserUtils.parseDouble3(e.getAttribute("kr")));
+        if (e.hasAttribute("shininess")) mat.setShininess(Integer.parseInt(e.getAttribute("shininess")));
         if (e.hasAttribute("kglossy"))   mat.setKGlossy(Double.parseDouble(e.getAttribute("kglossy")));
         if (e.hasAttribute("kdiffuse"))  mat.setKDiffuseGlass(Double.parseDouble(e.getAttribute("kdiffuse")));
         return mat;

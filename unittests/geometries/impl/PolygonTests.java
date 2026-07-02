@@ -1,13 +1,19 @@
 package geometries.impl;
 
+import geometries.api.AABB;
 import org.junit.jupiter.api.Test;
+import primitives.Color;
+import primitives.Material;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -16,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <ul>
  * <li>Polygon constructor validity</li>
  * <li>{@link Polygon#getNormal(Point)}</li>
+ * <li>{@link Polygon#equals(Object)}</li>
+ * <li>{@link geometries.api.Geometry#setEmission(Color)}</li>
+ * <li>{@link geometries.api.Geometry#setMaterial(Material)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -478,5 +487,83 @@ class PolygonTests {
         // TC49: Starts on the plane on an edge extension (0 points)
         assertNull(polygon.findIntersections(new Ray(ON_EDGE_EXTENSION_POINT, regular)),
                 ERROR_POLYGON_INTERSECTION_ON_PLANE);
+    }
+
+    /**
+     * Test method for {@link Polygon#equals(Object)} and {@link Polygon#hashCode()}.
+     */
+    @Test
+    void testEqualsAndHashCode() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Equal polygons constructed independently
+        Polygon poly1 = new Polygon(POINT_Z, POINT_X, POINT_Y, POINT1);
+        Polygon poly2 = new Polygon(POINT_Z, POINT_X, POINT_Y, POINT1);
+        assertEquals(poly1, poly2, "Equal polygons should compare equal");
+        assertEquals(poly1.hashCode(), poly2.hashCode(), "Equal polygons should have equal hashCode");
+        // TC02: Same vertices, cyclically rotated starting point — the exact case that used to
+        // break the equals/hashCode contract (equals() accepts it via cyclic rotation)
+        Polygon rotated = new Polygon(POINT_X, POINT_Y, POINT1, POINT_Z);
+        assertEquals(poly1, rotated, "Cyclically rotated vertex lists should be equal");
+        assertEquals(poly1.hashCode(), rotated.hashCode(),
+                "Cyclically rotated vertex lists should have equal hashCode");
+        // TC03: A genuinely different polygon (unrelated square in the z=0 plane)
+        Polygon different = new Polygon(
+                new Point(0, 0, 0), new Point(1, 0, 0), new Point(1, 1, 0), new Point(0, 1, 0));
+        assertNotEquals(poly1, different, "Different polygons should not be equal");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A polygon equals itself
+        assertEquals(poly1, poly1, "A polygon should equal itself");
+        // TC12: Not equal to null / a different type
+        assertNotEquals(poly1, null, "A polygon should not equal null");
+        assertNotEquals(poly1, "not a Polygon", "A polygon should not equal an object of a different type");
+        // TC13: A Triangle is never equal to a Polygon with the same vertices (different runtime class)
+        assertNotEquals(new Polygon(POINT_X, POINT_Y, POINT_Z), new Triangle(POINT_X, POINT_Y, POINT_Z),
+                "A Polygon should never equal a Triangle, even with identical vertices");
+    }
+
+    /**
+     * Test method for the inherited {@link geometries.api.Geometry#setEmission(Color)},
+     * {@link geometries.api.Geometry#getEmission()}, {@link geometries.api.Geometry#setMaterial(Material)}
+     * and {@link geometries.api.Geometry#getMaterial()}.
+     */
+    @Test
+    void testEmissionAndMaterial() {
+        // ============ Equivalence Partitions Tests ==============
+        Polygon polygon = new Polygon(POINT_Z, POINT_X, POINT_Y, POINT1);
+        Color emission = new Color(10, 20, 30);
+        Material material = new Material().setKD(0.5);
+
+        // TC01: setEmission returns the same instance (chaining) and stores the value
+        assertSame(polygon, polygon.setEmission(emission), "setEmission() should return the same instance for chaining");
+        assertEquals(emission, polygon.getEmission(), "getEmission() did not return the emission color that was set");
+
+        // TC02: setMaterial returns the same instance (chaining) and stores the value
+        assertSame(polygon, polygon.setMaterial(material), "setMaterial() should return the same instance for chaining");
+        assertSame(material, polygon.getMaterial(), "getMaterial() did not return the material that was set");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A freshly constructed geometry defaults to black emission and a default material
+        Polygon fresh = new Polygon(POINT_Z, POINT_X, POINT_Y, POINT1);
+        assertEquals(Color.BLACK, fresh.getEmission(), "A new geometry should default to black emission");
+        assertNotNull(fresh.getMaterial(), "A new geometry should default to a non-null material");
+    }
+
+    /**
+     * Test method for {@link Polygon#getBoundingBox()}.
+     */
+    @Test
+    void testGetBoundingBox() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: The box is the tight enclosure of all vertices
+        // Vertices: POINT_Z=(0,0,1), POINT_X=(1,0,0), POINT_Y=(0,1,0), POINT1=(-1,1,1)
+        AABB box = new Polygon(POINT_Z, POINT_X, POINT_Y, POINT1).getBoundingBox();
+        assertNotNull(box, "A polygon is finite and should have a non-null bounding box");
+        assertEquals(2d, box.size(0), DELTA, "Bounding box X size should span from -1 to 1");
+        assertEquals(1d, box.size(1), DELTA, "Bounding box Y size should span from 0 to 1");
+        assertEquals(1d, box.size(2), DELTA, "Bounding box Z size should span from 0 to 1");
+        assertEquals(0d, box.midpoint(0), DELTA, "Bounding box X midpoint should be 0");
+        assertEquals(0.5, box.midpoint(1), DELTA, "Bounding box Y midpoint should be 0.5");
+        assertEquals(0.5, box.midpoint(2), DELTA, "Bounding box Z midpoint should be 0.5");
     }
 }

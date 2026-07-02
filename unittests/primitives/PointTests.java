@@ -4,16 +4,20 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * Unit tests for class {@link Point}.
  * The tests verify:
  * <ul>
+ * <li>{@link Point#Point(Double3)}</li>
  * <li>{@link Point#subtract(Point)}</li>
  * <li>{@link Point#add(Vector)}</li>
  * <li>{@link Point#distanceSquared(Point)}</li>
  * <li>{@link Point#distance(Point)}</li>
+ * <li>{@link Point#getCoordinates()}</li>
+ * <li>{@link Point#equals(Object)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -51,6 +55,14 @@ class PointTests {
      * Error message for wrong distance.
      */
     private static final String DISTANCE_ERROR = "Point.distance() returned an unexpected value";
+    /**
+     * Error message for wrong getCoordinates() result.
+     */
+    private static final String COORDINATES_ERROR = "Point.getCoordinates() returned an unexpected value";
+    /**
+     * Error message for wrong equals() result.
+     */
+    private static final String EQUALS_ERROR = "Point.equals() returned an unexpected result";
 
     /**
      * First point for subtraction and addition tests
@@ -166,5 +178,52 @@ class PointTests {
         assertEquals(0d, P1.distance(P1), DELTA, DISTANCE_ERROR);
         // TC12: Distance in a Pythagorean case
         assertEquals(5d, Point.ZERO.distance(PYTHAGOREAN_POINT), DELTA, DISTANCE_ERROR);
+    }
+
+    /**
+     * Test method for {@link Point#Point(Double3)}.
+     */
+    @Test
+    void testConstructorFromDouble3() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Constructing a regular point from a Double3
+        assertEquals(P1, new Point(new Double3(1, 2, 3)), "Point(Double3) constructor produced an unexpected point");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: Constructing the origin from Double3.ZERO
+        assertEquals(Point.ZERO, new Point(Double3.ZERO), "Point(Double3) constructor produced an unexpected point");
+    }
+
+    /**
+     * Test method for {@link Point#getCoordinates()}.
+     */
+    @Test
+    void testGetCoordinates() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Coordinates of a regular point
+        assertEquals(new Double3(1, 2, 3), P1.getCoordinates(), COORDINATES_ERROR);
+
+        // =============== Boundary Values Tests ==================
+        // TC11: Coordinates of the origin
+        assertEquals(Double3.ZERO, Point.ZERO.getCoordinates(), COORDINATES_ERROR);
+    }
+
+    /**
+     * Test method for {@link Point#equals(Object)}.
+     */
+    @Test
+    void testEquals() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Equal points constructed independently
+        assertEquals(new Point(1, 2, 3), P1, EQUALS_ERROR);
+        // TC02: Different points are not equal
+        assertNotEquals(P1, P2, EQUALS_ERROR);
+
+        // =============== Boundary Values Tests ==================
+        // TC11: Not equal to null / a different type
+        assertNotEquals(P1, null, EQUALS_ERROR);
+        assertNotEquals(P1, "not a Point", EQUALS_ERROR);
+        // TC12: A Point never equals a Vector with the same coordinates
+        assertNotEquals(new Point(1, 2, 3), V1, EQUALS_ERROR);
     }
 }

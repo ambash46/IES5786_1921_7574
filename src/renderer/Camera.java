@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.MissingResourceException;
 import java.util.stream.IntStream;
 import primitives.Color;
+import primitives.Double3;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Util;
@@ -247,8 +248,10 @@ public class Camera implements Cloneable {
         java.util.List<Point> samples = _aaBlackboard.generateTargetPoints(
                 pixelCenter, _vRight, _vUp, _pixelWidth, _pixelHeight);
         Color total = Color.BLACK;
-        for (Point sample : samples)
-            total = total.add(_rayTracer.traceRay(new Ray(_p0, sample.subtract(_p0))));
+        for (Point sample : samples) {
+            Color sampleColor = _rayTracer.traceRay(new Ray(_p0, sample.subtract(_p0)));
+            total = total.add(sampleColor);
+        }
         return total.reduce(samples.size());
     }
 
@@ -328,9 +331,6 @@ public class Camera implements Cloneable {
          */
         private double _rotationAngle = 0;
 
-        /** The scene passed to {@link #setRayTracer(Scene, RayTracerType)}, kept for {@link #setBVH()}. */
-        private Scene _scene = null;
-
         /**
          * Configures the camera to render the given scene using the specified ray
          * tracing strategy.
@@ -342,11 +342,15 @@ public class Camera implements Cloneable {
          * @throws IllegalArgumentException if the requested type is not yet supported
          */
         public Builder setRayTracer(Scene scene, RayTracerType type) {
-            _scene = scene;
             _camera._rayTracer = switch (type) {
                 case SIMPLE -> new SimpleRayTracer(scene);
                 default -> throw new IllegalArgumentException("Unsupported ray tracer type: " + type);
             };
+            return this;
+        }
+
+        public Builder setRayTracer(RayTracerBase tracer) {
+            _camera._rayTracer = tracer;
             return this;
         }
 
@@ -440,62 +444,6 @@ public class Camera implements Cloneable {
             return this;
         }
 
-        /**
-         * Enables CBR with the default maximum of 2 primitives per leaf.
-         *
-         * @return this Builder
-         */
-        public Builder setCBR() {
-            geometries.api.Intersectable.setCBR();
-            return this;
-        }
-
-        /**
-         * Enables CBR with the given maximum primitives per leaf (must be ≥ 2).
-         *
-         * @param maxLeafSize maximum primitives per BVH leaf
-         * @return this Builder
-         */
-        public Builder setCBR(int maxLeafSize) {
-            geometries.api.Intersectable.setCBR(maxLeafSize);
-            return this;
-        }
-
-        /**
-         * Disables CBR acceleration (the default state).
-         *
-         * @return this Builder
-         */
-        public Builder disableCBR() {
-            geometries.api.Intersectable.disableCBR();
-            return this;
-        }
-
-        /**
-         * Reorganises the scene's geometries into an automatic BVH hierarchy
-         * (median split, default leaf size 2). Must be called after
-         * {@link #setRayTracer(Scene, RayTracerType)}.
-         *
-         * @return this Builder
-         */
-        public Builder setBVH() {
-            return setBVH(2);
-        }
-
-        /**
-         * Reorganises the scene's geometries into an automatic BVH hierarchy
-         * with the given leaf size. Must be called after
-         * {@link #setRayTracer(Scene, RayTracerType)}.
-         *
-         * @param maxLeafSize maximum primitives per BVH leaf
-         * @return this Builder
-         */
-        public Builder setBVH(int maxLeafSize) {
-            if (_scene == null)
-                throw new IllegalStateException("setBVH must be called after setRayTracer");
-            _scene.setGeometries(_scene.geometries.buildBVH(maxLeafSize));
-            return this;
-        }
 
         /**
          * Activates parallel-stream rendering; the JVM manages the thread pool.
@@ -682,8 +630,13 @@ public class Camera implements Cloneable {
                 double rad = Math.toRadians(_rotationAngle);
                 double cos = Math.cos(rad);
                 double sin = Math.sin(rad);
-                // vUp_new = vUp*cos + vRight*sin
-                Vector rotatedUp = _camera._vUp.scale(cos).add(_camera._vRight.scale(sin));
+                // vUp_new = vUp*cos + vRight*sin — combined via raw Double3 arithmetic,
+                // not Vector.scale()/add(): at a 90-degree roll, cos≈0 makes the
+                // intermediate term vUp*cos a near-zero vector (rejected by Vector's
+                // zero-vector check) even though the final sum is a valid unit vector.
+                Double3 up    = _camera._vUp.getCoordinates();
+                Double3 right = _camera._vRight.getCoordinates();
+                Vector rotatedUp = new Vector(up.scale(cos).add(right.scale(sin)));
                 _camera._vRight = _camera._vTo.crossProduct(rotatedUp).normalize();
                 _camera._vUp = _camera._vRight.crossProduct(_camera._vTo);
             }

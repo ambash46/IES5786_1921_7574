@@ -1,13 +1,19 @@
 package geometries.impl;
 
+import geometries.api.AABB;
 import org.junit.jupiter.api.Test;
+import primitives.Color;
+import primitives.Material;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -16,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * <ul>
  * <li>{@link Triangle#Triangle(Point, Point, Point)}</li>
  * <li>{@link Triangle#getNormal(Point)}</li>
+ * <li>{@link Triangle#equals(Object)} (inherited from {@link Polygon})</li>
+ * <li>{@link geometries.api.Geometry#setEmission(Color)}</li>
+ * <li>{@link geometries.api.Geometry#setMaterial(Material)}</li>
  * </ul>
  * Tests follow the methodology of
  * Equivalence Partitions (EP) and Boundary Values (BVA).
@@ -526,5 +535,77 @@ class TriangleTests {
         // TC49: Starts on the plane on an edge extension (0 points)
         assertNull(triangle.findIntersections(new Ray(ON_EDGE_EXTENSION_POINT, GENERAL_DIRECTION)),
                 ERROR_TRIANGLE_INTERSECTION_ON_PLANE);
+    }
+
+    /**
+     * Test method for {@link Triangle#equals(Object)} and {@link Triangle#hashCode()}
+     * (both inherited from {@link Polygon}).
+     */
+    @Test
+    void testEqualsAndHashCode() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: Equal triangles constructed independently
+        Triangle t1 = new Triangle(POINT1, POINT2, POINT3);
+        Triangle t2 = new Triangle(POINT1, POINT2, POINT3);
+        assertEquals(t1, t2, "Equal triangles should compare equal");
+        assertEquals(t1.hashCode(), t2.hashCode(), "Equal triangles should have equal hashCode");
+        // TC02: Same vertices, cyclically rotated starting point
+        Triangle rotated = new Triangle(POINT2, POINT3, POINT1);
+        assertEquals(t1, rotated, "Cyclically rotated vertices should be equal");
+        assertEquals(t1.hashCode(), rotated.hashCode(), "Cyclically rotated vertices should have equal hashCode");
+        // TC03: A genuinely different triangle
+        assertNotEquals(t1, new Triangle(POINT1, POINT2, POINT4), "Different triangles should not be equal");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A triangle equals itself
+        assertEquals(t1, t1, "A triangle should equal itself");
+        // TC12: Not equal to null / a different type
+        assertNotEquals(t1, null, "A triangle should not equal null");
+        assertNotEquals(t1, "not a Triangle", "A triangle should not equal an object of a different type");
+    }
+
+    /**
+     * Test method for the inherited {@link geometries.api.Geometry#setEmission(Color)},
+     * {@link geometries.api.Geometry#getEmission()}, {@link geometries.api.Geometry#setMaterial(Material)}
+     * and {@link geometries.api.Geometry#getMaterial()}.
+     */
+    @Test
+    void testEmissionAndMaterial() {
+        // ============ Equivalence Partitions Tests ==============
+        Triangle triangle = new Triangle(POINT1, POINT2, POINT3);
+        Color emission = new Color(10, 20, 30);
+        Material material = new Material().setKD(0.5);
+
+        // TC01: setEmission returns the same instance (chaining) and stores the value
+        assertSame(triangle, triangle.setEmission(emission), "setEmission() should return the same instance for chaining");
+        assertEquals(emission, triangle.getEmission(), "getEmission() did not return the emission color that was set");
+
+        // TC02: setMaterial returns the same instance (chaining) and stores the value
+        assertSame(triangle, triangle.setMaterial(material), "setMaterial() should return the same instance for chaining");
+        assertSame(material, triangle.getMaterial(), "getMaterial() did not return the material that was set");
+
+        // =============== Boundary Values Tests ==================
+        // TC11: A freshly constructed geometry defaults to black emission and a default material
+        Triangle fresh = new Triangle(POINT1, POINT2, POINT3);
+        assertEquals(Color.BLACK, fresh.getEmission(), "A new geometry should default to black emission");
+        assertNotNull(fresh.getMaterial(), "A new geometry should default to a non-null material");
+    }
+
+    /**
+     * Test method for {@link Triangle#getBoundingBox()} (inherited from {@link Polygon}).
+     */
+    @Test
+    void testGetBoundingBox() {
+        // ============ Equivalence Partitions Tests ==============
+        // TC01: The box is the tight enclosure of the three vertices
+        // Vertices: POINT1=(1,0,0), POINT2=(0,1,0), POINT3=(0,0,1)
+        AABB box = new Triangle(POINT1, POINT2, POINT3).getBoundingBox();
+        assertNotNull(box, "A triangle is finite and should have a non-null bounding box");
+        assertEquals(1d, box.size(0), DELTA, "Bounding box X size should span from 0 to 1");
+        assertEquals(1d, box.size(1), DELTA, "Bounding box Y size should span from 0 to 1");
+        assertEquals(1d, box.size(2), DELTA, "Bounding box Z size should span from 0 to 1");
+        assertEquals(0.5, box.midpoint(0), DELTA, "Bounding box X midpoint should be 0.5");
+        assertEquals(0.5, box.midpoint(1), DELTA, "Bounding box Y midpoint should be 0.5");
+        assertEquals(0.5, box.midpoint(2), DELTA, "Bounding box Z midpoint should be 0.5");
     }
 }

@@ -25,12 +25,44 @@ public class Material {
     public Double3 kT         = Double3.ZERO;
     /** Reflection attenuation coefficient. */
     public Double3 kR         = Double3.ZERO;
-    /** Shininess exponent for the specular highlight. */
-    public int    nShininess    = 0;
+    /** Shininess exponent for the specular highlight. Must be ≥ 1: the Phong
+     * specular formula raises a value in (0,1] to this power, and an exponent
+     * of 0 collapses it to a constant 1 — flooding the whole surface with a
+     * flat kS contribution instead of a falloff-limited highlight. */
+    public int    nShininess    = 1;
     /** Glossy reflection blur: 0 = perfect mirror, 1 = fully diffuse reflection. */
     public double kGlossy       = 0.0;
     /** Diffuse glass blur: 0 = perfectly clear, 1 = fully milky transparency. */
     public double kDiffuseGlass = 0.0;
+
+    /**
+     * Validates that every component of an attenuation coefficient lies within
+     * the physically meaningful range [0,1].
+     * <p>
+     * Components are aligned via {@link Util#alignZero(double)} before the
+     * bounds check, so floating-point noise (e.g. a component of
+     * {@code 1.0000000000000002} produced by upstream arithmetic) is not
+     * mistaken for a real out-of-range value.
+     *
+     * @param k    the coefficient to validate
+     * @param name the coefficient's name, used in the exception message
+     * @throws IllegalArgumentException if any component is outside [0,1]
+     */
+    private static void validateCoefficient(Double3 k, String name) {
+        if (isOutOfRange(k._d1()) || isOutOfRange(k._d2()) || isOutOfRange(k._d3()))
+            throw new IllegalArgumentException(name + " components must be in [0,1]");
+    }
+
+    /**
+     * Checks whether a single coefficient component is outside [0,1], tolerating
+     * floating-point noise around the two bounds.
+     *
+     * @param component the component to check
+     * @return {@code true} if the component is meaningfully below 0 or above 1
+     */
+    private static boolean isOutOfRange(double component) {
+        return Util.alignZero(component) < 0 || Util.alignZero(component - 1) > 0;
+    }
 
     /**
      * Sets the ambient attenuation coefficient.
@@ -39,8 +71,7 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKA(Double3 kA) {
-        if (kA._d1() > 1 || kA._d2() > 1 || kA._d3() > 1)
-            throw new IllegalArgumentException("kA components must not exceed 1");
+        validateCoefficient(kA, "kA");
         this.kA = kA;
         return this;
     }
@@ -52,9 +83,7 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKA(double kA) {
-        if (kA > 1) throw new IllegalArgumentException("kA must not exceed 1");
-        this.kA = new Double3(kA);
-        return this;
+        return setKA(new Double3(kA));
     }
 
     /**
@@ -64,6 +93,7 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKD(Double3 kD) {
+        validateCoefficient(kD, "kD");
         this.kD = kD;
         return this;
     }
@@ -75,8 +105,7 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKD(double kD) {
-        this.kD = new Double3(kD);
-        return this;
+        return setKD(new Double3(kD));
     }
 
     /**
@@ -86,6 +115,7 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKS(Double3 kS) {
+        validateCoefficient(kS, "kS");
         this.kS = kS;
         return this;
     }
@@ -97,8 +127,7 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKS(double kS) {
-        this.kS = new Double3(kS);
-        return this;
+        return setKS(new Double3(kS));
     }
 
     /**
@@ -108,6 +137,7 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKT(Double3 kT) {
+        validateCoefficient(kT, "kT");
         this.kT = kT;
         return this;
     }
@@ -119,8 +149,7 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKT(double kT) {
-        this.kT = new Double3(kT);
-        return this;
+        return setKT(new Double3(kT));
     }
 
     /**
@@ -130,6 +159,7 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKR(Double3 kR) {
+        validateCoefficient(kR, "kR");
         this.kR = kR;
         return this;
     }
@@ -141,17 +171,18 @@ public class Material {
      * @return this material, for method chaining
      */
     public Material setKR(double kR) {
-        this.kR = new Double3(kR);
-        return this;
+        return setKR(new Double3(kR));
     }
 
     /**
      * Sets the shininess exponent for the specular highlight.
      *
-     * @param nShininess the shininess exponent
-     * @return this material, for method chaining
+     * @param  nShininess               the shininess exponent (must be ≥ 1)
+     * @return                          this material, for method chaining
+     * @throws IllegalArgumentException if {@code nShininess} is less than 1
      */
     public Material setShininess(int nShininess) {
+        if (nShininess < 1) throw new IllegalArgumentException("nShininess must be >= 1");
         this.nShininess = nShininess;
         return this;
     }

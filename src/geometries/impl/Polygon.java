@@ -4,7 +4,7 @@ import static geometries.api.Intersectable.Intersection;
 
 import geometries.api.Geometry;
 import java.util.List;
-import java.util.Objects;
+import primitives.Double3;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
@@ -193,13 +193,59 @@ public class Polygon extends Geometry {
     }
 
     /**
-     * Returns a hash code for this polygon.
+     * Returns the index of the vertex that sorts first under
+     * {@link #compareQuantized(Double3, Double3)} — a canonical starting
+     * point for hashing that is the same regardless of which cyclic rotation
+     * of the vertex list the polygon was constructed with, matching
+     * {@link #equals(Object)}'s cyclic-rotation tolerance.
      *
-     * @return the hash code of the vertices and size
+     * @return the index of the canonical starting vertex
+     */
+    private int canonicalStartIndex() {
+        int best = 0;
+        for (int i = 1; i < _size; i++)
+            if (compareQuantized(_vertices.get(i).getCoordinates(), _vertices.get(best).getCoordinates()) < 0)
+                best = i;
+        return best;
+    }
+
+    /**
+     * Lexicographically compares two quantized triads.
+     *
+     * @param  a first triad
+     * @param  b second triad
+     * @return   negative, zero, or positive per the usual comparator contract
+     */
+    private static int compareQuantized(Double3 a, Double3 b) {
+        int c = Long.compare(Double3.quantize(a._d1()), Double3.quantize(b._d1()));
+        if (c != 0) return c;
+        c = Long.compare(Double3.quantize(a._d2()), Double3.quantize(b._d2()));
+        if (c != 0) return c;
+        return Long.compare(Double3.quantize(a._d3()), Double3.quantize(b._d3()));
+    }
+
+    /**
+     * Returns a hash code for this polygon.
+     * <p>
+     * Mirrors {@link #equals(Object)}: hashes the vertices starting from a
+     * canonical (rotation-independent) index instead of relying on the
+     * vertex list's own position-dependent {@code hashCode()}, so cyclic
+     * rotations of the same vertex sequence — accepted as equal — also hash
+     * identically.
+     *
+     * @return the hash code of the vertices (in canonical order) and size
      */
     @Override
     public int hashCode() {
-        return Objects.hash(_vertices, _plane, _size);
+        int start = canonicalStartIndex();
+        int result = _size;
+        for (int i = 0; i < _size; i++) {
+            Double3 c = _vertices.get((start + i) % _size).getCoordinates();
+            result = 31 * result + Long.hashCode(Double3.quantize(c._d1()));
+            result = 31 * result + Long.hashCode(Double3.quantize(c._d2()));
+            result = 31 * result + Long.hashCode(Double3.quantize(c._d3()));
+        }
+        return result;
     }
 
     /**

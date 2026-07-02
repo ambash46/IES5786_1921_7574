@@ -116,28 +116,6 @@ class SimpleRayTracer extends RayTracerBase {
     }
 
     /**
-     * Returns {@code true} if the intersection point has line-of-sight to its
-     * active light source (i.e. is not in shadow).
-     * <p>
-     * A shadow ray is fired from the surface point — offset by {@code Ray.DELTA}
-     * along the normal to avoid self-intersection — in the direction opposite to
-     * {@code l} (i.e. toward the light). If the ray hits any geometry the point
-     * is considered shadowed.
-     * </p>
-     *
-     * @param intersection the preprocessed intersection (uses {@code point},
-     *                     {@code n}, {@code l}, {@code ln})
-     * @return {@code true} if unshaded, {@code false} if occluded
-     */
-    private boolean unshaded(Intersection intersection) {
-        Ray shadowRay = new Ray(intersection.point, intersection.l.scale(-1), intersection.n);
-        double lightDistance = intersection.light.getDistance(intersection.point);
-        var blockers = _scene.geometries.calcIntersections(shadowRay, lightDistance);
-        return blockers == null
-                || blockers.stream().noneMatch(i -> i.material.kT.isLowerThan(MIN_CALC_COLOR_K));
-    }
-
-    /**
      * Computes the accumulated transparency factor between the intersection point
      * and its active light source.
      * <p>
@@ -219,7 +197,7 @@ class SimpleRayTracer extends RayTracerBase {
         for (LightSource lightSource : _scene.lights) {
             if (!preprocessLightSource(intersection, lightSource)) continue;
             Double3 ktr = transparency(intersection);
-            if (ktr.isGreaterThan(MIN_CALC_COLOR_K))
+            if (ktr.isNotLowerThan(MIN_CALC_COLOR_K))
                 color = color.add(lightSource.getIntensity(intersection.point)
                         .scale(ktr.product(calcDiffuse(intersection).add(calcSpecular(intersection)))));
         }
@@ -270,13 +248,14 @@ class SimpleRayTracer extends RayTracerBase {
      * @param level remaining recursion depth
      * @param k     accumulated attenuation so far
      * @param kx    the material's attenuation coefficient for this effect (kR or kT)
-     * @return the color contribution scaled by {@code kx}, or the background if no hit
+     * @return the color contribution scaled by {@code kx} — either the recursively
+     *         traced hit color, or the background if the secondary ray hits nothing
      */
     private Color calcGlobalEffect(Ray ray, int level, Double3 k, Double3 kx) {
         Double3 kkx = k.product(kx);
         if (kkx.isLowerThan(MIN_CALC_COLOR_K)) return Color.BLACK;
         Intersection intersection = findClosestIntersection(ray);
-        if (intersection == null) return _scene.background;
+        if (intersection == null) return _scene.background.scale(kx);
         return preprocessIntersection(intersection, ray.direction())
                 ? calcColor(intersection, level - 1, kkx).scale(kx)
                 : Color.BLACK;

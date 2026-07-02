@@ -1,9 +1,5 @@
 package primitives;
 
-import static primitives.Util.isZero;
-
-import java.util.Objects;
-
 /**
  * Immutable container for three double values.
  * <p>
@@ -41,18 +37,52 @@ public record Double3(double _d1, double _d2, double _d3) {
         this(value, value, value);
     }
 
+    /**
+     * Grid width shared by {@link #equals(Object)} and {@link #hashCode()}.
+     * Both derive from the same {@link #quantize(double)} quantization, so two
+     * triads are equal if and only if every component maps to the same
+     * bucket — guaranteeing the standard equals/hashCode contract with no
+     * boundary edge case (unlike a continuous, {@code isZero}-based equals
+     * paired with a separately-quantized hashCode). The trade-off is a hard
+     * grid boundary instead of a continuous tolerance: two values whose
+     * difference is smaller than {@code DELTA} can still land in adjacent
+     * buckets and compare unequal if they straddle a boundary.
+     */
+    private static final double DELTA = 1e-12;
+
+    /**
+     * Quantizes a value to this class's tolerance grid ({@value #DELTA}).
+     * <p>
+     * Exposed (not just used internally by {@link #equals(Object)} and
+     * {@link #hashCode()}) so that other classes whose {@code equals()} is
+     * tolerance-based or accepts multiple raw representations of the same
+     * logical value (e.g. a geometry whose {@code equals()} treats opposite
+     * normal directions or different points on the same line as equal) can
+     * build a matching, contract-consistent {@code hashCode()} without
+     * duplicating this tolerance constant.
+     *
+     * @param  v the value to quantize
+     * @return   the grid bucket index containing {@code v}
+     */
+    public static long quantize(double v) {
+        return Math.round(v / DELTA);
+    }
+
     @Override
     public boolean equals(Object obj) {
         return this == obj
                 || (obj instanceof Double3(double od1, double od2, double od3))
-                && isZero(_d1 - od1)
-                && isZero(_d2 - od2)
-                && isZero(_d3 - od3);
+                && quantize(_d1) == quantize(od1)
+                && quantize(_d2) == quantize(od2)
+                && quantize(_d3) == quantize(od3);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(_d1, _d2, _d3);
+        int result = Long.hashCode(quantize(_d1));
+        result = 31 * result + Long.hashCode(quantize(_d2));
+        result = 31 * result + Long.hashCode(quantize(_d3));
+        return result;
     }
 
     @Override
@@ -117,11 +147,11 @@ public record Double3(double _d1, double _d2, double _d3) {
     /**
      * Checks whether at least one component is greater than or equal to a given value.
      * This is the logical negation of {@link #isLowerThan(double)}:
-     * <pre>isGreaterThan(k) ≡ !isLowerThan(k) ≡ d1≥k ∨ d2≥k ∨ d3≥k</pre>
+     * <pre>isNotLowerThan(k) ≡ !isLowerThan(k) ≡ d1≥k ∨ d2≥k ∨ d3≥k</pre>
      * @param  k the value to compare against
      * @return   {@code true} if at least one component is ≥ {@code k}
      */
-    public boolean isGreaterThan(double k) {
+    public boolean isNotLowerThan(double k) {
         return _d1 >= k || _d2 >= k || _d3 >= k;
     }
 

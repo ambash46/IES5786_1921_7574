@@ -5,6 +5,7 @@ import static geometries.api.Intersectable.Intersection;
 import geometries.api.RadialGeometry;
 import java.util.List;
 import java.util.Objects;
+import primitives.Double3;
 import primitives.Point;
 import primitives.Ray;
 import primitives.Vector;
@@ -164,9 +165,48 @@ public class Tube extends RadialGeometry {
         return dir.isParallel(other._axis.origin().subtract(_axis.origin()));
     }
 
+    /**
+     * Returns the tube's axis direction oriented to a canonical sign, so that
+     * two tubes whose directions point oppositely — both accepted as equal by
+     * {@link #equals(Object)} — produce the same canonical form for hashing.
+     *
+     * @return the axis direction, negated if needed so its first non-zero component is positive
+     */
+    private Vector canonicalDirection() {
+        Double3 c = _axis.direction().getCoordinates();
+        boolean negate = !isZero(c._d1()) ? c._d1() < 0
+                : !isZero(c._d2()) ? c._d2() < 0
+                : c._d3() < 0;
+        return negate ? _axis.direction().scale(-1) : _axis.direction();
+    }
+
+    /**
+     * Returns the point on this tube's axis line closest to the coordinate
+     * origin — a canonical representative of the line that is the same
+     * regardless of which point along the line was chosen as the axis
+     * ray's origin, computed via raw {@link Double3} arithmetic so it stays
+     * well-defined even when the axis origin coincides with the coordinate
+     * origin.
+     *
+     * @param  direction the canonical (fixed-sign) axis direction
+     * @return the foot of the perpendicular from the origin to the axis line
+     */
+    private Double3 canonicalFoot(Vector direction) {
+        Double3 p = _axis.origin().getCoordinates();
+        Double3 d = direction.getCoordinates();
+        double pDotD = p._d1() * d._d1() + p._d2() * d._d2() + p._d3() * d._d3();
+        return new Double3(p._d1() - pDotD * d._d1(), p._d2() - pDotD * d._d2(), p._d3() - pDotD * d._d3());
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(_axis, _radius);
+        Vector dir = canonicalDirection();
+        Double3 d = dir.getCoordinates();
+        Double3 foot = canonicalFoot(dir);
+        return Objects.hash(
+                Double3.quantize(d._d1()), Double3.quantize(d._d2()), Double3.quantize(d._d3()),
+                Double3.quantize(foot._d1()), Double3.quantize(foot._d2()), Double3.quantize(foot._d3()),
+                Double3.quantize(_radius));
     }
 
     @Override

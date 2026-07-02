@@ -15,32 +15,8 @@ import primitives.Vector;
 
 public abstract class Intersectable {
 
-    /**
-     * Maximum number of primitives per BVH leaf; 0 = CBR disabled.
-     * Set via {@link #setCBR(int)}.
-     */
-    private static int _cbrMaxLeafSize = 0;
-
     /** Cached bounding box — computed lazily on first call to {@link #getBoundingBox()}. */
     private AABB _box = null;
-
-    /** Enables CBR with the default maximum of 2 primitives per leaf. */
-    public static void setCBR() { _cbrMaxLeafSize = 2; }
-
-    /**
-     * Enables CBR with the given maximum primitives per leaf.
-     *
-     * @param maxLeafSize maximum primitives per leaf (must be ≥ 2)
-     * @throws IllegalArgumentException if {@code maxLeafSize} is less than 2
-     */
-    public static void setCBR(int maxLeafSize) {
-        if (maxLeafSize < 2)
-            throw new IllegalArgumentException("CBR maxLeafSize must be >= 2, got: " + maxLeafSize);
-        _cbrMaxLeafSize = maxLeafSize;
-    }
-
-    /** Disables CBR acceleration (the default state). */
-    public static void disableCBR() { _cbrMaxLeafSize = 0; }
 
     /**
      * Default constructor for use by subclasses.
@@ -92,16 +68,19 @@ public abstract class Intersectable {
     /**
      * Finds all intersections between this object and the given ray that are
      * within {@code maxDistance} from the ray origin.
+     * <p>
+     * Always pre-checks the bounding box first: if the ray misses it, the
+     * (potentially expensive) exact intersection calculation is skipped
+     * entirely. Infinite objects (null bounding box) always fall through to
+     * the exact calculation.
      *
      * @param ray         the ray to intersect with
      * @param maxDistance upper bound on intersection distance
      * @return a list of {@link Intersection}s within range, or {@code null} if none
      */
     public final List<Intersection> calcIntersections(Ray ray, double maxDistance) {
-        if (_cbrMaxLeafSize > 0) {
-            AABB box = getBoundingBox(); // cached — computed only once
-            if (box != null && !box.intersects(ray)) return null;
-        }
+        AABB box = getBoundingBox(); // cached — computed only once
+        if (box != null && !box.intersects(ray)) return null;
         return calcIntersectionsHelper(ray, maxDistance);
     }
 
@@ -177,6 +156,20 @@ public abstract class Intersectable {
             if (obj == null || getClass() != obj.getClass()) return false;
             Intersection other = (Intersection) obj;
             return geometry == other.geometry && point.equals(other.point);
+        }
+
+        /**
+         * Mirrors {@link #equals(Object)}: {@code geometry} is compared there by
+         * reference ({@code ==}), not by {@link Geometry#equals(Object)}, so it
+         * is hashed via {@link System#identityHashCode(Object)} here rather than
+         * {@code geometry.hashCode()} (which would be value-based and could
+         * collide with unrelated {@code Intersection}s on a different geometry
+         * instance that merely has the same value). {@code point} is compared
+         * and hashed by value on both sides, consistently.
+         */
+        @Override
+        public int hashCode() {
+            return 31 * System.identityHashCode(geometry) + point.hashCode();
         }
 
         @Override
