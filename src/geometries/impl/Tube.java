@@ -1,7 +1,5 @@
 package geometries.impl;
 
-import static geometries.api.Intersectable.Intersection;
-
 import geometries.api.RadialGeometry;
 import java.util.List;
 import java.util.Objects;
@@ -63,7 +61,6 @@ public class Tube extends RadialGeometry {
      * delta vector (ΔP = p0 - pa), then solves the resulting quadratic
      * a·t²+b·t+c=0 for the tube surface. Only t > 0 roots are kept.
      */
-    @SuppressWarnings("SpellCheckingInspection")
     @Override
     protected List<Intersection> calcIntersectionsHelper(Ray ray, double maxDistance) {
         // p0 = ray origin, pa = axis origin, v = ray direction (unit), va = axis direction (unit)

@@ -310,8 +310,12 @@ class SimpleRayTracer extends RayTracerBase {
 
         Color total = Color.BLACK;
         for (Point sample : samples) {
-            Vector offset = sample.subtract(origin); // perpendicular offset: dx·vX + dy·vY
-            Vector newDir = dir.add(offset).normalize();
+            // GRID sampling always includes an exact dead-center sample when
+            // sqrt(numSamples) is odd (e.g. 9, 25, 81 -> 3x3, 5x5, 9x9): for
+            // that sample, sample == origin, so subtract() would build the
+            // zero vector. A zero offset means "no deviation", so just reuse
+            // the unperturbed central direction instead of computing it.
+            Vector newDir = sample.equals(origin) ? dir : dir.add(sample.subtract(origin)).normalize();
             total = total.add(calcGlobalEffect(new Ray(origin, newDir), level, k, kx));
         }
         return total.reduce(samples.size());

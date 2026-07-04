@@ -2,6 +2,7 @@ package renderer;
 
 import java.util.LinkedList;
 import java.util.MissingResourceException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import primitives.Color;
 import primitives.Double3;
@@ -206,18 +207,28 @@ public class Camera implements Cloneable {
      */
     private Camera renderImageRawThreads() {
         var threads = new LinkedList<Thread>();
+        // An uncaught exception in a raw Thread terminates just that thread;
+        // it is never propagated to the joining thread. Capture it here so a
+        // worker-thread failure fails the render loudly instead of silently
+        // leaving the rest of the image unwritten.
+        var error = new AtomicReference<RuntimeException>();
         int count = _threadsCount;
         while (count-- > 0)
             threads.add(new Thread(() -> {
-                PixelManager.Pixel pixel;
-                while ((pixel = _pixelManager.nextPixel()) != null)
-                    castRay(pixel.col(), pixel.row());
+                try {
+                    PixelManager.Pixel pixel;
+                    while ((pixel = _pixelManager.nextPixel()) != null)
+                        castRay(pixel.col(), pixel.row());
+                } catch (RuntimeException e) {
+                    error.compareAndSet(null, e);
+                }
             }));
         for (var thread : threads) thread.start();
         try {
             for (var thread : threads) thread.join();
         } catch (InterruptedException ignored) {
         }
+        if (error.get() != null) throw error.get();
         return this;
     }
 
@@ -349,7 +360,7 @@ public class Camera implements Cloneable {
             return this;
         }
 
-        public Builder setRayTracer(RayTracerBase tracer) {
+        Builder setRayTracer(RayTracerBase tracer) {
             _camera._rayTracer = tracer;
             return this;
         }
@@ -363,59 +374,6 @@ public class Camera implements Cloneable {
          */
         public Builder setAntiAliasing(int numSamples) {
             _camera._aaBlackboard = new Blackboard().setNumSamples(numSamples);
-            return this;
-        }
-
-        /**
-         * Enables soft shadows by distributing shadow rays across the light-source disk.
-         * Requires the scene's PointLights to have a non-zero radius set via
-         * {@link lighting.PointLight#setRadius(double)}.
-         *
-         * @param numSamples shadow rays per pixel per light (1 = hard shadows)
-         * @param pattern    sampling pattern for the light disk
-         * @return this Builder
-         */
-        public Builder setSoftShadows(int numSamples, SamplingPattern pattern) {
-            if (_camera._rayTracer instanceof SimpleRayTracer srt)
-                srt.setShadowSamples(numSamples, pattern);
-            return this;
-        }
-
-        /**
-         * Enables soft shadows using the default {@link SamplingPatterns#GRID} pattern.
-         *
-         * @param numSamples shadow rays per pixel per light
-         * @return this Builder
-         */
-        public Builder setSoftShadows(int numSamples) {
-            return setSoftShadows(numSamples, SamplingPatterns.GRID);
-        }
-
-        /**
-         * Enables glossy reflections by distributing reflection rays around
-         * the mirror direction. Requires {@code kGlossy > 0} on the material.
-         *
-         * @param numSamples rays per reflection (1 = disabled)
-         * @param pattern    sampling pattern
-         * @return this Builder
-         */
-        public Builder setGlossyReflection(int numSamples, SamplingPattern pattern) {
-            if (_camera._rayTracer instanceof SimpleRayTracer srt)
-                srt.setGlossySamples(numSamples, pattern);
-            return this;
-        }
-
-        /**
-         * Enables diffuse glass by distributing transparency rays around
-         * the refraction direction. Requires {@code kDiffuseGlass > 0} on the material.
-         *
-         * @param numSamples rays per refraction (1 = disabled)
-         * @param pattern    sampling pattern
-         * @return this Builder
-         */
-        public Builder setDiffuseGlass(int numSamples, SamplingPattern pattern) {
-            if (_camera._rayTracer instanceof SimpleRayTracer srt)
-                srt.setDiffuseSamples(numSamples, pattern);
             return this;
         }
 

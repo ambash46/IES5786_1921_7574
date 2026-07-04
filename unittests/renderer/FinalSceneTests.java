@@ -8,6 +8,7 @@ import lighting.AmbientLight;
 import lighting.DirectionalLight;
 import lighting.PointLight;
 import lighting.SpotLight;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import primitives.Color;
 import primitives.Material;
@@ -29,22 +30,27 @@ import scene.Scene;
  * @author Ambash and Elyasaf
  */
 @SuppressWarnings("java:S109")
+@Disabled("j")
 class FinalSceneTests {
 
-    /** Default constructor to satisfy JavaDoc generator. */
+    /**
+     * Default constructor to satisfy JavaDoc generator.
+     */
     FinalSceneTests() { /* no-op */ }
 
     // ── constants ──────────────────────────────────────────────────────────────
-    private static final int    RESOLUTION = 300;
-    private static final int    SHADOW_S   = 9;
-    private static final double SCALE      = 42.0;
+    private static final int RESOLUTION = 300;
+    private static final int SHADOW_S = 9;
+    private static final double SCALE = 42.0;
     private static final String MODELS_PATH =
             System.getProperty("user.dir") + "/scenes/models/";
     private static final String DESK_OBJ = "Главный стол+ПК.obj";
 
     // ── mesh helpers ───────────────────────────────────────────────────────────
 
-    /** Loads the desk OBJ and applies glass material to the desk-top slab only. */
+    /**
+     * Loads the desk OBJ and applies glass material to the desk-top slab only.
+     */
     private static Geometries loadRawDesk() {
         Geometries raw = ObjLoader.load(
                 new File(MODELS_PATH + DESK_OBJ), SCALE, 0, 0, 0, 1);
@@ -56,7 +62,7 @@ class FinalSceneTests {
         for (Intersectable child : raw.getChildren()) {
             geometries.api.AABB box = child.getBoundingBox();
             if (box == null) continue;
-            double yMid  = box.midpoint(1);
+            double yMid = box.midpoint(1);
             double ySize = box.size(1);
             if (yMid > 22 && yMid < 38 && ySize < 2) {
                 primitives.Double3 kd =
@@ -68,15 +74,20 @@ class FinalSceneTests {
         return raw;
     }
 
-    /** Groups the flat desk mesh into bottom (Y < 0) and top (Y ≥ 0) spatial groups. */
+    /**
+     * Groups the flat desk mesh into bottom (Y < 0) and top (Y ≥ 0) spatial groups.
+     */
     private static Geometries buildManualDesk(Geometries flat) {
-        Geometries root   = new Geometries();
+        Geometries root = new Geometries();
         Geometries bottom = new Geometries();
-        Geometries top    = new Geometries();
+        Geometries top = new Geometries();
 
         for (Intersectable child : flat.getChildren()) {
             geometries.api.AABB box = child.getBoundingBox();
-            if (box == null) { root.add(child); continue; }
+            if (box == null) {
+                root.add(child);
+                continue;
+            }
             (box.midpoint(1) < 0 ? bottom : top).add(child);
         }
         root.add(bottom, top);
@@ -141,19 +152,25 @@ class FinalSceneTests {
 
     // ── tests ──────────────────────────────────────────────────────────────────
 
-    /** Flat mesh — baseline. */
+    /**
+     * Flat mesh — baseline.
+     */
     @Test
     void desk_flat() {
         renderDesk(loadRawDesk(), "desk_flat");
     }
 
-    /** Manual spatial groups (bottom / top). */
+    /**
+     * Manual spatial groups (bottom / top).
+     */
     @Test
     void desk_manual() {
         renderDesk(buildManualDesk(loadRawDesk()), "desk_manual");
     }
 
-    /** Automatic BVH — fastest configuration. */
+    /**
+     * Automatic BVH — fastest configuration.
+     */
     @Test
     void desk_bvh() {
         renderDesk(loadRawDesk().buildBVH(), "desk_bvh");

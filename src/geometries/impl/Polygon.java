@@ -1,7 +1,5 @@
 package geometries.impl;
 
-import static geometries.api.Intersectable.Intersection;
-
 import geometries.api.Geometry;
 import java.util.List;
 import primitives.Double3;

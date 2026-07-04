@@ -1,19 +1,17 @@
 package renderer;
 
 import geometries.impl.Geometries;
+import java.io.File;
 import lighting.AmbientLight;
 import lighting.DirectionalLight;
 import lighting.PointLight;
 import lighting.SpotLight;
 import org.junit.jupiter.api.Test;
 import primitives.Color;
-import primitives.Material;
 import primitives.Point;
 import primitives.Vector;
 import scene.ObjLoader;
 import scene.Scene;
-
-import java.io.File;
 
 /**
  * Renders an OBJ + MTL file exported from Blender / 3ds Max / etc.
@@ -45,26 +43,39 @@ import java.io.File;
 @SuppressWarnings("java:S109")
 class ObjMtlRenderTests {
 
-    /** Default constructor. */
-    ObjMtlRenderTests() { }
+    /**
+     * Default constructor.
+     */
+    ObjMtlRenderTests() {
+    }
 
     // ── ✏ CHANGE THESE ───────────────────────────────────────────────────────
 
-    /** OBJ filename (must be in {@code scenes/models/}). */
-    private static final String OBJ_FILE = "myScene.obj";
+    /**
+     * OBJ filename (must be in {@code scenes/models/}).
+     */
+    private static final String OBJ_FILE = "Главный стол+ПК.obj";
 
     /**
      * Uniform scale applied after centering.
      * Start with 1.0 and increase/decrease until the model fills the frame.
+     * ({@code Главный стол+ПК.obj}'s raw units are tiny -- {@code FinalSceneTests}
+     * uses the same 42x factor at a comparable camera distance.)
      */
-    private static final double SCALE = 1.0;
+    private static final double SCALE = 42.0;
 
-    /** Y translation (move model up/down). */
+    /**
+     * Y translation (move model up/down).
+     */
     private static final double TRANSLATE_Y = 0;
-    /** Z translation (move model forward/backward). */
+    /**
+     * Z translation (move model forward/backward).
+     */
     private static final double TRANSLATE_Z = 0;
 
-    /** Resolution (pixels). */
+    /**
+     * Resolution (pixels).
+     */
     private static final int RESOLUTION = 500;
 
     // ── internals ─────────────────────────────────────────────────────────────
@@ -103,7 +114,7 @@ class ObjMtlRenderTests {
                 new Point(0, 600, 300), new Vector(0, -1, -0.4))
                 .setKl(0.00001).setKq(0.000001).setNarrowBeam(3));
 
-        scene.setGeometries(geos);
+        scene.setGeometries(geos.buildBVH());
         return scene;
     }
 

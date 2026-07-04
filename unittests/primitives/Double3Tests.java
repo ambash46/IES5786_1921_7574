@@ -35,11 +35,6 @@ class Double3Tests {
     Double3Tests() { /* to satisfy JavaDoc generator */ }
 
     /**
-     * Delta value for accuracy when comparing double values.
-     */
-    private static final double DELTA = 1e-10;
-
-    /**
      * Error message for wrong single-value constructor result.
      */
     private static final String CONSTRUCTOR_ERROR = "Double3(double) constructor produced an unexpected result";

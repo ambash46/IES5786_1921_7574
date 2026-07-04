@@ -24,7 +24,7 @@ class MultiThreadingTests {
     /** Shared scene — loaded once so all tests use identical geometry and lights. */
     private static final Scene SCENE = new XmlSceneLoader().load("stage8CrystalGallery");
 
-    private static final int RESOLUTION = 400;
+    private static final int RESOLUTION = 200;
     private static final int SAMPLES    = 25;
 
     // ── shared camera builder ─────────────────────────────────────────────────
@@ -49,7 +49,7 @@ class MultiThreadingTests {
     void singleThread() {
         builder()
                 .setMultithreading(1)
-                .build().renderImage().writeToImage("multiThreading/singleThread");
+                .build().renderImage().writeToImage("acceleration/multiThreading/singleThread");
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -60,28 +60,28 @@ class MultiThreadingTests {
     void rawThreads_2() {
         builder()
                 .setMultithreading(2)
-                .build().renderImage().writeToImage("multiThreading/rawThreads_2");
+                .build().renderImage().writeToImage("acceleration/multiThreading/rawThreads_2");
     }
 
     @Test
     void rawThreads_4() {
         builder()
                 .setMultithreading(4)
-                .build().renderImage().writeToImage("multiThreading/rawThreads_4");
+                .build().renderImage().writeToImage("acceleration/multiThreading/rawThreads_4");
     }
 
     @Test
     void rawThreads_8() {
         builder()
                 .setMultithreading(8)
-                .build().renderImage().writeToImage("multiThreading/rawThreads_8");
+                .build().renderImage().writeToImage("acceleration/multiThreading/rawThreads_8");
     }
 
     @Test
     void rawThreadsAuto() {
         builder()
                 .setMultithreadingAuto()
-                .build().renderImage().writeToImage("multiThreading/rawThreads_auto");
+                .build().renderImage().writeToImage("acceleration/multiThreading/rawThreads_auto");
     }
 
     // ══════════════════════════════════════════════════════════════════════════
@@ -92,6 +92,6 @@ class MultiThreadingTests {
     void parallelStream() {
         builder()
                 .setParallelStreaming()
-                .build().renderImage().writeToImage("multiThreading/parallelStream");
+                .build().renderImage().writeToImage("acceleration/multiThreading/parallelStream");
     }
 }

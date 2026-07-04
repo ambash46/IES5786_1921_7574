@@ -1,7 +1,5 @@
 package geometries.impl;
 
-import static geometries.api.Intersectable.Intersection;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

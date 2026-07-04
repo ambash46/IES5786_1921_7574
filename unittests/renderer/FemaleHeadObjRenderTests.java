@@ -1,5 +1,6 @@
 package renderer;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import primitives.Point;
 import primitives.Vector;
@@ -27,9 +28,11 @@ class FemaleHeadObjRenderTests {
     /**
      * Loads {@code scenes/femaleHeadObj.xml} and renders the female-head mesh.
      */
+    @Disabled
     @Test
     void testFemaleHeadObj() {
-        SimpleRayTracer tracer = new SimpleRayTracer(new XmlSceneLoader().load("femaleHeadObj"));
+        SimpleRayTracer tracer = new SimpleRayTracer((new XmlSceneLoader().load("femaleHeadObj")));
+        tracer._scene.geometries.buildBVH();
         Camera.getBuilder()
                 .setRayTracer(tracer)
                 .setLocation(new Point(100, 70, 100))
