@@ -79,6 +79,22 @@ class SoftShadowsTests {
                 .build().renderImage().writeToImage("features/softShadows/" + name);
     }
 
+    private void renderAdaptive(int maxDepth, double threshold, String name) {
+        SimpleRayTracer tracer = new SimpleRayTracer(buildScene(LIGHT_RADIUS))
+                .setAdaptiveShadowSampling(maxDepth, threshold);
+
+        Camera.getBuilder()
+                .setRayTracer(tracer)
+                .setAntiAliasing(S9, SamplingPatterns.GRID)
+                .setMultithreadingAuto()
+                .setLocation(new Point(0, 60, 150))
+                .setDirection(new Point(0, 10, -100), Vector.AXIS_Y)
+                .setVpSize(150, 150)
+                .setVpDistance(200)
+                .setResolution(HIGH, HIGH)
+                .build().renderImage().writeToImage("features/softShadows/" + name);
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     //  Hard shadow baseline (radius = 0)
     // ══════════════════════════════════════════════════════════════════════════
@@ -105,4 +121,11 @@ class SoftShadowsTests {
 
     @Test void jitter_s9()  { render(LIGHT_RADIUS, S9,  SamplingPatterns.JITTERED, "jitter_s9");  }
     @Test void jitter_s81() { render(LIGHT_RADIUS, S81, SamplingPatterns.JITTERED, "jitter_s81"); }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  Soft shadows — Adaptive super-sampling (quadtree, corner-driven)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    @Test void adaptive_shallow() { renderAdaptive(2, 10, "adaptive_shallow"); }
+    @Test void adaptive_deep()    { renderAdaptive(4, 10, "adaptive_deep");    }
 }

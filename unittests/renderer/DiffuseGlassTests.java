@@ -94,6 +94,23 @@ class DiffuseGlassTests {
                 .build().renderImage().writeToImage("features/diffuseGlass/" + name);
     }
 
+    private void renderAdaptive(int maxDepth, double threshold, String name) {
+        SimpleRayTracer tracer = new SimpleRayTracer(buildScene())
+                .setShadowSamples(S9, SamplingPatterns.GRID)
+                .setAdaptiveDiffuseSampling(maxDepth, threshold);
+
+        Camera.getBuilder()
+                .setRayTracer(tracer)
+                .setAntiAliasing(S9, SamplingPatterns.GRID)
+                .setMultithreadingAuto()
+                .setLocation(new Point(0, 20, 120))
+                .setDirection(new Point(0, 0, -80), Vector.AXIS_Y)
+                .setVpSize(150, 150)
+                .setVpDistance(200)
+                .setResolution(HIGH, HIGH)
+                .build().renderImage().writeToImage("features/diffuseGlass/" + name);
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     //  Sharp refraction baseline (numSamples = 1)
     // ══════════════════════════════════════════════════════════════════════════
@@ -120,4 +137,11 @@ class DiffuseGlassTests {
 
     @Test void jitter_s9()  { render(S9,  SamplingPatterns.JITTERED, "jitter_s9");  }
     @Test void jitter_s81() { render(S81, SamplingPatterns.JITTERED, "jitter_s81"); }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  Diffuse glass — Adaptive super-sampling (quadtree, corner-driven)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    @Test void adaptive_shallow() { renderAdaptive(2, 10, "adaptive_shallow"); }
+    @Test void adaptive_deep()    { renderAdaptive(4, 10, "adaptive_deep");    }
 }

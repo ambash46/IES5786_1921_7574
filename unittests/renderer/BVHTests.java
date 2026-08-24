@@ -3,7 +3,10 @@ package renderer;
 import geometries.api.AABB;
 import geometries.api.Intersectable;
 import geometries.impl.Geometries;
+import geometries.impl.Sphere;
 import org.junit.jupiter.api.Test;
+import primitives.Color;
+import primitives.Material;
 import primitives.Point;
 import primitives.Vector;
 import scene.Scene;
@@ -15,7 +18,16 @@ import java.util.List;
  * BVH acceleration benchmark, using the Crystal Gallery scene so the
  * comparison is on real authored content rather than a synthetic grid.
  *
- * <p>All 6 tests render the same scene at the same low resolution and
+ * <p>The Crystal Gallery XML itself has only ~13 primitives — far too few
+ * for linear intersection testing to ever be a bottleneck, so flat vs. BVH
+ * shows no measurable difference at that scale. To make the benchmark
+ * actually demonstrate BVH's benefit, the scene is padded with a large field
+ * of small filler spheres placed well outside the camera's frustum (so the
+ * rendered image is pixel-identical to the unpadded gallery) — this gives
+ * every ray hundreds of extra intersection candidates to test, which is
+ * exactly the regime BVH is meant to accelerate.
+ *
+ * <p>All 6 tests render the same padded scene at the same low resolution and
  * quality — only the geometry organisation (flat / manual / auto) and the
  * multi-threading flag differ; the bounding-box pre-check is always active.
  *
@@ -33,15 +45,39 @@ class BVHTests {
     private static final int SHADOW_S   = 9;
     private static final int STRIPS     = 5;
 
+    /** Side length of the filler-sphere grid (400 extra objects). */
+    private static final int    FILLER_GRID    = 20;
+    /** Spacing between filler spheres. */
+    private static final double FILLER_SPACING = 30;
+    /** Y placed well below the visible ground plane, out of camera view. */
+    private static final double FILLER_Y       = -300;
+
     // ── shared geometry (built once) ───────────────────────────────────────────
-    /** All Crystal Gallery leaf geometries in a single flat Geometries. */
+    /** Crystal Gallery leaf geometries plus filler, in a single flat Geometries. */
     private static final Geometries FLAT;
     /** Same content organised into Z-depth strips (manual BVH). */
     private static final Geometries MANUAL;
 
     static {
-        FLAT   = new XmlSceneLoader().load("stage8CrystalGallery").geometries.flatten();
+        FLAT   = loadPaddedGallery();
         MANUAL = buildManual(FLAT);
+    }
+
+    /**
+     * Loads the Crystal Gallery and adds a grid of small, out-of-frame
+     * filler spheres so the total object count (~13 -> ~413) is large enough
+     * for BVH traversal to actually outperform linear search.
+     */
+    private static Geometries loadPaddedGallery() {
+        Geometries gallery = new XmlSceneLoader().load("stage8CrystalGallery").geometries.flatten();
+        Material fillerMat = new Material().setKD(0.5).setKS(0.2).setShininess(30);
+        for (int i = 0; i < FILLER_GRID; i++)
+            for (int j = 0; j < FILLER_GRID; j++)
+                gallery.add(new Sphere(
+                        new Point((i - FILLER_GRID / 2.0) * FILLER_SPACING, FILLER_Y,
+                                (j - FILLER_GRID / 2.0) * FILLER_SPACING), 1)
+                        .setEmission(new Color(10, 10, 10)).setMaterial(fillerMat));
+        return gallery;
     }
 
     // ── manual hierarchy builder ───────────────────────────────────────────────

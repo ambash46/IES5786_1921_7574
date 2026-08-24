@@ -14,16 +14,16 @@ class JitteredSampling implements SamplingPattern {
 
     @Override
     public double[][] generateOffsets(int numSamples) {
-        int n = (int) Math.ceil(Math.sqrt(numSamples));
-        double cellSize = 1.0 / n;
-        double[][] offsets = new double[n * n][2];
+        // Same n×n cells as GridSampling -- reuse its cell centers and
+        // displace each one randomly within its own cell.
+        double[][] grid = GridSampling.INSTANCE.generateOffsets(numSamples);
+        double cellSize = 1.0 / (int) Math.round(Math.sqrt(grid.length));
         ThreadLocalRandom rng = ThreadLocalRandom.current();
-        int idx = 0;
-        for (int row = 0; row < n; row++)
-            for (int col = 0; col < n; col++) {
-                offsets[idx][0]   = -0.5 + (col + rng.nextDouble()) * cellSize;
-                offsets[idx++][1] = -0.5 + (row + rng.nextDouble()) * cellSize;
-            }
+        double[][] offsets = new double[grid.length][2];
+        for (int i = 0; i < grid.length; i++) {
+            offsets[i][0] = grid[i][0] + (rng.nextDouble() - 0.5) * cellSize;
+            offsets[i][1] = grid[i][1] + (rng.nextDouble() - 0.5) * cellSize;
+        }
         return offsets;
     }
 }

@@ -95,6 +95,22 @@ class AntiAliasingTests {
                 .build().renderImage().writeToImage("features/antiAliasing/" + name);
     }
 
+    private void renderAdaptive(int maxDepth, double threshold, String name) {
+        SimpleRayTracer tracer = new SimpleRayTracer(buildScene())
+                .setShadowSamples(S9, SamplingPatterns.GRID);
+
+        Camera.getBuilder()
+                .setRayTracer(tracer)
+                .setAdaptiveSuperSampling(maxDepth, threshold)
+                .setMultithreadingAuto()
+                .setLocation(new Point(0, 40, 60))
+                .setDirection(new Point(0, -10, -150), Vector.AXIS_Y)
+                .setVpSize(150, 150)
+                .setVpDistance(200)
+                .setResolution(HIGH, HIGH)
+                .build().renderImage().writeToImage("features/antiAliasing/" + name);
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     //  No anti-aliasing baseline (numSamples = 1)
     // ══════════════════════════════════════════════════════════════════════════
@@ -121,4 +137,12 @@ class AntiAliasingTests {
 
     @Test void jitter_s9()  { render(S9,  SamplingPatterns.JITTERED, "jitter_s9");  }
     @Test void jitter_s81() { render(S81, SamplingPatterns.JITTERED, "jitter_s81"); }
+
+    // ══════════════════════════════════════════════════════════════════════════
+    //  Anti-aliasing — Adaptive super-sampling (quadtree, corner-color driven)
+    // ══════════════════════════════════════════════════════════════════════════
+
+    @Test void adaptive_shallow()       { renderAdaptive(2, 10, "adaptive_shallow");       }
+    @Test void adaptive_deep()          { renderAdaptive(4, 10, "adaptive_deep");          }
+    @Test void adaptive_tightThreshold(){ renderAdaptive(4, 2,  "adaptive_tightThreshold");}
 }

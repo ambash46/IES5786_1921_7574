@@ -103,6 +103,18 @@ public class Camera implements Cloneable {
     private Blackboard _aaBlackboard = new Blackboard();
 
     /**
+     * Max quadtree subdivision depth for adaptive super-sampling (0 = disabled;
+     * when disabled the fixed-sample {@link #_aaBlackboard} path is used instead).
+     */
+    private int _adaptiveMaxDepth = 0;
+
+    /**
+     * Max per-channel (0-255) color difference tolerated across a region's
+     * corners before it is subdivided further.
+     */
+    private double _adaptiveThreshold = 0;
+
+    /**
      * 0 = parallel stream, 1+ = raw thread count (default 1 = single thread)
      */
     private int _threadsCount = 1;
@@ -241,7 +253,8 @@ public class Camera implements Cloneable {
      * @param yIndex the pixel row index (0-based)
      */
     private void castRay(int xIndex, int yIndex) {
-        _imageWriter.writePixel(xIndex, yIndex, castAaBeam(xIndex, yIndex));
+        Color color = _adaptiveMaxDepth > 0 ? castAdaptiveBeam(xIndex, yIndex) : castAaBeam(xIndex, yIndex);
+        _imageWriter.writePixel(xIndex, yIndex, color);
         _pixelManager.pixelDone();
     }
 
@@ -264,6 +277,30 @@ public class Camera implements Cloneable {
             total = total.add(sampleColor);
         }
         return total.reduce(samples.size());
+    }
+
+    /**
+     * Adaptively samples the pixel area via {@link AdaptiveSampler}: starts
+     * from the 4 corner rays and recursively subdivides into quadrants (up to
+     * {@link #_adaptiveMaxDepth} levels) only where the corner colors actually
+     * disagree by more than {@link #_adaptiveThreshold}, instead of always
+     * casting a fixed number of rays like {@link #castAaBeam}.
+     *
+     * @param xIndex the pixel column index (0-based)
+     * @param yIndex the pixel row index (0-based)
+     * @return the adaptively averaged color of the pixel
+     */
+    private Color castAdaptiveBeam(int xIndex, int yIndex) {
+        Point center = getPixelCenter(xIndex, yIndex);
+        return AdaptiveSampler.forColor(this::traceAt, _vRight, _vUp, _adaptiveMaxDepth, _adaptiveThreshold)
+                .sample(center, _pixelWidth, _pixelHeight);
+    }
+
+    /**
+     * Traces the ray from the camera through the given view-plane point.
+     */
+    private Color traceAt(Point point) {
+        return _rayTracer.traceRay(new Ray(_p0, point.subtract(_p0)));
     }
 
     /**
@@ -423,6 +460,28 @@ public class Camera implements Cloneable {
          */
         public Builder setAntiAliasing(int numSamples, SamplingPattern pattern) {
             _camera._aaBlackboard = new Blackboard().setNumSamples(numSamples).setStrategy(pattern);
+            return this;
+        }
+
+        /**
+         * Enables adaptive super-sampling: instead of always casting a fixed
+         * number of rays per pixel, each pixel starts from its 4 corner rays and
+         * is recursively subdivided into quadrants only where the corner colors
+         * actually disagree by more than {@code threshold} — so flat regions
+         * cost 4 rays while high-contrast edges get up to {@code 4^maxDepth}
+         * times the resolution. Overrides any {@link #setAntiAliasing} setting.
+         *
+         * @param maxDepth  maximum quadtree subdivision depth (0 = 4 corner rays, no subdivision)
+         * @param threshold maximum per-channel (0-255) color difference tolerated
+         *                  across a region's corners before it is subdivided further
+         * @return this Builder
+         * @throws IllegalArgumentException if {@code maxDepth} or {@code threshold} is negative
+         */
+        public Builder setAdaptiveSuperSampling(int maxDepth, double threshold) {
+            if (maxDepth < 0) throw new IllegalArgumentException("maxDepth must be >= 0");
+            if (threshold < 0) throw new IllegalArgumentException("threshold must be >= 0");
+            _camera._adaptiveMaxDepth = maxDepth;
+            _camera._adaptiveThreshold = threshold;
             return this;
         }
 

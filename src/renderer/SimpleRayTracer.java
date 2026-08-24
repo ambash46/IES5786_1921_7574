@@ -1,6 +1,7 @@
 package renderer;
 
 import java.util.List;
+import java.util.function.Function;
 import lighting.LightSource;
 import lighting.PointLight;
 import primitives.Color;
@@ -48,6 +49,21 @@ class SimpleRayTracer extends RayTracerBase {
      */
     private Blackboard _diffuseBlackboard = new Blackboard();
 
+    /** Max quadtree depth for adaptive soft shadows (0 = use {@link #_shadowBlackboard} instead). */
+    private int    _shadowAdaptiveDepth     = 0;
+    /** Max per-channel (0-255-equivalent) transparency difference tolerated before subdividing further. */
+    private double _shadowAdaptiveThreshold = 0;
+
+    /** Max quadtree depth for adaptive glossy reflection (0 = use {@link #_glossyBlackboard} instead). */
+    private int    _glossyAdaptiveDepth     = 0;
+    /** Max per-channel (0-255) color difference tolerated before subdividing further. */
+    private double _glossyAdaptiveThreshold = 0;
+
+    /** Max quadtree depth for adaptive diffuse glass (0 = use {@link #_diffuseBlackboard} instead). */
+    private int    _diffuseAdaptiveDepth     = 0;
+    /** Max per-channel (0-255) color difference tolerated before subdividing further. */
+    private double _diffuseAdaptiveThreshold = 0;
+
     /**
      * Constructs a simple ray tracer for the given scene.
      *
@@ -77,6 +93,59 @@ class SimpleRayTracer extends RayTracerBase {
 
     SimpleRayTracer setDiffuseSamples(int numSamples, SamplingPattern pattern) {
         _diffuseBlackboard = new Blackboard().setNumSamples(numSamples).setStrategy(pattern);
+        return this;
+    }
+
+    /**
+     * Enables adaptive soft shadows: instead of a fixed number of shadow rays,
+     * the light disk is recursively subdivided only where sampled points
+     * disagree about occlusion by more than {@code threshold}. Overrides any
+     * {@link #setShadowSamples} setting.
+     *
+     * @param maxDepth  maximum quadtree subdivision depth (0 = disabled)
+     * @param threshold maximum per-channel (0-255-equivalent) transparency
+     *                  difference tolerated across a region's corners
+     * @return this tracer, for method chaining
+     */
+    SimpleRayTracer setAdaptiveShadowSampling(int maxDepth, double threshold) {
+        if (maxDepth < 0) throw new IllegalArgumentException("maxDepth must be >= 0");
+        if (threshold < 0) throw new IllegalArgumentException("threshold must be >= 0");
+        _shadowAdaptiveDepth = maxDepth;
+        _shadowAdaptiveThreshold = threshold;
+        return this;
+    }
+
+    /**
+     * Enables adaptive glossy reflection sampling. Overrides any
+     * {@link #setGlossySamples} setting.
+     *
+     * @param maxDepth  maximum quadtree subdivision depth (0 = disabled)
+     * @param threshold maximum per-channel (0-255) color difference tolerated
+     *                  across a region's corners
+     * @return this tracer, for method chaining
+     */
+    SimpleRayTracer setAdaptiveGlossySampling(int maxDepth, double threshold) {
+        if (maxDepth < 0) throw new IllegalArgumentException("maxDepth must be >= 0");
+        if (threshold < 0) throw new IllegalArgumentException("threshold must be >= 0");
+        _glossyAdaptiveDepth = maxDepth;
+        _glossyAdaptiveThreshold = threshold;
+        return this;
+    }
+
+    /**
+     * Enables adaptive diffuse-glass sampling. Overrides any
+     * {@link #setDiffuseSamples} setting.
+     *
+     * @param maxDepth  maximum quadtree subdivision depth (0 = disabled)
+     * @param threshold maximum per-channel (0-255) color difference tolerated
+     *                  across a region's corners
+     * @return this tracer, for method chaining
+     */
+    SimpleRayTracer setAdaptiveDiffuseSampling(int maxDepth, double threshold) {
+        if (maxDepth < 0) throw new IllegalArgumentException("maxDepth must be >= 0");
+        if (threshold < 0) throw new IllegalArgumentException("threshold must be >= 0");
+        _diffuseAdaptiveDepth = maxDepth;
+        _diffuseAdaptiveThreshold = threshold;
         return this;
     }
 
@@ -130,9 +199,10 @@ class SimpleRayTracer extends RayTracerBase {
      * {@link Double3#ONE} if nothing blocks the light
      */
     private Double3 transparency(Intersection intersection) {
-        if (intersection.light instanceof PointLight pl && pl.getRadius() > 0
-                && _shadowBlackboard.isMultiSample())
-            return softTransparency(intersection, pl);
+        if (intersection.light instanceof PointLight pl && pl.getRadius() > 0) {
+            if (_shadowAdaptiveDepth > 0) return adaptiveTransparency(intersection, pl);
+            if (_shadowBlackboard.isMultiSample()) return softTransparency(intersection, pl);
+        }
 
         Ray shadowRay = new Ray(intersection.point, intersection.l.scale(-1), intersection.n);
         return singleRayTransparency(shadowRay, intersection.light.getDistance(intersection.point));
@@ -183,6 +253,31 @@ class SimpleRayTracer extends RayTracerBase {
             total = total.add(singleRayTransparency(shadowRay, dist));
         }
         return total.scale(1.0 / samples.size());
+    }
+
+    /**
+     * Adaptive counterpart of {@link #softTransparency}: recursively
+     * subdivides the light disk via {@link AdaptiveSampler} instead of
+     * sampling a fixed number of points.
+     *
+     * @param intersection the preprocessed intersection
+     * @param light        the area point light (must have radius &gt; 0)
+     * @return adaptively averaged transparency coefficient across the light disk
+     */
+    private Double3 adaptiveTransparency(Intersection intersection, PointLight light) {
+        Vector toLight = intersection.l.scale(-1);
+        Vector[] basis = toLight.buildOrthogonalBasis();
+        Vector vX = basis[0], vY = basis[1];
+        double size = light.getRadius() * 2;
+
+        Function<Point, Double3> evaluate = sample -> {
+            Vector dir = sample.subtract(intersection.point);
+            Ray shadowRay = new Ray(intersection.point, dir.normalize(), intersection.n);
+            return singleRayTransparency(shadowRay, dir.length());
+        };
+
+        return AdaptiveSampler.forTransparency(evaluate, vX, vY, _shadowAdaptiveDepth, _shadowAdaptiveThreshold)
+                .sample(light.getPosition(), size, size);
     }
 
     /**
@@ -282,42 +377,53 @@ class SimpleRayTracer extends RayTracerBase {
      */
     private Color calcReflection(Intersection intersection, int level, Double3 k) {
         double blur = level == MAX_CALC_COLOR_LEVEL ? intersection.material.kGlossy : 0;
-        return sampleBlurredRay(constructReflectionRay(intersection),
-                blur, _glossyBlackboard, level, k, intersection.material.kR);
+        return sampleBlurredRay(constructReflectionRay(intersection), blur, _glossyBlackboard,
+                _glossyAdaptiveDepth, _glossyAdaptiveThreshold, level, k, intersection.material.kR);
     }
 
     private Color calcTransparency(Intersection intersection, int level, Double3 k) {
         double blur = level == MAX_CALC_COLOR_LEVEL ? intersection.material.kDiffuseGlass : 0;
-        return sampleBlurredRay(constructTransparencyRay(intersection),
-                blur, _diffuseBlackboard, level, k, intersection.material.kT);
+        return sampleBlurredRay(constructTransparencyRay(intersection), blur, _diffuseBlackboard,
+                _diffuseAdaptiveDepth, _diffuseAdaptiveThreshold, level, k, intersection.material.kT);
     }
 
     /**
      * Sends a beam of rays around {@code centralRay} and averages their colors.
      * The beam disk is perpendicular to the ray direction; its radius equals
      * {@code blur}. When {@code blur == 0} only the central ray is traced.
+     * When {@code adaptiveDepth > 0} the disk is recursively subdivided via
+     * {@link AdaptiveSampler} instead of using {@code blackboard}'s fixed-N samples.
      */
     private Color sampleBlurredRay(Ray centralRay, double blur, Blackboard blackboard,
+                                   int adaptiveDepth, double adaptiveThreshold,
                                    int level, Double3 k, Double3 kx) {
-        if (Util.isZero(blur) || !blackboard.isMultiSample()) return calcGlobalEffect(centralRay, level, k, kx);
+        if (Util.isZero(blur)) return calcGlobalEffect(centralRay, level, k, kx);
 
         Vector dir = centralRay.direction();
         Vector[] basis = dir.buildOrthogonalBasis();
         Vector vX = basis[0], vY = basis[1];
-
         Point origin = centralRay.origin();
-        List<Point> samples = blackboard.generateTargetPoints(origin, vX, vY, blur);
 
-        Color total = Color.BLACK;
-        for (Point sample : samples) {
+        Function<Point, Color> evaluate = sample -> {
             // GRID sampling always includes an exact dead-center sample when
-            // sqrt(numSamples) is odd (e.g. 9, 25, 81 -> 3x3, 5x5, 9x9): for
-            // that sample, sample == origin, so subtract() would build the
-            // zero vector. A zero offset means "no deviation", so just reuse
-            // the unperturbed central direction instead of computing it.
+            // sqrt(numSamples) is odd (e.g. 9, 25, 81 -> 3x3, 5x5, 9x9), and the
+            // adaptive sampler's own recursion always re-visits the exact disk
+            // center too: for that sample, sample == origin, so subtract() would
+            // build the zero vector. A zero offset means "no deviation", so just
+            // reuse the unperturbed central direction instead of computing it.
             Vector newDir = sample.equals(origin) ? dir : dir.add(sample.subtract(origin)).normalize();
-            total = total.add(calcGlobalEffect(new Ray(origin, newDir), level, k, kx));
-        }
+            return calcGlobalEffect(new Ray(origin, newDir), level, k, kx);
+        };
+
+        if (adaptiveDepth > 0)
+            return AdaptiveSampler.forColor(evaluate, vX, vY, adaptiveDepth, adaptiveThreshold)
+                    .sample(origin, blur, blur);
+
+        if (!blackboard.isMultiSample()) return calcGlobalEffect(centralRay, level, k, kx);
+
+        List<Point> samples = blackboard.generateTargetPoints(origin, vX, vY, blur);
+        Color total = Color.BLACK;
+        for (Point sample : samples) total = total.add(evaluate.apply(sample));
         return total.reduce(samples.size());
     }
 
